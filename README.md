@@ -90,6 +90,6 @@ This project is licensed under the MIT License.
 ## 📬 Contact
 For questions or collaboration, reach out to us:
 
-Email: [✉️](contactjarafi@gmail.com)
-Twitter: [X - formerly Twitter](https://x.com/JaraFi_xyz)
-Website: [Official Website](https://www.jarafi.xyz/)
+- Email: [✉️](contactjarafi@gmail.com)
+- Twitter: [X - formerly Twitter](https://x.com/JaraFi_xyz)
+- Website: [Official Website](https://www.jarafi.xyz/)
