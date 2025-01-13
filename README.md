@@ -46,12 +46,7 @@ npm install
 ```
 
 3. **Set Environment Variables**
-   Create a .env file in the root directory and configure your blockchain connection and API keys. Example:
-
-```bash
-REACT_APP_BLOCKCHAIN_NETWORK=<Your_Network>
-REACT_APP_API_KEY=<Your_API_Key>
-```
+   Create a .env file in the root directory and configure your blockchain connection and API keys.
 
 4. **Run the Application**
 
@@ -64,9 +59,11 @@ Access the application at http://localhost:3000.
 ---
 
 ## 🤝 Contributing
+
 We welcome contributions from the community!
 
 How to Contribute
+
 - Fork the repository.
 - Create a new branch: git checkout -b feature-name.
 - Commit your changes: git commit -m "Add feature".
@@ -76,18 +73,22 @@ How to Contribute
 ---
 
 ## 📜 License
+
 This project is licensed under the MIT License.
 
 ---
 
 ## 🛠️ Built With
+
 - Next.js - Frontend framework
 - Node.js - Backend runtime
 - Blockchain - Underlying blockchain infrastructure
 - TailwindCSS - For styling
 
 ---
+
 ## 📬 Contact
+
 For questions or collaboration, reach out to us:
 
 - Email: [✉️](mailto:https://contactjarafi@gmail.com)
