@@ -2,6 +2,9 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
+import rollupNodePolyfills from 'rollup-plugin-node-polyfills';
+import {NodeGlobalsPolyfillPlugin} from "@esbuild-plugins/node-globals-polyfill";
+import {NodeModulesPolyfillPlugin} from "@esbuild-plugins/node-modules-polyfill";
 export default defineConfig({
   plugins: [
     react(),
@@ -38,5 +41,14 @@ export default defineConfig({
         ],
       },
     }),
+    
   ],
+  resolve: {
+    alias: {
+      process: 'process/browser',
+    },
+  },
+  define: {
+    'process.env': {}, // Define a fallback for process.env if needed
+  },
 });

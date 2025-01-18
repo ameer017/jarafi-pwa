@@ -1,35 +1,22 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
+import Capsule, { Environment, CapsuleModal } from "@usecapsule/react-sdk";
+// The following styles.css import is not needed if using a version before v3.5.0 of '@usecapsule/react-sdk'
+import "@usecapsule/react-sdk/styles.css";
+
+// Initialize Capsule SDK with your API key and environment
+const capsule = new Capsule(Environment.BETA, import.meta.env.VITE_APP_CAPSULE_PROJECT_ID);
 
 function App() {
-  const [count, setCount] = useState(0)
-
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <button onClick={() => setIsOpen(true)}>Sign in with Capsule</button>
+      <CapsuleModal
+        capsule={capsule}
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+      />
+    </div>
+  );
 }
-
-export default App
+export default App;
