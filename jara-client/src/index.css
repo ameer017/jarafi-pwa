@@ -22,3 +22,18 @@
     transition: transform 500ms ease, opacity 500ms ease;
   }
   
+
+  .loader {
+    height: 100px;
+    width: 100px;
+    border-radius: 50%;
+    border: 5px solid transparent;
+    border-top: 5px solid #929292;
+    animation: spin 2s linear infinite;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
