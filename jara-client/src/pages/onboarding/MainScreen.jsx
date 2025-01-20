@@ -32,23 +32,28 @@ const MainScreen = () => {
           <img
             src="/bg-up.png"
             alt="Background Top Left"
-            className="absolute top-0 left-0 w-36 md:w-48 lg:w-64"
+            className="absolute top-0 left-0 w-36 md:w-48 lg:w-64 hidden md:block"
+          />
+          <img
+            src="/mobile.svg"
+            alt="Background Top Left"
+            className="absolute top-0 left-0 md:w-48 lg:w-64  md:hidden"
           />
           <img
             src="/bg-down.svg"
             alt="Background Bottom Left"
-            className="absolute bottom-0 left-0 w-28 md:w-40 lg:w-56"
+            className="absolute bottom-0 left-0 w-28 md:w-40 lg:w-56 hidden md:block"
           />
 
           <img
             src="/bg-up.png"
             alt="Background Bottom Right"
-            className="absolute bottom-0 right-0 rotate-180 w-36 md:w-48 lg:w-64"
+            className="absolute bottom-0 right-0 rotate-180 w-36 md:w-48 lg:w-64 hidden md:block"
           />
           <img
             src="/bg-down.svg"
             alt="Background Top Right"
-            className="absolute top-0 right-0 rotate-180 w-36 md:w-48 lg:w-64"
+            className="absolute top-0 right-0 rotate-180 w-36 md:w-48 lg:w-64 hidden md:block"
           />
 
           <div className="flex flex-col items-center text-center text-white space-y-6 mt-12">
