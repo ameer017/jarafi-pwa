@@ -1,16 +1,32 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { CSSTransition, TransitionGroup } from "react-transition-group";
 
 const SignUpEndpoint = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen w-full bg-[#0F0140] text-white">
+        <div className="loader"></div>
+      </div>
+    );
+  }
   return (
     <TransitionGroup component={null}>
-      <CSSTransition key={location.key} classNames="slide" timeout={500}>
+      <CSSTransition key={location.key} classNames="slide-enter" timeout={500}>
         <div className="bg-[#F2E205] h-screen w-full p-6 flex flex-col items-center justify-center gap-[80px] text-center text-[#0F0140] relative">
           <img
             src="/vite.svg"
