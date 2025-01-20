@@ -31,12 +31,17 @@ const TWE = () => {
           <img
             src="/bg-up.png"
             alt="Background Top Left"
-            className="absolute top-0 left-0 w-36 md:w-48 lg:w-64"
+            className="absolute top-0 left-0 w-36 md:w-48 lg:w-64 hidden md:block "
+          />
+          <img
+            src="/start.svg"
+            alt="Background Top Left"
+            className="absolute top-0 left-0 w-36 md:w-48 lg:w-64 md:hidden "
           />
           <img
             src="/bg-down.svg"
             alt="Background Bottom Left"
-            className="absolute bottom-10 left-0 w-28 md:w-40 lg:w-56"
+            className="absolute bottom-10 left-0 w-28 md:w-40 lg:w-56 hidden md:block "
           />
           <img
             src="/bgSeven.png"
@@ -46,12 +51,17 @@ const TWE = () => {
           <img
             src="/bgTen.png"
             alt="Background Top Right"
-            className="absolute top-0 right-0 w-36 md:w-48 lg:w-64"
+            className="absolute top-0 right-0 w-36 md:w-48 lg:w-64 hidden md:block "
           />
           <img
             src="/bgTen.png"
             alt="Background Bottom Right Rotated"
-            className="absolute md:-bottom-9 md:right-0 -bottom-6 right-6 w-36 md:w-48 lg:w-64 rotate-90"
+            className="absolute md:-bottom-9 md:right-0 -bottom-6 right-6 w-36 md:w-48 lg:w-64 rotate-90 hidden md:block "
+          />
+          <img
+            src="/startii.svg"
+            alt="Background Bottom Right Rotated"
+            className="absolute -bottom-0 right-0 w-36 md:w-48 lg:w-64 md:hidden  "
           />
 
           <div className="flex flex-col items-center space-y-6 mt-12">

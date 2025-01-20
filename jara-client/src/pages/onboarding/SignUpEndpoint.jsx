@@ -29,14 +29,24 @@ const SignUpEndpoint = () => {
       <CSSTransition key={location.key} classNames="slide-enter" timeout={500}>
         <div className="bg-[#F2E205] h-screen w-full p-6 flex flex-col items-center justify-center gap-[80px] text-center text-[#0F0140] relative">
           <img
+            src="/wp.svg"
+            alt="Background Top Left"
+            className="absolute top-0 right-0  md:hidden "
+          />
+          <img
+            src="/wpii.svg"
+            alt="Background Top Left"
+            className="absolute bottom-0 right-0  md:hidden "
+          />
+          <img
             src="/vite.svg"
             alt="Background Top Left"
-            className="absolute top-0 left-0 w-36 md:w-48 lg:w-64"
+            className="absolute top-0 left-0 w-36 md:w-48 lg:w-64 hidden md:block"
           />
           <img
             src="/bg-down.svg"
             alt="Background Bottom Left"
-            className="absolute bottom-10 left-0 w-28 md:w-40 lg:w-56"
+            className="absolute bottom-10 left-0 w-28 md:w-40 lg:w-56 hidden md:block"
           />
           <img
             src="/bgEight.png"
@@ -46,12 +56,12 @@ const SignUpEndpoint = () => {
           <img
             src="/bgTen.png"
             alt="Background Top Right"
-            className="absolute top-0 right-0 w-36 md:w-48 lg:w-64"
+            className="absolute top-0 right-0 w-36 md:w-48 lg:w-64 hidden md:block"
           />
           <img
             src="/bgTen.png"
             alt="Background Bottom Right Rotated"
-            className="absolute md:-bottom-9 md:right-0 -bottom-6 right-6 w-36 md:w-48 lg:w-64 rotate-90"
+            className="absolute md:-bottom-9 md:right-0 -bottom-6 right-6 w-36 md:w-48 lg:w-64 rotate-90 hidden md:block"
           />
           <div className="flex flex-col items-center space-y-6 mt-12">
             <img
@@ -96,7 +106,7 @@ const SignUpEndpoint = () => {
                 className={`border-[1.2px] p-[1.8px] rounded-lg text-md font-medium shadow hover:bg-gray-200 duration-300 ${
                   isActive("/sign-up-endpoint")
                     ? "bg-[#0F0140] text-[#0F0140]"
-                    : "border-[#ffffff] text-white"
+                    : "border-[#0F0140] text-[#0F0140] "
                 }`}
               ></button>
             </div>
