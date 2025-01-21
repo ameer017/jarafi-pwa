@@ -11,20 +11,24 @@ import { IoIosNotificationsOutline } from "react-icons/io";
 import { Link } from "react-router-dom";
 
 const mockData = [
-  { id: 1, first_name: "Brenn" },
-  { id: 2, first_name: "Aimee" },
-  { id: 3, first_name: "Phelia" },
-  { id: 4, first_name: "Loreen" },
-  { id: 5, first_name: "Catina" },
-  { id: 6, first_name: "Adi" },
-  { id: 7, first_name: "Leonerd" },
-  { id: 8, first_name: "Silvie" },
-  { id: 9, first_name: "Angel" },
-  { id: 10, first_name: "Pat" },
-  { id: 11, first_name: "Alvy" },
-  { id: 12, first_name: "Flore" },
-  { id: 13, first_name: "Erna" },
-  { id: 14, first_name: "Kurt" },
+  {
+    id: 1,
+    first_name: "100.00 USDT",
+    price: "$100.00",
+    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
+  },
+  {
+    id: 2,
+    first_name: "100.00 USDT",
+    price: "$100.00",
+    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
+  },
+  {
+    id: 3,
+    first_name: "100.00 USDT",
+    price: "$100.00",
+    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
+  },
 ];
 
 const HomePage = () => {
@@ -43,8 +47,8 @@ const HomePage = () => {
           <section className="flex justify-between items-center">
             <p className="text-[#F2EDE4] text-[16px]">Wallet Balance</p>
             <div className="flex gap-4">
-              <BiScan color="#B0AFB1" />
-              <IoIosNotificationsOutline color="#B0AFB1" />
+              <BiScan color="#B0AFB1" size={25} />
+              <IoIosNotificationsOutline color="#B0AFB1" size={25} />
             </div>
           </section>
 
@@ -73,7 +77,7 @@ const HomePage = () => {
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
-                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center ${
+                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${
                     rotate ? "rotate-180" : ""
                   }`}
                 >
@@ -109,11 +113,12 @@ const HomePage = () => {
                       to={`/token-details/${item.id}`}
                       className=" border-b w-full flex justify-between"
                     >
-                      <td className="p-4 text-[#464446] text-[14px] font-[400] text-left">
-                        {item.id}
+                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1">
+                        <img src={item.icon} className="w-[20px] h-[20px] " /> USDT
                       </td>
-                      <td className="p-4 text-[#464446] text-[14px] font-[400] text-right">
-                        {item.first_name}
+                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col ">
+                        {item.first_name} <br/>
+                        {item.price}
                       </td>
                     </Link>
                   </tr>
