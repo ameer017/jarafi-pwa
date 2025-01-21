@@ -56,7 +56,7 @@ const TWE = () => {
           <img
             src="/bgTen.png"
             alt="Background Bottom Right Rotated"
-            className="absolute md:-bottom-9 md:right-0 -bottom-6 right-6 w-36 md:w-48 lg:w-64 rotate-90 hidden md:block "
+            className="absolute md:-bottom-9 md:right-10 -bottom-6 right-6 w-36 md:w-48 lg:w-64 rotate-90 hidden md:block "
           />
           <img
             src="/startii.svg"
