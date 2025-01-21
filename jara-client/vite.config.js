@@ -46,9 +46,14 @@ export default defineConfig({
   resolve: {
     alias: {
       process: "process/browser",
-    },
+      stream: 'stream-browserify',
+      crypto: 'crypto-browserify'
+    }
   },
   define: {
     "process.env": {},
   },
+  optimizeDeps: {
+    exclude: ['chunk-OTONJH47.js']
+  }
 });
