@@ -2,7 +2,9 @@ import React from 'react'
 
 const WalletShowcase = () => {
   return (
-    <div>WalletShowcase</div>
+    <div>
+      
+    </div>
   )
 }
 

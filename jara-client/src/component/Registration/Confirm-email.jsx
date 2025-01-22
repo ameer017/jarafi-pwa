@@ -1,6 +1,6 @@
 import React from 'react'
 
-const SeedPhrase = () => {
+const ConfirmEmail = () => {
   return (
     <div>
       
@@ -8,4 +8,4 @@ const SeedPhrase = () => {
   )
 }
 
-export default SeedPhrase
+export default ConfirmEmail
