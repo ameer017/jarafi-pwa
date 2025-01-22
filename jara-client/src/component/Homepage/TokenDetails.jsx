@@ -61,7 +61,7 @@ const TokenDetails = () => {
       </header>
 
 
-      <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
+      <main className="h-[575px] md:h-[582px] bg-white overflow-hidden">
         <div className="h-full border">
           <table className="w-full text-center border-collapse">
             <thead>
