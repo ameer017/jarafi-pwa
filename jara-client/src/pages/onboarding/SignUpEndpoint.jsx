@@ -114,7 +114,7 @@ const SignUpEndpoint = () => {
             <div className="flex flex-col items-center space-y-4">
               <button
                 className="bg-[#0F0140] py-3 px-8 text-[#F6F5F6] text-[16px] rounded-lg text-lg font-medium shadow-lg w-[280px] md:w-[350px] hover:bg-[#0f0140b8] transition-transform transform scale-90 hover:scale-100"
-                onClick={() => navigate("/sign-up-endpoint")}
+                onClick={() => navigate("/sign-up-user")}
               >
                 Sign Up
               </button>
