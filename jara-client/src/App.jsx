@@ -11,6 +11,7 @@ import ConfirmEmail from "./component/Registration/ConfirmEmail";
 import CreateWallet from "./component/Registration/SecureWallet/CreateWallet";
 import WalletShowcase from "./component/Registration/SecureWallet/WalletShowcase";
 import Congratulation from "./component/Registration/SecureWallet/Congratulation";
+import Activities from "./component/Homepage/Activities";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
         <Route path="/dashboard" element={<HomePage />} />
         <Route path="/token-details/:id" element={<TokenDetails />} />
+        <Route path="/token-details/:id/activities" element={<Activities />} />
         <Route path="/sign-up-user" element={<Register />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/create-wallet" element={<CreateWallet />} />
