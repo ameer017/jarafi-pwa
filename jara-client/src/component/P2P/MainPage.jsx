@@ -1,102 +1,10 @@
-// import React, { useState } from "react"
-// import Buy from "./Buy"
-// import Sell from "./Sell"
-// import { Bell, Wallet, Users2, LayoutGrid, Settings, ChevronDown } from "lucide-react"
-
-// const MainPage = () => {
-//   const [activeTab, setActiveTab] = useState("buy")
-//   const [selectedCurrency, setSelectedCurrency] = useState("NGN")
-//   const [showCurrencies, setShowCurrencies] = useState(false)
-
-//   const currencies = ["NGN", "USD", "EUR", "GBP"]
-
-//   return (
-//     <div className="min-h-screen bg-white text-black">
-//       {/* Header */}
-//       <div className="bg-[#0F0140] p-4">
-//         <div className="flex items-center justify-between">
-//           <div className="flex items-center gap-4">
-//             <button
-//               onClick={() => setActiveTab("buy")}
-//               className={`px-6 py-2 rounded-lg text-white ${
-//                 activeTab === "buy" ? "bg-[#FFE600] text-black" : "bg-[#0F0140]"
-//               }`}
-//             >
-//               Buy
-//             </button>
-//             <button
-//               onClick={() => setActiveTab("sell")}
-//               className={`px-6 py-2 rounded-lg text-white ${activeTab === "sell" ? "bg-[#FF0000]" : "bg-[#0F0140]"}`}
-//             >
-//               Sell
-//             </button>
-//           </div>
-
-//           <div className="flex items-center gap-2 cursor-pointer">
-//             <span className="text-white text-xl">P2P</span>
-//             <span className="text-xl">⚡</span>
-//           </div>
-
-//           <div className="flex items-center gap-4">
-//             <Bell size={20} className="text-white cursor-pointer" />
-//             <div className="relative">
-//               <button onClick={() => setShowCurrencies(!showCurrencies)} className="flex items-center gap-2 text-white">
-//                 {selectedCurrency} <ChevronDown size={16} />
-//               </button>
-//               {showCurrencies && (
-//                 <div className="absolute top-full right-0 mt-1 bg-white shadow-lg rounded-lg py-2 w-24 z-10">
-//                   {currencies.map((currency) => (
-//                     <button
-//                       key={currency}
-//                       onClick={() => {
-//                         setSelectedCurrency(currency)
-//                         setShowCurrencies(false)
-//                       }}
-//                       className="w-full px-4 py-2 text-left hover:bg-gray-100"
-//                     >
-//                       {currency}
-//                     </button>
-//                   ))}
-//                 </div>
-//               )}
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Content */}
-//       {activeTab === "buy" ? <Buy /> : <Sell />}
-
-//       {/* Bottom Navigation */}
-//       <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
-//         <div className="flex justify-around py-4">
-//           <button className="flex flex-col items-center gap-1">
-//             <Wallet size={20} className="text-gray-400" />
-//             <span className="text-xs text-gray-400">Wallet</span>
-//           </button>
-//           <button className="flex flex-col items-center gap-1">
-//             <LayoutGrid size={20} className="text-gray-400" />
-//             <span className="text-xs text-gray-400">Markets</span>
-//           </button>
-//           <button className="flex flex-col items-center gap-1">
-//             <Users2 size={20} className="text-[#FFE600]" />
-//             <span className="text-xs text-[#FFE600]">P2P</span>
-//           </button>
-//           <button className="flex flex-col items-center gap-1">
-//             <Settings size={20} className="text-gray-400" />
-//             <span className="text-xs text-gray-400">Settings</span>
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
-
-// export default MainPage
 import React, { useState } from "react"
 import Buy from "./Buy"
 import Sell from "./Sell"
 import { Bell, Wallet, Users2, LayoutGrid, Settings, ChevronDown } from "lucide-react"
+import { Link } from "react-router-dom"
+import { LuCreditCard, LuSettings2, LuWalletMinimal } from "react-icons/lu"
+import { RiTokenSwapLine } from "react-icons/ri"
 
 const MainPage = () => {
   const [activeTab, setActiveTab] = useState("buy")
@@ -219,30 +127,20 @@ const MainPage = () => {
         </div>
       </div>
 
-      {/* Content */}
       {activeTab === "buy" ? <Buy /> : <Sell />}
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t">
-        <div className="flex justify-around py-4">
-          <button className="flex flex-col items-center gap-1">
-            <Wallet size={20} className="text-gray-400" />
-            <span className="text-xs text-gray-400">Wallet</span>
-          </button>
-          <button className="flex flex-col items-center gap-1">
-            <LayoutGrid size={20} className="text-gray-400" />
-            <span className="text-xs text-gray-400">Markets</span>
-          </button>
-          <button className="flex flex-col items-center gap-1">
-            <Users2 size={20} className="text-[#FFE600]" />
-            <span className="text-xs text-[#FFE600]">P2P</span>
-          </button>
-          <button className="flex flex-col items-center gap-1">
-            <Settings size={20} className="text-gray-400" />
-            <span className="text-xs text-gray-400">Settings</span>
-          </button>
-        </div>
-      </div>
+      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
+        <Link to="/dashboard">
+
+          <LuWalletMinimal size={25} color="#B0AFB1" />
+        </Link>
+        <Link to="/p2p" >
+
+          <RiTokenSwapLine size={25} color="#B0AFB1" />
+        </Link>
+        <LuCreditCard size={25} color="#B0AFB1" />
+        <LuSettings2 size={25} color="#B0AFB1" />
+      </footer>
     </div>
   )
 }

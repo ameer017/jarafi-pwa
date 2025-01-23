@@ -13,12 +13,14 @@ import ConfirmEmail from "./component/Registration/ConfirmEmail";
 import CreateWallet from "./component/Registration/SecureWallet/CreateWallet";
 import WalletShowcase from "./component/Registration/SecureWallet/WalletShowcase";
 import Congratulation from "./component/Registration/SecureWallet/Congratulation";
+import Home from "./pages/Home";
 
 function App() {
   return (
     <>
       <Routes>
         {/* <Route path="/buy" element={<Buy />} /> */}
+        <Route path="/" element={<Home />} />
         <Route path="/p2p" element={<MainPage />} />
         <Route path="/main-screen" element={<MainScreen />} />
         <Route path="/trade-with-ease" element={<TWE />} />
