@@ -3,10 +3,11 @@ import { celo } from "wagmi/chains";
 import { capsuleConnector } from "@usecapsule/wagmi-v2-integration";
 import { OAuthMethod } from "@usecapsule/web-sdk";
 import capsuleClient from "./capsuleClient";
+import { CEUR, cUsd, USDC, USDT } from "./otherChains";
 
 const connector = capsuleConnector({
   capsule: capsuleClient,
-  chains: [celo],
+  chains: [celo, cUsd, USDC, USDT, CEUR],
   appName: "Jarafi PWA",
   options: {},
   nameOverride: "Capsule",
@@ -22,5 +23,9 @@ export const config = createConfig({
   connectors: [connector],
   transports: {
     [celo.id]: http(),
+    [cUsd.id]: http(),
+    [USDC.id]: http(),
+    [USDT.id]: http(),
+    [CEUR.id]: http(),
   },
 });
