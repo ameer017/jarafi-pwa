@@ -11,7 +11,7 @@ const mockData = [
     price: "$100.00",
     icon: "https://images.ctfassets.net/wr0no19kwov9/2Yfw57sF3oz0UuItz3niKq/066d7923f857cdc91b340d9c17bba416/brand-kit-symbol-image-04.png?fm=webp&w=3840&q=70",
   },
-  
+
 ];
 const TokenDetails = () => {
   const { id } = useParams();
@@ -47,9 +47,8 @@ const TokenDetails = () => {
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
-                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${
-                    rotate ? "rotate-180" : ""
-                  }`}
+                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${rotate ? "rotate-180" : ""
+                    }`}
                 >
                   {icon}
                 </button>
@@ -80,14 +79,14 @@ const TokenDetails = () => {
               <tbody>
                 {mockData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-100">
-                   
-                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1">
-                        <img src={item.icon} className="w-[20px] h-[20px] " /> USDT
-                      </td>
-                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col ">
-                        {item.first_name} <br/>
-                        {item.price}
-                      </td>
+
+                    <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1">
+                      <img src={item.icon} className="w-[20px] h-[20px] " /> USDT
+                    </td>
+                    <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col ">
+                      {item.first_name} <br />
+                      {item.price}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -97,11 +96,17 @@ const TokenDetails = () => {
       </main>
 
       <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
-              <LuWalletMinimal size={25} color="#B0AFB1" />
-              <RiTokenSwapLine size={25} color="#B0AFB1" />
-              <LuCreditCard size={25} color="#B0AFB1" />
-              <LuSettings2 size={25} color="#B0AFB1" />
-            </footer>
+        <Link to="/dashboard">
+
+          <LuWalletMinimal size={25} color="#B0AFB1" />
+        </Link>
+        <Link to="/p2p" >
+
+          <RiTokenSwapLine size={25} color="#B0AFB1" />
+        </Link>
+        <LuCreditCard size={25} color="#B0AFB1" />
+        <LuSettings2 size={25} color="#B0AFB1" />
+      </footer>
     </section>
   );
 };

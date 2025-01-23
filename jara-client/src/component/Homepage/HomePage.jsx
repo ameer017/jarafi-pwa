@@ -77,9 +77,8 @@ const HomePage = () => {
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
-                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${
-                    rotate ? "rotate-180" : ""
-                  }`}
+                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${rotate ? "rotate-180" : ""
+                    }`}
                 >
                   {icon}
                 </button>
@@ -117,7 +116,7 @@ const HomePage = () => {
                         <img src={item.icon} className="w-[20px] h-[20px] " /> USDT
                       </td>
                       <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col ">
-                        {item.first_name} <br/>
+                        {item.first_name} <br />
                         {item.price}
                       </td>
                     </Link>
@@ -130,8 +129,14 @@ const HomePage = () => {
       </main>
 
       <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
-        <LuWalletMinimal size={25} color="#B0AFB1" />
-        <RiTokenSwapLine size={25} color="#B0AFB1" />
+        <Link to="/dashboard">
+
+          <LuWalletMinimal size={25} color="#B0AFB1" />
+        </Link>
+        <Link to="/p2p" >
+
+          <RiTokenSwapLine size={25} color="#B0AFB1" />
+        </Link>
         <LuCreditCard size={25} color="#B0AFB1" />
         <LuSettings2 size={25} color="#B0AFB1" />
       </footer>
