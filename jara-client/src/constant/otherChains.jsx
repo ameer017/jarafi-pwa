@@ -1,26 +1,80 @@
-import { defineChain } from 'viem'
+import { chainConfig } from "viem/celo";
 
-export const mainnet = defineChain({
-  id: 1,
-  name: 'Ethereum',
-  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+import { defineChain } from "viem";
+import { celo } from "viem/chains";
+
+export const cUsd = defineChain({
+  ...chainConfig,
+  id: celo.id,
+  name: "cUSD",
+  network: celo,
   rpcUrls: {
-    default: { http: ['https://cloudflare-eth.com'] },
+    default: { http: ["https://forno.celo.org"] },
+    public: { http: ["https://forno.celo.org"] },
   },
   blockExplorers: {
-    default: { name: 'Etherscan', url: 'https://etherscan.io' },
+    default: { name: "Celo Explorer", url: "https://explorer.celo.org" },
   },
-  contracts: {
-    ensRegistry: {
-      address: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
-    },
-    ensUniversalResolver: {
-      address: '0xE4Acdd618deED4e6d2f03b9bf62dc6118FC9A4da',
-      blockCreated: 16773775,
-    },
-    multicall3: {
-      address: '0xca11bde05977b3631167028862be2a173976ca11',
-      blockCreated: 14353601,
-    },
+  nativeCurrency: {
+    name: "Celo Dollar",
+    symbol: "cUSD",
+    decimals: 18,
   },
-})
+});
+
+export const USDC = defineChain({
+  ...chainConfig,
+  id: celo.id,
+  name: "USDC",
+  network: celo,
+  rpcUrls: {
+    default: { http: ["https://forno.celo.org"] },
+    public: { http: ["https://forno.celo.org"] },
+  },
+  blockExplorers: {
+    default: { name: "Celo Explorer", url: "https://explorer.celo.org" },
+  },
+  nativeCurrency: {
+    name: "USD Coin",
+    symbol: "USDC",
+    decimals: 6,
+  },
+});
+
+export const USDT = defineChain({
+  ...chainConfig,
+  id: celo.id,
+  name: "USDT",
+  network: celo,
+  rpcUrls: {
+    default: { http: ["https://forno.celo.org"] },
+    public: { http: ["https://forno.celo.org"] },
+  },
+  blockExplorers: {
+    default: { name: "Celo Explorer", url: "https://explorer.celo.org" },
+  },
+  nativeCurrency: {
+    name: "Tether USD",
+    symbol: "USDT",
+    decimals: 6,
+  },
+});
+
+export const CEUR = defineChain({
+  ...chainConfig,
+  id: celo.id,
+  name: "CEUR",
+  network: celo,
+  rpcUrls: {
+    default: { http: ["https://forno.celo.org"] },
+    public: { http: ["https://forno.celo.org"] },
+  },
+  blockExplorers: {
+    default: { name: "Celo Explorer", url: "https://explorer.celo.org" },
+  },
+  nativeCurrency: {
+    name: "Celo Euro",
+    symbol: "CEUR",
+    decimals: 18,
+  },
+});
