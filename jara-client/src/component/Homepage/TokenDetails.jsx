@@ -1,75 +1,45 @@
 import React from "react";
+import { LuArrowUpToLine, LuCreditCard, LuSettings2, LuWalletMinimal } from "react-icons/lu";
 import { RiTokenSwapLine } from "react-icons/ri";
-import {
-  LuCreditCard,
-  LuSettings2,
-  LuWalletMinimal,
-  LuArrowUpToLine,
-} from "react-icons/lu";
-import { BiScan } from "react-icons/bi";
-import { IoIosNotificationsOutline } from "react-icons/io";
-import { Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { GoPlus } from "react-icons/go";
 
 const mockData = [
   {
     id: 1,
     first_name: "100.00 USDT",
     price: "$100.00",
-    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
+    icon: "https://images.ctfassets.net/wr0no19kwov9/2Yfw57sF3oz0UuItz3niKq/066d7923f857cdc91b340d9c17bba416/brand-kit-symbol-image-04.png?fm=webp&w=3840&q=70",
   },
-  {
-    id: 2,
-    first_name: "100.00 USDT",
-    price: "$100.00",
-    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
-  },
-  {
-    id: 3,
-    first_name: "100.00 USDT",
-    price: "$100.00",
-    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
-  },
+  
 ];
-
-const HomePage = () => {
+const TokenDetails = () => {
+  const { id } = useParams();
   return (
     <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
-      <p className="text-[12px] text-[#8A868A] text-center px-6 py-2">
-        Finish setting up your account for maximum security!
-      </p>
-
-      <p className="text-[20px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
-        0xacmn.....234oop
-      </p>
-
       <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
         <section className="flex flex-col justify-between w-full max-w-[1024px] px-4 md:p-6">
-          <section className="flex justify-between items-center">
-            <p className="text-[#F2EDE4] text-[16px]">Wallet Balance</p>
-            <div className="flex gap-4">
-              <BiScan color="#B0AFB1" size={25} />
-              <IoIosNotificationsOutline color="#B0AFB1" size={25} />
-            </div>
-          </section>
-
           <section className="mt-4">
-            <p className="text-[#F2EDE4] text-[32px]">$0.00</p>
+            <p className="text-[#F2EDE4] text-[16px] text-center ">
+              Celo Dollar
+            </p>
+            <p className="text-[#F2EDE4] text-[30px] text-center ">$1.00</p>
           </section>
 
           <section className="flex justify-between mt-4">
             {[
               {
+                label: "Buy",
+                icon: <GoPlus size={25} color="#0F0140" />,
+              },
+              {
                 label: "Send",
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
               },
               {
-                label: "Receive",
+                label: "Withdraw",
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
                 rotate: true,
-              },
-              {
-                label: "Swap",
-                icon: <RiTokenSwapLine size={25} color="#0F0140" />,
               },
             ].map(({ label, icon, rotate }, index) => (
               <div
@@ -90,7 +60,8 @@ const HomePage = () => {
         </section>
       </header>
 
-      <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
+
+      <main className="h-[575px] md:h-[582px] bg-white overflow-hidden">
         <div className="h-full border">
           <table className="w-full text-center border-collapse">
             <thead>
@@ -109,10 +80,7 @@ const HomePage = () => {
               <tbody>
                 {mockData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-100">
-                    <Link
-                      to={`/token-details/${item.id}`}
-                      className=" border-b w-full flex justify-between"
-                    >
+                   
                       <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1">
                         <img src={item.icon} className="w-[20px] h-[20px] " /> USDT
                       </td>
@@ -120,7 +88,6 @@ const HomePage = () => {
                         {item.first_name} <br/>
                         {item.price}
                       </td>
-                    </Link>
                   </tr>
                 ))}
               </tbody>
@@ -130,13 +97,13 @@ const HomePage = () => {
       </main>
 
       <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
-        <LuWalletMinimal size={25} color="#B0AFB1" />
-        <RiTokenSwapLine size={25} color="#B0AFB1" />
-        <LuCreditCard size={25} color="#B0AFB1" />
-        <LuSettings2 size={25} color="#B0AFB1" />
-      </footer>
+              <LuWalletMinimal size={25} color="#B0AFB1" />
+              <RiTokenSwapLine size={25} color="#B0AFB1" />
+              <LuCreditCard size={25} color="#B0AFB1" />
+              <LuSettings2 size={25} color="#B0AFB1" />
+            </footer>
     </section>
   );
 };
 
-export default HomePage;
+export default TokenDetails;
