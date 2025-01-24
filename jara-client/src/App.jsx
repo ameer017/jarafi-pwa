@@ -35,6 +35,8 @@ function App() {
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/congrats" element={<Congratulation />} />
         {/* <Route path="/sell" element={<Sell />} /> */}
+        <Route path="/recieve" element={<Recieve/>} />
+
       </Routes>
     </>
   );
