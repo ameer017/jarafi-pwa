@@ -1,7 +1,5 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import Buy from "./component/P2P/Buy";
-import Sell from "./component/P2P/Sell";
 import MainPage from "./component/P2P/MainPage";
 import MainScreen from "./pages/onboarding/MainScreen";
 import TWE from "./pages/onboarding/TWE";
@@ -15,12 +13,12 @@ import WalletShowcase from "./component/Registration/SecureWallet/WalletShowcase
 import Congratulation from "./component/Registration/SecureWallet/Congratulation";
 import Home from "./pages/Home";
 import Activities from "./component/Homepage/Activities";
+import ReceiveAssets from "./component/Transactions/Receive";
 
 function App() {
   return (
     <>
       <Routes>
-        {/* <Route path="/buy" element={<Buy />} /> */}
         <Route path="/" element={<Home />} />
         <Route path="/p2p" element={<MainPage />} />
         <Route path="/main-screen" element={<MainScreen />} />
@@ -34,13 +32,10 @@ function App() {
         <Route path="/create-wallet" element={<CreateWallet />} />
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/congrats" element={<Congratulation />} />
-        {/* <Route path="/sell" element={<Sell />} /> */}
-        <Route path="/recieve" element={<Recieve/>} />
-
+        <Route path="/recieve" element={<ReceiveAssets />} />
       </Routes>
     </>
   );
 }
 
 export default App;
-

@@ -19,7 +19,7 @@ const connector = capsuleConnector({
 });
 
 export const config = createConfig({
-  chains: [celo],
+  chains: [celo, cUsd, USDC, USDT, CEUR],
   connectors: [connector],
   transports: {
     [celo.id]: http(),
