@@ -19,7 +19,7 @@ const Sell = () => {
           <div className="space-y-1 mb-8">
             <div className="flex items-center gap-1 justify-center">
               <span className="text-gray-500">Price</span>
-              <span className="text-[#1FE600]">₦1,670 NGN</span>
+              <span className="text-[#FF0B02]">₦1,670 NGN</span>
             </div>
             <div className="text-gray-500 text-center text-sm">Payment Method: Bank Transfer</div>
             <div className="text-gray-500 text-center text-sm">Payment Duration: 30mins</div>
