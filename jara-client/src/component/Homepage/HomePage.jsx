@@ -8,7 +8,9 @@ import {
 } from "react-icons/lu";
 import { BiScan } from "react-icons/bi";
 import { IoIosNotificationsOutline } from "react-icons/io";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { config } from "../../constant/config";
+import { useAccount, useBalance, useConnect, useDisconnect } from "wagmi";
 
 const mockData = [
   {
@@ -32,6 +34,18 @@ const mockData = [
 ];
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { address, isConnected } = useAccount();
+  // console.log(address);
+
+  const result = useBalance({
+    address: address,
+    config,
+  });
+  const { wallet } = location.state || {};
+  console.log(result);
+
   return (
     <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
       <p className="text-[12px] text-[#8A868A] text-center px-6 py-2">
@@ -39,7 +53,7 @@ const HomePage = () => {
       </p>
 
       <p className="text-[20px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
-        0xacmn.....234oop
+        {wallet ? `${wallet.slice(0, 10)}...${wallet.slice(-10)}` : "N/A"}
       </p>
 
       <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
@@ -61,24 +75,29 @@ const HomePage = () => {
               {
                 label: "Send",
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
+                routes: "/send-assets",
               },
               {
                 label: "Receive",
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
                 rotate: true,
+                routes: "/recieve",
               },
               {
                 label: "Swap",
                 icon: <RiTokenSwapLine size={25} color="#0F0140" />,
+                routes: "/swap",
               },
-            ].map(({ label, icon, rotate }, index) => (
+            ].map(({ label, icon, rotate, routes }, index) => (
               <div
                 key={index}
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
-                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${rotate ? "rotate-180" : ""
-                    }`}
+                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${
+                    rotate ? "rotate-180" : ""
+                  }`}
+                  onClick={() => navigate(routes)}
                 >
                   {icon}
                 </button>
@@ -113,7 +132,8 @@ const HomePage = () => {
                       className=" border-b w-full flex justify-between"
                     >
                       <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1">
-                        <img src={item.icon} className="w-[20px] h-[20px] " /> USDT
+                        <img src={item.icon} className="w-[20px] h-[20px] " />{" "}
+                        USDT
                       </td>
                       <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col ">
                         {item.first_name} <br />
@@ -130,11 +150,9 @@ const HomePage = () => {
 
       <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
         <Link to="/dashboard">
-
           <LuWalletMinimal size={25} color="#B0AFB1" />
         </Link>
-        <Link to="/p2p" >
-
+        <Link to="/p2p">
           <RiTokenSwapLine size={25} color="#B0AFB1" />
         </Link>
         <LuCreditCard size={25} color="#B0AFB1" />

@@ -1,16 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   IoCopyOutline,
   IoShieldCheckmarkOutline,
   IoWalletOutline,
 } from "react-icons/io5";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const WalletShowcase = () => {
-  const [walletAddress] = useState("0xh85j2...4n9d");
+  // const [walletAddress] = useState("0xh85j2...4n9d");
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const [walletAddress, setWalletAddress] = useState("");
+  const [recoverySecret, setRecoverySecret] = useState("");
 
+  useEffect(() => {
+    const { wallet, recoverySecret: recoverySecret } = location.state || {};
+    console.log(wallet);
+    if (wallet) {
+      setWalletAddress(wallet);
+    }
+    if (recoverySecret) {
+      setRecoverySecret(recoverySecret);
+    }
+  }, [location.state]);
   const handleCopy = () => {
     navigator.clipboard.writeText(walletAddress);
     setCopied(true);
@@ -18,7 +31,12 @@ const WalletShowcase = () => {
   };
 
   const handleContinue = () => {
-    navigate("/congrats");
+    navigate("/congrats", {
+      state: {
+        wallet: walletAddress,
+        recoverySecret,
+      },
+    });
   };
 
   return (
@@ -39,7 +57,11 @@ const WalletShowcase = () => {
             <div className="h-5 w-5 bg-gray-400 rounded-full" />
             <div className="text-center flex-1 mx-2">
               <p className="text-gray-600 text-xs mb-1">Your wallet address</p>
-              <p className="font-mono text-sm">{walletAddress}</p>
+              <p className="font-mono text-sm">
+                {walletAddress
+                  ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-6)}`
+                  : ""}
+              </p>
             </div>
             <button
               onClick={handleCopy}
