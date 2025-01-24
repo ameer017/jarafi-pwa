@@ -1,19 +1,21 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import MainPage from "./component/P2P/MainPage";
-import MainScreen from "./pages/onboarding/MainScreen";
-import TWE from "./pages/onboarding/TWE";
-import SignUpEndpoint from "./pages/onboarding/SignUpEndpoint";
-import HomePage from "./component/Homepage/HomePage";
-import TokenDetails from "./component/Homepage/TokenDetails";
-import Register from "./component/Registration/Register";
-import ConfirmEmail from "./component/Registration/ConfirmEmail";
-import CreateWallet from "./component/Registration/SecureWallet/CreateWallet";
-import WalletShowcase from "./component/Registration/SecureWallet/WalletShowcase";
-import Congratulation from "./component/Registration/SecureWallet/Congratulation";
-import Home from "./pages/Home";
-import Activities from "./component/Homepage/Activities";
-import ReceiveAssets from "./component/Transactions/Receive";
+import {
+  Activities,
+  ConfirmEmail,
+  Congratulation,
+  CreateWallet,
+  Home,
+  HomePage,
+  MainPage,
+  MainScreen,
+  ReceiveAssets,
+  Register,
+  SignUpEndpoint,
+  TokenDetails,
+  TWE,
+  WalletShowcase,
+} from "./index";
 
 function App() {
   return (
