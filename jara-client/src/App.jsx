@@ -7,6 +7,7 @@ import {
   CreateWallet,
   Home,
   HomePage,
+  Login,
   MainPage,
   MainScreen,
   ReceiveAssets,
@@ -35,6 +36,7 @@ function App() {
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/congrats" element={<Congratulation />} />
         <Route path="/recieve" element={<ReceiveAssets />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </>
   );

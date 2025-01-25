@@ -120,7 +120,7 @@ const SignUpEndpoint = () => {
               </button>
               <button
                 className="bg-[#FCFEE8] py-3 px-8 text-[#4F4E50] text-[16px] border-[1px] border-[#F2E205] rounded-lg text-lg font-medium shadow-lg w-[280px] md:w-[350px] hover:bg-[#0F0140] hover:text-[#fcf338] transition-transform transform scale-90 hover:scale-100"
-                onClick={() => navigate("/sign-up-endpoint")}
+                onClick={() => navigate("/login")}
               >
                 Already have one? Log in
               </button>
