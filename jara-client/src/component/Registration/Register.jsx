@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from "react-router-dom";
+import capsuleClient from "../../constant/capsuleClient";
+import { CapsuleModal } from "@usecapsule/react-sdk";
 
 const Register = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (localError) {
@@ -18,10 +21,45 @@ const Register = () => {
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
-    navigate("/confirm-email")
+    setIsLoading(true);
+    setLocalError(null);
+
+    try {
+      await capsuleClient.logout();
+      const isExistingUser = await capsuleClient.checkIfUserExists(email);
+
+      if (isExistingUser) {
+        const webAuthUrlForLogin = await capsuleClient.initiateUserLogin(
+          email,
+          false,
+          "email"
+        );
+
+        const popupWindow = window.open(
+          webAuthUrlForLogin,
+          "loginPopup",
+          "popup=true,width=500,height=700"
+        );
+
+        await capsuleClient.waitForLoginAndSetup(popupWindow);
+
+        navigate("/dashboard");
+      } else {
+        await capsuleClient.createUser(email);
+
+        navigate("/confirm-email", { state: { email } });
+      }
+    } catch (error) {
+      console.error("Error during email login:", error);
+      setLocalError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = async () => {};
+  const handleGoogleLogin = async () => {
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F4F1] flex items-center justify-center p-4">
@@ -46,7 +84,7 @@ const Register = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="johndoe@gmail.com"
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F7E353]"
-              
+              required
             />
           </div>
 
@@ -74,7 +112,7 @@ const Register = () => {
           </div>
         </div>
 
-        <button
+        {/* <button
           onClick={handleGoogleLogin}
           disabled={isLoading}
           className={`w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg bg-[#FFFEF7] text-sm font-medium text-gray-700 hover:bg-[#FFFEF0] focus:outline-none ${
@@ -86,7 +124,56 @@ const Register = () => {
           ) : (
             <>Continue with Google</>
           )}
-        </button>
+        </button> */}
+
+        <div className="flex flex-col items-center justify-center h-full">
+          <button
+            onClick={handleGoogleLogin}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg bg-[#FFFEF7] text-sm font-medium text-gray-700 hover:bg-[#FFFEF0] focus:outline-none ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>Continue with Google</>
+            )}
+          </button>
+
+          <CapsuleModal
+            capsule={capsuleClient}
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            logo={"/jarafi-yellow.png"}
+            oAuthMethods={["GOOGLE"]}
+            disableEmailLogin
+            disablePhoneLogin
+            authLayout={["AUTH:CONDENSED"]}
+            externalWallets={[]}
+            recoverySecretStepEnabled
+            onRampTestMode={true}
+            theme={{
+              // ... basic theme properties
+              customPalette: {
+                text: {
+                  primary: "#333333",
+                  secondary: "#666666",
+                  subtle: "#999999",
+                  inverted: "#FFFFFF",
+                  error: "#FF3B30",
+                },
+                modal: {
+                  surface: {
+                    main: "#000000",
+                    footer: "#F2F2F7",
+                  },
+                  border: "#E5E5EA",
+                },
+                // ... other customPalette properties
+              },
+            }}
+          />
+        </div>
 
         {localError && (
           <div className="text-red-500 text-sm text-center mt-2">
