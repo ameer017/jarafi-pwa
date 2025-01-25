@@ -8,6 +8,7 @@ export const cUsd = defineChain({
   id: celo.id,
   name: "cUSD",
   network: celo,
+  icon:"https://s2.coinmarketcap.com/static/img/coins/200x200/7236.png",
   rpcUrls: {
     default: { http: ["https://forno.celo.org"] },
     public: { http: ["https://forno.celo.org"] },
@@ -27,6 +28,7 @@ export const USDC = defineChain({
   id: celo.id,
   name: "USDC",
   network: celo,
+  icon:"https://cryptologos.cc/logos/usd-coin-usdc-logo.png?v=040",
   rpcUrls: {
     default: { http: ["https://forno.celo.org"] },
     public: { http: ["https://forno.celo.org"] },
@@ -46,6 +48,7 @@ export const USDT = defineChain({
   id: celo.id,
   name: "USDT",
   network: celo,
+  icon:"https://w7.pngwing.com/pngs/840/253/png-transparent-usdt-cryptocurrencies-icon.png",
   rpcUrls: {
     default: { http: ["https://forno.celo.org"] },
     public: { http: ["https://forno.celo.org"] },
@@ -65,6 +68,7 @@ export const CEUR = defineChain({
   id: celo.id,
   name: "CEUR",
   network: celo,
+  icon:"https://cryptologos.cc/logos/celo-celo-logo.png?v=040",
   rpcUrls: {
     default: { http: ["https://forno.celo.org"] },
     public: { http: ["https://forno.celo.org"] },

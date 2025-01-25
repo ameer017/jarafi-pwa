@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { RiTokenSwapLine } from "react-icons/ri";
 import {
   LuCreditCard,
@@ -9,42 +9,56 @@ import {
 import { BiScan } from "react-icons/bi";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { config } from "../../constant/config";
-import { useAccount, useBalance, useConnect, useDisconnect } from "wagmi";
-
-const mockData = [
-  {
-    id: 1,
-    first_name: "100.00 USDT",
-    price: "$100.00",
-    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
-  },
-  {
-    id: 2,
-    first_name: "100.00 USDT",
-    price: "$100.00",
-    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
-  },
-  {
-    id: 3,
-    first_name: "100.00 USDT",
-    price: "$100.00",
-    icon: "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
-  },
-];
+import { useAccount, useBalance } from "wagmi";
+import { CEUR, cUsd, USDC, USDT } from "../../constant/otherChains";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { address, isConnected } = useAccount();
   // console.log(address);
-
-  const result = useBalance({
-    address: address,
-    config,
+  const {
+    data: balanceData,
+    isLoading,
+    isError,
+  } = useBalance({
+    addressOrName: address,
   });
-  const { wallet } = location.state || {};
-  console.log(result);
+
+  const balance = balanceData ? balanceData.formatted : "0.00";
+  // console.log(balance)
+
+  const [mockData, setMockData] = useState([]);
+
+  // Token addresses
+  const tokens = [cUsd, USDC, USDT, CEUR];
+
+  useEffect(() => {
+    const fetchTokenBalances = async () => {
+      const fetchedData = [];
+
+      for (let token of tokens) {
+        if (isLoading) continue;
+        if (isError) continue;
+
+        fetchedData.push({
+          id: token.id,
+          token_name: token.name,
+          symbol: token.nativeCurrency.symbol,
+          network: token.network.name,
+          balance: `${(balanceData?.formatted || 0) * token.price || 0}`,
+          icon:
+            token.icon ||
+            "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
+        });
+      }
+
+      setMockData(fetchedData);
+      console.log(fetchedData);
+    };
+
+    if (address) fetchTokenBalances();
+  }, [address]);
 
   return (
     <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
@@ -53,7 +67,7 @@ const HomePage = () => {
       </p>
 
       <p className="text-[20px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
-        {wallet ? `${wallet.slice(0, 10)}...${wallet.slice(-10)}` : "N/A"}
+        {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "N/A"}
       </p>
 
       <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
@@ -67,7 +81,9 @@ const HomePage = () => {
           </section>
 
           <section className="mt-4">
-            <p className="text-[#F2EDE4] text-[32px]">$0.00</p>
+            <p className="text-[#F2EDE4] text-[32px]">
+             $ {isLoading ? "Loading..." : balance}
+            </p>
           </section>
 
           <section className="flex justify-between mt-4">
@@ -133,11 +149,11 @@ const HomePage = () => {
                     >
                       <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1">
                         <img src={item.icon} className="w-[20px] h-[20px] " />{" "}
-                        USDT
+                        {item.token_name}
                       </td>
                       <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col ">
-                        {item.first_name} <br />
-                        {item.price}
+                        {item.balance} USDT <br/>
+                        {balance} {item.token_name}
                       </td>
                     </Link>
                   </tr>
