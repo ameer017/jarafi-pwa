@@ -1,9 +1,10 @@
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Share } from "lucide-react";
 import { toast } from "react-toastify";
+import { useAccount } from "wagmi";
 
 const ReceiveAssets = () => {
-  const address = "0xadfib834qefbbwufs5jdkff9w834suwu93";
+  const {address} = useAccount();
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(address);
@@ -15,7 +16,7 @@ const ReceiveAssets = () => {
       try {
         await navigator.share({
           title: "Wallet Address",
-          text: `My Celo wallet address: ${address}`,
+          text: ` ${address}`,
         });
       } catch (error) {
         if (error.name !== "AbortError") {
@@ -33,7 +34,7 @@ const ReceiveAssets = () => {
     <div className="min-h-screen bg-[#0F0140] flex flex-col items-center justify-center font-montserrat text-[#F6F5F6]">
       <h1 className="text-2xl font-bold mb-[40px] ">Receive Assets</h1>
 
-      <div className="bg-white rounded-[20px] w-[90%] max-w-[616px] h-[616px] p-[40px] flex flex-col items-center shadow-md space-y-6">
+      <div className="bg-white rounded-[20px] w-[90%] max-w-[600px] h-[516px] p-[40px] flex flex-col items-center shadow-md space-y-6">
         {/* QR Code Section */}
         <div className="flex items-center justify-center w-[190px] h-[190px] mt-[40px] ">
           <QRCodeSVG

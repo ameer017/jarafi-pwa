@@ -8,56 +8,68 @@ import {
 } from "react-icons/lu";
 import { BiScan } from "react-icons/bi";
 import { IoIosNotificationsOutline } from "react-icons/io";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAccount, useBalance } from "wagmi";
-import { CEUR, cUsd, USDC, USDT } from "../../constant/otherChains";
+import { Link, useNavigate } from "react-router-dom";
+import { useAccount } from "wagmi";
+import { cEUR, cUsd, cREAL, Celo } from "../../constant/otherChains";
+import { Contract, ethers, JsonRpcProvider } from "ethers";
 
 const HomePage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { address, isConnected } = useAccount();
-  // console.log(address);
-  const {
-    data: balanceData,
-    isLoading,
-    isError,
-  } = useBalance({
-    addressOrName: address,
-  });
+  const { address } = useAccount();
+  const [totalBalance, setTotalBalance] = useState(0);
 
-  const balance = balanceData ? balanceData.formatted : "0.00";
-  // console.log(balance)
 
   const [mockData, setMockData] = useState([]);
+  const tokens = [cEUR, cUsd, cREAL, Celo];
 
-  // Token addresses
-  const tokens = [cUsd, USDC, USDT, CEUR];
+  const fetchTokenBalances = async (address, tokens) => {
+    if (!address) {
+      console.error("Address is not provided!");
+      return;
+    }
 
-  useEffect(() => {
-    const fetchTokenBalances = async () => {
-      const fetchedData = [];
+    const fetchedData = [];
+    const provider = new JsonRpcProvider("https://forno.celo.org");
+    let totalBalance = 0;
 
-      for (let token of tokens) {
-        if (isLoading) continue;
-        if (isError) continue;
+    
+    for (let token of tokens) {
+      try {
+        const contract = new Contract(
+          token.address,
+          ["function balanceOf(address) view returns (uint256)"],
+          provider
+        );
+        
+        const tokenBalance = await contract.balanceOf(address);
+        const formattedBalance = ethers.formatUnits(tokenBalance, token.decimals);
+    
+          // Add the token's balance to the total balance
+          totalBalance += parseFloat(formattedBalance);
 
         fetchedData.push({
           id: token.id,
           token_name: token.name,
-          symbol: token.nativeCurrency.symbol,
-          network: token.network.name,
-          balance: `${(balanceData?.formatted || 0) * token.price || 0}`,
+          symbol: token.nativeCurrency?.symbol || "N/A",
+          network: token.network?.name || "Unknown Network",
+          balance: ethers.formatUnits(tokenBalance, token.decimals),
           icon:
             token.icon ||
             "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
         });
+      } catch (error) {
+        console.error(`Error fetching balance for ${token.name}:`, error);
       }
+    }
 
-      setMockData(fetchedData);
-      console.log(fetchedData);
-    };
+    setMockData(fetchedData);
+    setTotalBalance(totalBalance)
+  };
 
-    if (address) fetchTokenBalances();
+  useEffect(() => {
+    if (address) {
+      fetchTokenBalances(address, tokens);
+    }
   }, [address]);
 
   return (
@@ -82,7 +94,7 @@ const HomePage = () => {
 
           <section className="mt-4">
             <p className="text-[#F2EDE4] text-[32px]">
-             $ {isLoading ? "Loading..." : balance}
+              $ { totalBalance}
             </p>
           </section>
 
@@ -138,22 +150,23 @@ const HomePage = () => {
               </tr>
             </thead>
           </table>
+
           <div className="overflow-y-auto h-full">
-            <table className="w-full text-center border-collapse">
+            <table className="w-full text-center border-collapse table-fixed">
               <tbody>
                 {mockData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-100">
                     <Link
                       to={`/token-details/${item.id}`}
-                      className=" border-b w-full flex justify-between"
+                      className="border-b w-full flex justify-between"
                     >
-                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1">
-                        <img src={item.icon} className="w-[20px] h-[20px] " />{" "}
+                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                        <img src={item.icon} className="w-[20px] h-[20px]" />{" "}
                         {item.token_name}
                       </td>
-                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col ">
-                        {item.balance} USDT <br/>
-                        {balance} {item.token_name}
+                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                        {/* ${item.balance_in_usdt} USDT <br /> */}
+                        {item.balance} {item.token_name}
                       </td>
                     </Link>
                   </tr>
