@@ -83,7 +83,7 @@ const Register = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="johndoe@gmail.com"
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F7E353]"
+              className="mt-1 block w-full p-4 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F7E353]"
               required
             />
           </div>
@@ -112,31 +112,21 @@ const Register = () => {
           </div>
         </div>
 
-        {/* <button
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg bg-[#FFFEF7] text-sm font-medium text-gray-700 hover:bg-[#FFFEF0] focus:outline-none ${
-            isLoading ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          {isLoading ? (
-            <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <>Continue with Google</>
-          )}
-        </button> */}
-
         <div className="flex flex-col items-center justify-center h-full">
           <button
             onClick={handleGoogleLogin}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg bg-[#FFFEF7] text-sm font-medium text-gray-700 hover:bg-[#FFFEF0] focus:outline-none ${
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 border border-[#F2E205] rounded-lg bg-[#FFFEF7] text-sm font-medium text-gray-700 hover:bg-[#FFFEF0] focus:outline-none ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
             ) : (
-              <>Continue with Google</>
+              <div className="flex items-center justify-center gap-2">Continue with Google 
+              <img 
+                src="https://image.similarpng.com/file/similarpng/very-thumbnail/2020/06/Logo-google-icon-PNG.png" className="w-[24px] h-[24px] border-2 border-white border-t-transparent rounded-full "
+              />
+              </div>
             )}
           </button>
 
@@ -144,34 +134,21 @@ const Register = () => {
             capsule={capsuleClient}
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            logo={"/jarafi-yellow.png"}
+            logo={"https://www.jarafi.xyz/assets/full-logo-blue-b7QovqMI.svg"}
+            theme={{
+              foregroundColor: "#ffffff",
+              backgroundColor: "#ffffff",
+              font: "Merriweather",
+              borderRadius: "md",
+              mode: "light",
+            }}
             oAuthMethods={["GOOGLE"]}
             disableEmailLogin
             disablePhoneLogin
-            authLayout={["AUTH:CONDENSED"]}
+            authLayout={["AUTH:FULL"]}
             externalWallets={[]}
             recoverySecretStepEnabled
             onRampTestMode={true}
-            theme={{
-              // ... basic theme properties
-              customPalette: {
-                text: {
-                  primary: "#333333",
-                  secondary: "#666666",
-                  subtle: "#999999",
-                  inverted: "#FFFFFF",
-                  error: "#FF3B30",
-                },
-                modal: {
-                  surface: {
-                    main: "#000000",
-                    footer: "#F2F2F7",
-                  },
-                  border: "#E5E5EA",
-                },
-                // ... other customPalette properties
-              },
-            }}
           />
         </div>
 
