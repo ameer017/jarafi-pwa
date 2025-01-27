@@ -10,7 +10,7 @@ import { BiScan } from "react-icons/bi";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { cEUR, cUsd, cREAL, Celo } from "../../constant/otherChains";
+import { cEUR, cUsd, cREAL, celoToken } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 
 const HomePage = () => {
@@ -18,9 +18,20 @@ const HomePage = () => {
   const { address } = useAccount();
   const [totalBalance, setTotalBalance] = useState(0);
 
+  const handleScan = (data) => {
+    if (data) {
+      setCrypto(data);
+      setShowScanner(false);
+      console.log("Wallet address:", data);
+    }
+  };
+
+  const handleError = (err) => {
+    console.error(err);
+  };
 
   const [mockData, setMockData] = useState([]);
-  const tokens = [cEUR, cUsd, cREAL, Celo];
+  const tokens = [cEUR, cUsd, cREAL, celoToken];
 
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
@@ -32,7 +43,6 @@ const HomePage = () => {
     const provider = new JsonRpcProvider("https://forno.celo.org");
     let totalBalance = 0;
 
-    
     for (let token of tokens) {
       try {
         const contract = new Contract(
@@ -40,12 +50,15 @@ const HomePage = () => {
           ["function balanceOf(address) view returns (uint256)"],
           provider
         );
-        
+
         const tokenBalance = await contract.balanceOf(address);
-        const formattedBalance = ethers.formatUnits(tokenBalance, token.decimals);
-    
-          // Add the token's balance to the total balance
-          totalBalance += parseFloat(formattedBalance);
+        const formattedBalance = ethers.formatUnits(
+          tokenBalance,
+          token.decimals
+        );
+
+        // Add the token's balance to the total balance
+        totalBalance += parseFloat(formattedBalance);
 
         fetchedData.push({
           id: token.id,
@@ -63,7 +76,7 @@ const HomePage = () => {
     }
 
     setMockData(fetchedData);
-    setTotalBalance(totalBalance)
+    setTotalBalance(totalBalance);
   };
 
   useEffect(() => {
@@ -93,9 +106,7 @@ const HomePage = () => {
           </section>
 
           <section className="mt-4">
-            <p className="text-[#F2EDE4] text-[32px]">
-              $ { totalBalance}
-            </p>
+            <p className="text-[#F2EDE4] text-[32px]">$ {totalBalance}</p>
           </section>
 
           <section className="flex justify-between mt-4">
@@ -156,19 +167,24 @@ const HomePage = () => {
               <tbody>
                 {mockData.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-100">
-                    <Link
-                      to={`/token-details/${item.id}`}
-                      className="border-b w-full flex justify-between"
-                    >
-                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
-                        <img src={item.icon} className="w-[20px] h-[20px]" />{" "}
-                        {item.token_name}
-                      </td>
-                      <td className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                        {/* ${item.balance_in_usdt} USDT <br /> */}
-                        {item.balance} {item.token_name}
-                      </td>
-                    </Link>
+                    <td colSpan={2} className="p-0">
+                      <Link
+                        to={`/token-details/${item.id}`}
+                        className="w-full flex justify-between"
+                      >
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                          <img
+                            src={item.icon}
+                            className="w-[20px] h-[20px]"
+                            alt="icon"
+                          />
+                          {item.token_name}
+                        </div>
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                          {item.balance} {item.token_name}
+                        </div>
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

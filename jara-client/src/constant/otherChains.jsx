@@ -1,5 +1,4 @@
-import { celo } from "viem/chains";
-
+import { celo, mainnet } from "viem/chains";
 export const cUsd = {
   ...celo,
   id: 1, // Make sure this ID aligns with your network
@@ -13,7 +12,7 @@ export const cUsd = {
 
 export const cEUR = {
   ...celo,
-  id: 4,
+  id: 2,
   name: "cEUR",
   decimals: 18,
   nativeCurrency: { symbol: "cEUR" },
@@ -24,7 +23,7 @@ export const cEUR = {
 
 export const cREAL = {
   ...celo,
-  id: 5,
+  id: 3,
   name: "cREAL",
   decimals: 18,
   nativeCurrency: { symbol: "cREAL" },
@@ -33,7 +32,7 @@ export const cREAL = {
   address: "0xe8537a3d056DA446677B9E9d6c5dB704EaAb4787",
 };
 
-export const Celo = {
+export const celoToken = {
   ...celo,
   id: 42220,
   name: "Celo",
@@ -42,5 +41,6 @@ export const Celo = {
     symbol: "CELO",
   },
   icon: "https://cryptologos.cc/logos/celo-celo-logo.png?v=040",
-  address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+  address: "0x471EcE3750Da237f93B8E339c536989b8978a438",
 };
+

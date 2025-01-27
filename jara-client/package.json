@@ -51,6 +51,5 @@
     "vite": "^5.4.12",
     "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-pwa": "^0.21.1"
-  },
-  "proxy": "https://pro-api.coinmarketcap.com/v1/"
+  }
 }
