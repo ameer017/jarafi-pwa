@@ -50,9 +50,7 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setIsModalOpen(true);
 
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 2000);
+    navigate("/dashboard");
   };
 
   const handleEmailLogin = async (e) => {
@@ -172,39 +170,36 @@ const Login = () => {
                   className="bg-[#FCFEE8] border-[1px] border-[#F2E205] rounded-lg p-[10px] text-[16px] font-[Montserrat] font-[600] text-[#4F4E50] "
                   onClick={handleGoogleLogin}
                 >
-                  Continue with Google
+                  <div className="flex items-center justify-center gap-2">
+                    Continue with Google
+                    <img
+                      src="https://image.similarpng.com/file/similarpng/very-thumbnail/2020/06/Logo-google-icon-PNG.png"
+                      className="w-[24px] h-[24px] border-2 border-white border-t-transparent rounded-full "
+                    />
+                  </div>
                 </button>
 
                 <CapsuleModal
                   capsule={capsuleClient}
                   isOpen={isModalOpen}
                   onClose={() => setIsModalOpen(false)}
-                  logo={"/jarafi-yellow.png"}
+                  logo={
+                    "https://www.jarafi.xyz/assets/full-logo-blue-b7QovqMI.svg"
+                  }
+                  theme={{
+                    foregroundColor: "#ffffff",
+                    backgroundColor: "#ffffff",
+                    font: "Merriweather",
+                    borderRadius: "md",
+                    mode: "light",
+                  }}
                   oAuthMethods={["GOOGLE"]}
                   disableEmailLogin
                   disablePhoneLogin
-                  authLayout={["AUTH:CONDENSED"]}
+                  authLayout={["AUTH:FULL"]}
                   externalWallets={[]}
                   recoverySecretStepEnabled
                   onRampTestMode={true}
-                  theme={{
-                    customPalette: {
-                      text: {
-                        primary: "#333333",
-                        secondary: "#666666",
-                        subtle: "#999999",
-                        inverted: "#FFFFFF",
-                        error: "#FF3B30",
-                      },
-                      modal: {
-                        surface: {
-                          main: "#000000",
-                          footer: "#F2F2F7",
-                        },
-                        border: "#E5E5EA",
-                      },
-                    },
-                  }}
                 />
               </div>
             </div>
