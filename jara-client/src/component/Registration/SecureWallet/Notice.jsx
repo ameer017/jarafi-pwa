@@ -5,9 +5,10 @@ const Notice = ({ onClose }) => {
   const navigate = useNavigate();
 
   const handleContinue = () => {
-    onClose();
-    navigate("/wallet-showcase");
-  };
+      onClose();
+      navigate("/wallet-showcase", { state: { wallet } });
+    };
+
 
   return (
     <section className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 min-h-screen p-4">

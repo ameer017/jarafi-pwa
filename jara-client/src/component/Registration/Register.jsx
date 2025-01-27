@@ -1,27 +1,86 @@
-import { useState, useEffect } from "react";
-import {useNavigate} from 'react-router-dom'
+import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+import { capsuleClient } from '../../client.js';
+
 
 const Register = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (localError) {
-      const timer = setTimeout(() => {
-        setLocalError(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [localError]);
+    const checkExistingLogin = async () => {
+      try {
+        const loggedIn = await capsuleClient.isFullyLoggedIn();
+        if (loggedIn) {
+          navigate('/create-wallet');
+        }
+      } catch (error) {
+        console.error("Login check failed:", error);
+      }
+    };
+
+    checkExistingLogin();
+  }, [navigate]);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
-    navigate("/confirm-email")
+    setIsLoading(true);
+    setLocalError(null);
+
+    try {
+      const isExistingUser = await capsuleClient.checkIfUserExists(email);
+
+      if (isExistingUser) {
+        // Existing user flow
+        const webAuthUrlForLogin = await capsuleClient.initiateUserLogin(email, false, "email");
+        const popupWindow = window.open(webAuthUrlForLogin, "loginPopup", "popup=true");
+        
+        const { needsWallet } = await capsuleClient.waitForLoginAndSetup(popupWindow);
+        
+        if (needsWallet) {
+          // Create wallet if needed
+          const [wallet, recoverySecret] = await capsuleClient.createWallet();
+          navigate('/create-wallet', { state: { wallet, recoverySecret, email } });
+        } else {
+          navigate('/create-wallet');
+        }
+      } else {
+        // New user flow: initiate email verification
+        await capsuleClient.createUser(email);
+        navigate('/confirm-email', { state: { email } });
+      }
+    } catch (error) {
+      setLocalError(error.message || "Authentication failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGoogleLogin = async () => {};
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setLocalError(null);
+
+    try {
+      const webAuthUrlForLogin = await capsuleClient.initiateUserLogin(null, true, "google");
+      const popupWindow = window.open(webAuthUrlForLogin, "loginPopup", "popup=true");
+      
+      const { needsWallet } = await capsuleClient.waitForLoginAndSetup(popupWindow);
+      
+      if (needsWallet) {
+        // Create wallet if needed
+        const [wallet, recoverySecret] = await capsuleClient.createWallet();
+        navigate('/create-wallet', { state: { wallet, recoverySecret } });
+      } else {
+        navigate('/create-wallet');
+      }
+    } catch (error) {
+      setLocalError(error.message || "Google login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#F8F4F1] flex items-center justify-center p-4">
@@ -46,7 +105,7 @@ const Register = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="johndoe@gmail.com"
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F7E353]"
-              
+              required
             />
           </div>
 
@@ -84,7 +143,7 @@ const Register = () => {
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
           ) : (
-            <>Continue with Google</>
+            "Continue with Google"
           )}
         </button>
 

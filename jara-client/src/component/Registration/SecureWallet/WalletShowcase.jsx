@@ -1,15 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   IoCopyOutline,
   IoShieldCheckmarkOutline,
-  IoWalletOutline,
+  IoWalletOutline
 } from "react-icons/io5";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { capsuleClient } from '../../../client.js';
 
 const WalletShowcase = () => {
-  const [walletAddress] = useState("0xh85j2...4n9d");
+  const [walletAddress, setWalletAddress] = useState("");
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const fetchWalletAddress = async () => {
+      try {
+        // Check if wallet was passed in navigation state
+        const stateWallet = location.state?.wallet;
+        
+        if (stateWallet) {
+          // If wallet is in state, use its address
+          setWalletAddress(stateWallet.address);
+        } else {
+          // Otherwise, fetch current user's wallet
+          const wallet = await capsuleClient.getCurrentWallet();
+          setWalletAddress(wallet.address);
+        }
+      } catch (error) {
+        console.error("Failed to fetch wallet address:", error);
+        navigate('/register');
+      }
+    };
+
+    fetchWalletAddress();
+  }, [location.state, navigate]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(walletAddress);
@@ -23,7 +48,7 @@ const WalletShowcase = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F4F1] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-8  space-y-6">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-8 space-y-6">
         <div className="max-w-md mx-auto flex flex-col items-center">
           <img
             src="/wallet.png"
@@ -32,19 +57,25 @@ const WalletShowcase = () => {
           />
 
           <h1 className="text-[24px] font-bold text-center mt-16 mb-6 text-[#0F0140]">
-            Here&apos;s your wallet!
+            Here's your wallet!
           </h1>
 
           <div className="flex justify-between items-center bg-[#E3D7C5] rounded-[10px] w-full px-4 py-2 mb-4">
             <div className="h-5 w-5 bg-gray-400 rounded-full" />
             <div className="text-center flex-1 mx-2">
               <p className="text-gray-600 text-xs mb-1">Your wallet address</p>
-              <p className="font-mono text-sm">{walletAddress}</p>
+              <p className="font-mono text-sm">
+                {walletAddress ? 
+                  `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}` 
+                  : 'Loading...'
+                }
+              </p>
             </div>
             <button
               onClick={handleCopy}
               className="flex items-center justify-center"
               aria-label="Copy wallet address"
+              disabled={!walletAddress}
             >
               <IoCopyOutline
                 size={24}
@@ -66,7 +97,7 @@ const WalletShowcase = () => {
               <div className="bg-yellow-50 h-9 w-9 flex justify-center items-center rounded-full border border-yellow-200">
                 <IoShieldCheckmarkOutline size={18} />
               </div>
-              <p className="text-[12px] text-[#6F6B6F] ">
+              <p className="text-[12px] text-[#6F6B6F]">
                 Address above acts like an account number for receiving funds
               </p>
             </div>
@@ -75,7 +106,7 @@ const WalletShowcase = () => {
               <div className="bg-yellow-50 h-9 w-9 flex justify-center items-center rounded-full border border-yellow-200">
                 <IoWalletOutline size={18} />
               </div>
-              <p className="text-[12px] text-[#6F6B6F] ">
+              <p className="text-[12px] text-[#6F6B6F]">
                 It's a non-custodial wallet, which means you have total control
                 over your funds.
               </p>
