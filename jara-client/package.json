@@ -11,6 +11,10 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.64.2",
+    "@ubeswap/default-token-list": "^4.1.71",
+    "@ubeswap/sdk": "^2.1.2",
+    "@uniswap/sdk-core": "^7.5.0",
+    "@uniswap/v4-sdk": "^1.18.0",
     "@usecapsule/react-sdk": "^4.17.0",
     "@usecapsule/wagmi-v2-integration": "^3.17.0",
     "axios": "^1.7.9",

@@ -13,6 +13,7 @@ import {
   ReceiveAssets,
   Register,
   SignUpEndpoint,
+  Swap,
   TokenDetails,
   TWE,
   WalletShowcase,
@@ -37,6 +38,7 @@ function App() {
         <Route path="/create-wallet" element={<CreateWallet />} />
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/congrats" element={<Congratulation />} />
+        <Route path="/swap" element={< Swap/>}/>
         <Route path="/recieve" element={<ReceiveAssets />} />
         <Route path="/login" element={<Login />} />
       </Routes>
