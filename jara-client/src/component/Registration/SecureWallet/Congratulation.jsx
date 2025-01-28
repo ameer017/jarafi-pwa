@@ -1,8 +1,23 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Congratulation = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const [walletAddress, setWalletAddress] = useState("");
+  const [recoverySecret, setRecoverySecret] = useState("");
+
+  useEffect(() => {
+    const { wallet, recoverySecret: recoverySecret } = location.state || {};
+    console.log(wallet);
+    if (wallet) {
+      setWalletAddress(wallet);
+    }
+    if (recoverySecret) {
+      setRecoverySecret(recoverySecret);
+    }
+  }, [location.state]);
   return (
     <div className="min-h-screen bg-[#F8F4F1] flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-lg rounded-2xl shadow-lg p-8 space-y-6 text-center">
@@ -22,7 +37,9 @@ const Congratulation = () => {
 
           <button
             className="w-full bg-[#F2E205] hover:bg-yellow-100 py-3 rounded-[10px] text-[#4F4E50] text-[16px] font-semibold transition"
-            onClick={() => navigate("/dashboard")}
+            onClick={() =>
+              navigate("/dashboard", { state: { wallet: walletAddress } })
+            }
           >
             Get Started
           </button>

@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { capsuleClient } from '../../client.js';
-
+import capsuleClient from "../../constant/capsuleClient";
 
 const ConfirmEmail = () => {
   const navigate = useNavigate();
@@ -70,15 +69,16 @@ const ConfirmEmail = () => {
       }
 
       // Create wallet after email verification
-      const [wallet, recoverySecret] = await capsuleClient.createWallet();
+      // const [wallet, recoverySecret] = await capsuleClient.createWallet();
 
       // Navigate to create wallet with wallet details
       navigate("/create-wallet", {
-        state: { wallet, recoverySecret, email }
+        // state: { wallet, recoverySecret, email },
+        state: { email },
       });
     } catch (error) {
       console.error("Verification failed:", error);
-      setLocalError('An unexpected error occurred. Please try again.');
+      setLocalError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -115,12 +115,14 @@ const ConfirmEmail = () => {
                     inputRefs.current[index - 1]?.focus();
                   }
                 }}
+                placeholder="-"
+                required
               />
             ))}
           </div>
 
-          <div className="mt-auto mb-8">
-            <div className="mb-6">
+          <div className="mt-auto ">
+            <div className="mb-6 ">
               <div className="flex items-center my-4">
                 <label className="flex items-center cursor-pointer">
                   <input
@@ -139,7 +141,7 @@ const ConfirmEmail = () => {
               <button
                 onClick={handleVerification}
                 disabled={!isChecked || isLoading}
-                className={`w-full bg-[#F2E205] hover:bg-[#F7E353] rounded-lg py-3 font-semibold text-[16px] ${
+                className={`w-full bg-[#F2E205] hover:bg-[#F7E353] rounded-lg py-3 font-semibold text-[16px] my-6 ${
                   !isChecked || isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >

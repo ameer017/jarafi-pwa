@@ -1,14 +1,42 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import capsuleClient from "../../../constant/capsuleClient";
+import { ethers } from "ethers";
 
-const Notice = ({ onClose }) => {
+const Notice = ({ onClose, email }) => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    setIsLoading(true);
+    try {
+      const authUrl = await capsuleClient.getSetUpBiometricsURL(false);
+      window.open(authUrl, "signUpPopup", "popup=true");
+
+      console.log("capsule.wallets:", capsuleClient.wallets);
+
+      const { walletIds, recoverySecret } =
+        await capsuleClient.waitForPasskeyAndCreateWallet();
+      console.log("walletIds:", walletIds);
+
+      const fetchWallet = await capsuleClient.findWallet(walletIds.EVM[0]);
+      console.log(recoverySecret);
+      console.log(fetchWallet.address);
+
+      navigate("/wallet-showcase", {
+        state: {
+          wallet: fetchWallet.address,
+          recoverySecret: recoverySecret,
+        },
+      });
+
       onClose();
-      navigate("/wallet-showcase", { state: { wallet } });
-    };
-
+    } catch (error) {
+      console.error("Wallet generation failed:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <section className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 min-h-screen p-4">
@@ -17,15 +45,22 @@ const Notice = ({ onClose }) => {
           <h1 className="text-[22px] font-bold text-[#F21B1B]">Notice!</h1>
 
           <p className="text-[16px] text-[#262526] ">
-            Your seed phrase will automatically be backed up to
-            john****@gmail.com. Check your Google Drive to preview.
+            Your seed phrase will automatically be backed up to &nbsp;
+            {email}. Check your Google Drive to preview.
           </p>
 
           <button
+            disabled={isLoading}
             onClick={handleContinue}
-            className="w-full bg-[#F2E205] hover:bg-yellow-200 py-3 rounded-[10px] text-gray-700 text-sm font-semibold"
+            className={`w-full flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-lg bg-[#F2E205] text-sm font-medium text-gray-700 hover:bg-yellow-200 focus:outline-none ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
-            Continue
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>Continue</>
+            )}
           </button>
         </div>
       </div>

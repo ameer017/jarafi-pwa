@@ -2,65 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { capsuleClient } from '../../../client.js';
 import Notice from "./Notice";
+import { useLocation } from "react-router-dom";
 
 const CreateWallet = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [wallet, setWallet] = useState(null);
-  const [recoverySecret, setRecoverySecret] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [toast, setToast] = useState(null);
+  const location = useLocation();
 
+  const [email, setEmail] = useState(location.state?.email || "");
 
-  useEffect(() => {
-    // Check if wallet was created during registration
-    const stateWallet = location.state?.wallet;
-    const stateRecoverySecret = location.state?.recoverySecret;
-    const stateEmail = location.state?.email;
-
-    if (stateWallet && stateRecoverySecret) {
-      setWallet(stateWallet);
-      setRecoverySecret(stateRecoverySecret);
-      
-      // Show success toast
-      setToast({ message: "Wallet ready to be created!", type: 'success' });
-      
-      // Automatically open modal
-      handleModalOpen();
-    } else if (!stateWallet) {
-      // Redirect if no wallet info is available
-      navigate('/register');
-    }
-  }, [location.state, navigate]);
-
-  const handleCreateWallet = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // If wallet wasn't pre-created during registration, create it now
-      if (!wallet) {
-        const [newWallet, newRecoverySecret] = await capsuleClient.createWallet();
-        setWallet(newWallet);
-        setRecoverySecret(newRecoverySecret);
-      }
-
-      handleModalOpen();
-    } catch (err) {
-      setError('Failed to create wallet. Please try again.');
-      console.error('Wallet creation error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRecoverWallet = () => {
-    // Placeholder for wallet recovery logic
-    navigate('/wallet-recovery');
-  };
-
+  // console.log(email);
   const handleModalOpen = () => {
     setIsOpen(true);
   };
@@ -123,13 +75,7 @@ const CreateWallet = () => {
         </div>
       </div>
 
-      {isOpen && (
-        <Notice 
-          onClose={handleModalClose} 
-          wallet={wallet} 
-          recoverySecret={recoverySecret} 
-        />
-      )}
+      {isOpen && <Notice onClose={handleModalClose} email={email} />}
     </div>
   );
 };

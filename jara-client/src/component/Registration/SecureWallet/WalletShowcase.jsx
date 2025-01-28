@@ -1,41 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   IoCopyOutline,
   IoShieldCheckmarkOutline,
   IoWalletOutline
 } from "react-icons/io5";
-import { useNavigate, useLocation } from "react-router-dom";
-import { capsuleClient } from '../../../client.js';
+import { useLocation, useNavigate } from "react-router-dom";
 
 const WalletShowcase = () => {
-  const [walletAddress, setWalletAddress] = useState("");
+  // const [walletAddress] = useState("0xh85j2...4n9d");
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [walletAddress, setWalletAddress] = useState("");
+  const [recoverySecret, setRecoverySecret] = useState("");
 
   useEffect(() => {
-    const fetchWalletAddress = async () => {
-      try {
-        // Check if wallet was passed in navigation state
-        const stateWallet = location.state?.wallet;
-        
-        if (stateWallet) {
-          // If wallet is in state, use its address
-          setWalletAddress(stateWallet.address);
-        } else {
-          // Otherwise, fetch current user's wallet
-          const wallet = await capsuleClient.getCurrentWallet();
-          setWalletAddress(wallet.address);
-        }
-      } catch (error) {
-        console.error("Failed to fetch wallet address:", error);
-        navigate('/register');
-      }
-    };
-
-    fetchWalletAddress();
-  }, [location.state, navigate]);
-
+    const { wallet, recoverySecret: recoverySecret } = location.state || {};
+    console.log(wallet);
+    if (wallet) {
+      setWalletAddress(wallet);
+    }
+    if (recoverySecret) {
+      setRecoverySecret(recoverySecret);
+    }
+  }, [location.state]);
   const handleCopy = () => {
     navigator.clipboard.writeText(walletAddress);
     setCopied(true);
@@ -43,7 +31,12 @@ const WalletShowcase = () => {
   };
 
   const handleContinue = () => {
-    navigate("/congrats");
+    navigate("/congrats", {
+      state: {
+        wallet: walletAddress,
+        recoverySecret,
+      },
+    });
   };
 
   return (
@@ -65,10 +58,9 @@ const WalletShowcase = () => {
             <div className="text-center flex-1 mx-2">
               <p className="text-gray-600 text-xs mb-1">Your wallet address</p>
               <p className="font-mono text-sm">
-                {walletAddress ? 
-                  `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}` 
-                  : 'Loading...'
-                }
+                {walletAddress
+                  ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-6)}`
+                  : ""}
               </p>
             </div>
             <button

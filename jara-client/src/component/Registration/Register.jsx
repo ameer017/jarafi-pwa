@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
-import { capsuleClient } from '../../client.js';
-
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import capsuleClient from "../../constant/capsuleClient";
+import { CapsuleModal } from "@usecapsule/react-sdk";
 
 const Register = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const checkExistingLogin = async () => {
@@ -30,56 +32,40 @@ const Register = () => {
     setLocalError(null);
 
     try {
+      await capsuleClient.logout();
       const isExistingUser = await capsuleClient.checkIfUserExists(email);
 
       if (isExistingUser) {
-        // Existing user flow
-        const webAuthUrlForLogin = await capsuleClient.initiateUserLogin(email, false, "email");
-        const popupWindow = window.open(webAuthUrlForLogin, "loginPopup", "popup=true");
-        
-        const { needsWallet } = await capsuleClient.waitForLoginAndSetup(popupWindow);
-        
-        if (needsWallet) {
-          // Create wallet if needed
-          const [wallet, recoverySecret] = await capsuleClient.createWallet();
-          navigate('/create-wallet', { state: { wallet, recoverySecret, email } });
-        } else {
-          navigate('/create-wallet');
-        }
+        const webAuthUrlForLogin = await capsuleClient.initiateUserLogin(
+          email,
+          false,
+          "email"
+        );
+
+        const popupWindow = window.open(
+          webAuthUrlForLogin,
+          "loginPopup",
+          "popup=true,width=500,height=700"
+        );
+
+        await capsuleClient.waitForLoginAndSetup(popupWindow);
+
+        navigate("/dashboard");
       } else {
-        // New user flow: initiate email verification
         await capsuleClient.createUser(email);
-        navigate('/confirm-email', { state: { email } });
+
+        navigate("/confirm-email", { state: { email } });
       }
     } catch (error) {
-      setLocalError(error.message || "Authentication failed");
+      console.error("Error during email login:", error);
+      setLocalError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    setLocalError(null);
-
-    try {
-      const webAuthUrlForLogin = await capsuleClient.initiateUserLogin(null, true, "google");
-      const popupWindow = window.open(webAuthUrlForLogin, "loginPopup", "popup=true");
-      
-      const { needsWallet } = await capsuleClient.waitForLoginAndSetup(popupWindow);
-      
-      if (needsWallet) {
-        // Create wallet if needed
-        const [wallet, recoverySecret] = await capsuleClient.createWallet();
-        navigate('/create-wallet', { state: { wallet, recoverySecret } });
-      } else {
-        navigate('/create-wallet');
-      }
-    } catch (error) {
-      setLocalError(error.message || "Google login failed");
-    } finally {
-      setIsLoading(false);
-    }
+    setIsModalOpen(true);
   };
 
   return (
@@ -104,7 +90,7 @@ const Register = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="johndoe@gmail.com"
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F7E353]"
+              className="mt-1 block w-full p-4 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#F7E353]"
               required
             />
           </div>
@@ -133,19 +119,45 @@ const Register = () => {
           </div>
         </div>
 
-        <button
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg bg-[#FFFEF7] text-sm font-medium text-gray-700 hover:bg-[#FFFEF0] focus:outline-none ${
-            isLoading ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-        >
-          {isLoading ? (
-            <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
-          ) : (
-            "Continue with Google"
-          )}
-        </button>
+        <div className="flex flex-col items-center justify-center h-full">
+          <button
+            onClick={handleGoogleLogin}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 border border-[#F2E205] rounded-lg bg-[#FFFEF7] text-sm font-medium text-gray-700 hover:bg-[#FFFEF0] focus:outline-none ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <div className="flex items-center justify-center gap-2">Continue with Google 
+              <img 
+                src="https://image.similarpng.com/file/similarpng/very-thumbnail/2020/06/Logo-google-icon-PNG.png" className="w-[24px] h-[24px] border-2 border-white border-t-transparent rounded-full "
+              />
+              </div>
+            )}
+          </button>
+
+          <CapsuleModal
+            capsule={capsuleClient}
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            logo={"https://www.jarafi.xyz/assets/full-logo-blue-b7QovqMI.svg"}
+            theme={{
+              foregroundColor: "#ffffff",
+              backgroundColor: "#ffffff",
+              font: "Merriweather",
+              borderRadius: "md",
+              mode: "light",
+            }}
+            oAuthMethods={["GOOGLE"]}
+            disableEmailLogin
+            disablePhoneLogin
+            authLayout={["AUTH:FULL"]}
+            externalWallets={[]}
+            recoverySecretStepEnabled
+            onRampTestMode={true}
+          />
+        </div>
 
         {localError && (
           <div className="text-red-500 text-sm text-center mt-2">
