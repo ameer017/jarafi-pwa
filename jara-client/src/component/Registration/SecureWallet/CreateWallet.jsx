@@ -1,9 +1,14 @@
 import React, { useState } from "react";
 import Notice from "./Notice";
+import { useLocation } from "react-router-dom";
 
 const CreateWallet = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
 
+  const [email, setEmail] = useState(location.state?.email || "");
+
+  // console.log(email);
   const handleModalOpen = () => {
     setIsOpen(true);
   };
@@ -48,7 +53,7 @@ const CreateWallet = () => {
         </div>
       </div>
 
-      {isOpen && <Notice onClose={handleModalClose} />}
+      {isOpen && <Notice onClose={handleModalClose} email={email} />}
     </div>
   );
 };

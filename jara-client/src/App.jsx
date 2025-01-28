@@ -1,34 +1,44 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
-import Home from "./pages/Home";
-import MainScreen from "./pages/onboarding/MainScreen";
-import TWE from "./pages/onboarding/TWE";
-import SignUpEndpoint from "./pages/onboarding/SignUpEndpoint";
-import HomePage from "./component/Homepage/HomePage";
-import TokenDetails from "./component/Homepage/TokenDetails";
-import Register from "./component/Registration/Register";
-import ConfirmEmail from "./component/Registration/ConfirmEmail";
-import CreateWallet from "./component/Registration/SecureWallet/CreateWallet";
-import WalletShowcase from "./component/Registration/SecureWallet/WalletShowcase";
-import Congratulation from "./component/Registration/SecureWallet/Congratulation";
-import Swap from "./component/Transactions/Swap";
+import {
+  Activities,
+  ConfirmEmail,
+  Congratulation,
+  CreateWallet,
+  Home,
+  HomePage,
+  Login,
+  MainPage,
+  MainScreen,
+  ReceiveAssets,
+  Register,
+  SignUpEndpoint,
+  Swap,
+  TokenDetails,
+  TWE,
+  WalletShowcase,
+} from "./index";
 
 function App() {
   return (
     <>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/p2p" element={<MainPage />} />
         <Route path="/main-screen" element={<MainScreen />} />
         <Route path="/trade-with-ease" element={<TWE />} />
         <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
         <Route path="/dashboard" element={<HomePage />} />
         <Route path="/token-details/:id" element={<TokenDetails />} />
+        <Route path="/token-details/:id/activities" element={<Activities />} />
         <Route path="/sign-up-user" element={<Register />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/create-wallet" element={<CreateWallet />} />
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/congrats" element={<Congratulation />} />
         <Route path="/swap" element={< Swap/>}/>
+        <Route path="/recieve" element={<ReceiveAssets />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </>
   );

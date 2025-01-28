@@ -1,26 +1,46 @@
-import { defineChain } from 'viem'
+import { celo } from "viem/chains";
 
-export const mainnet = defineChain({
-  id: 1,
-  name: 'Ethereum',
-  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
-  rpcUrls: {
-    default: { http: ['https://cloudflare-eth.com'] },
+export const cUsd = {
+  ...celo,
+  id: 1, // Make sure this ID aligns with your network
+  name: "cUSD",
+  decimals: 18,
+  nativeCurrency: { symbol: "cUSD" },
+  network: { name: "Celo" },
+  icon: "https://s2.coinmarketcap.com/static/img/coins/200x200/7236.png",
+  address: "0x765de816845861e75a25fca122bb6898b8b1282a",
+};
+
+export const cEUR = {
+  ...celo,
+  id: 4,
+  name: "cEUR",
+  decimals: 18,
+  nativeCurrency: { symbol: "cEUR" },
+  network: { name: "Celo" },
+  icon: "https://cryptologos.cc/logos/celo-celo-logo.png?v=040",
+  address: "0xd8763cba276a3738e6de85b4b3bf5fded6d6ca73",
+};
+
+export const cREAL = {
+  ...celo,
+  id: 5,
+  name: "cREAL",
+  decimals: 18,
+  nativeCurrency: { symbol: "cREAL" },
+  network: { name: "Celo" },
+  icon: "https://cryptologos.cc/logos/celo-celo-logo.png?v=040",
+  address: "0xe8537a3d056DA446677B9E9d6c5dB704EaAb4787",
+};
+
+export const Celo = {
+  ...celo,
+  id: 42220,
+  name: "Celo",
+  decimals: 18,
+  nativeCurrency: {
+    symbol: "CELO",
   },
-  blockExplorers: {
-    default: { name: 'Etherscan', url: 'https://etherscan.io' },
-  },
-  contracts: {
-    ensRegistry: {
-      address: '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e',
-    },
-    ensUniversalResolver: {
-      address: '0xE4Acdd618deED4e6d2f03b9bf62dc6118FC9A4da',
-      blockCreated: 16773775,
-    },
-    multicall3: {
-      address: '0xca11bde05977b3631167028862be2a173976ca11',
-      blockCreated: 14353601,
-    },
-  },
-})
+  icon: "https://cryptologos.cc/logos/celo-celo-logo.png?v=040",
+  address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+};
