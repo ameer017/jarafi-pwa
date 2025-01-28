@@ -4,20 +4,26 @@ import capsuleClient from "../../constant/capsuleClient";
 import { CapsuleModal } from "@usecapsule/react-sdk";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
-  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (localError) {
-      const timer = setTimeout(() => {
-        setLocalError(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [localError]);
+    const checkExistingLogin = async () => {
+      try {
+        const loggedIn = await capsuleClient.isFullyLoggedIn();
+        if (loggedIn) {
+          navigate('/create-wallet');
+        }
+      } catch (error) {
+        console.error("Login check failed:", error);
+      }
+    };
+
+    checkExistingLogin();
+  }, [navigate]);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();

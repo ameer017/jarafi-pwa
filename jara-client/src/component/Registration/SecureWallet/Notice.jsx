@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import capsuleClient from "../../../constant/capsuleClient";
-import { ethers } from "ethers";
 
 const Notice = ({ onClose, email }) => {
   const navigate = useNavigate();

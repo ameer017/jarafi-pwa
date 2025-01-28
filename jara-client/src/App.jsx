@@ -17,6 +17,7 @@ import {
   TokenDetails,
   TWE,
   WalletShowcase,
+  Send
 } from "./index";
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/create-wallet" element={<CreateWallet />} />
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
+        <Route path="/send" element={<Send />} />
         <Route path="/congrats" element={<Congratulation />} />
         <Route path="/swap" element={< Swap/>}/>
         <Route path="/recieve" element={<ReceiveAssets />} />
