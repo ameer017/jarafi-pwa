@@ -8,7 +8,6 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
-  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {

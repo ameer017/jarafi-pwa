@@ -16,6 +16,7 @@ import {
   TokenDetails,
   TWE,
   WalletShowcase,
+  Send
 } from "./index";
 
 function App() {
