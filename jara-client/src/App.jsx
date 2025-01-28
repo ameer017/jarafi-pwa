@@ -11,6 +11,7 @@ import ConfirmEmail from "./component/Registration/ConfirmEmail";
 import CreateWallet from "./component/Registration/SecureWallet/CreateWallet";
 import WalletShowcase from "./component/Registration/SecureWallet/WalletShowcase";
 import Congratulation from "./component/Registration/SecureWallet/Congratulation";
+import Swap from "./component/Transactions/Swap";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/create-wallet" element={<CreateWallet />} />
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/congrats" element={<Congratulation />} />
+        <Route path="/swap" element={< Swap/>}/>
       </Routes>
     </>
   );
