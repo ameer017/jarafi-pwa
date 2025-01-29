@@ -158,7 +158,7 @@ const SwapAssetsPage = ({ onExchangeRate }) => {
             onClick={handleSwap}
             className="w-full bg-[#FFE600] text-black font-medium py-2 sm:py-3 rounded-lg mt-4 sm:mt-8 hover:bg-[#FFE600]/90 transition-colors text-sm sm:text-base"
           >
-            Swap
+            Continue
           </button>
         </div>
       </div>

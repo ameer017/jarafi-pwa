@@ -1,7 +1,7 @@
 import { celo, mainnet } from "viem/chains";
 export const cUsd = {
   ...celo,
-  id: 1, // Make sure this ID aligns with your network
+  id: 1,
   name: "cUSD",
   decimals: 18,
   nativeCurrency: { symbol: "cUSD" },

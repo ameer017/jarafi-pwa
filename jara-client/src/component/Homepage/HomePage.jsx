@@ -114,7 +114,7 @@ const HomePage = () => {
               {
                 label: "Send",
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
-                routes: "/send-assets",
+                routes: "/send",
               },
               {
                 label: "Receive",
