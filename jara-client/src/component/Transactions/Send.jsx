@@ -21,6 +21,7 @@ import {
 } from "viem";
 import { getStorageAt } from "@wagmi/core";
 import { celo } from "viem/chains";
+import { useNavigate } from "react-router-dom";
 
 const Send = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -35,6 +36,7 @@ const Send = () => {
   const [isTransactionPending, setIsTransactionPending] = useState(false);
   const [currentChainId, setCurrentChainId] = useState(null);
 
+  const navigate = useNavigate();
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
@@ -107,6 +109,11 @@ const Send = () => {
     }
     return true;
   };
+
+  const publicClient = createPublicClient({
+    chain: celo,
+    transport: http("https://forno.celo.org"),
+  });
 
   const IMPLEMENTATION_SLOT =
     "0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC";
@@ -181,6 +188,10 @@ const Send = () => {
       return;
     }
 
+    const isLoggedIn = await capsuleClient.isFullyLoggedIn();
+
+    console.log("isLoggedIn:", isLoggedIn);
+
     setIsLoading(true);
     setError("");
     setIsTransactionPending(true);
@@ -190,7 +201,6 @@ const Send = () => {
         await switchChain(config, { chainId: selectedToken.id });
       }
 
-      // Create a Capsule account and Viem client
       const viemCapsuleAccount = await createCapsuleAccount(capsuleClient);
       console.log(viemCapsuleAccount);
       const capsuleViemSigner = createCapsuleViemClient(capsuleClient, {
@@ -199,7 +209,6 @@ const Send = () => {
         transport: http("https://forno.celo.org"),
       });
 
-      // Prepare the transaction
       const amountInWei = parseUnits(amount, selectedToken.decimals);
       const implementationAddress = await getImplementationAddress(
         selectedToken.address
@@ -218,6 +227,22 @@ const Send = () => {
         type: "function",
       };
 
+      const gasPrice = await publicClient.getGasPrice(); // Fetch latest gas price
+      console.log(gasPrice);
+      const estimatedGas = await publicClient.estimateGas({
+        account: viemCapsuleAccount,
+        to: selectedToken.address,
+        data: encodeFunctionData({
+          abi: [abiItem],
+          args: [recipientAddress, amountInWei],
+        }),
+      });
+
+      console.log(estimatedGas);
+
+      const gasLimit = (estimatedGas * BigInt(110)) / BigInt(100); // 10% buffer
+
+      console.log(gasLimit);
       const tx = {
         account: viemCapsuleAccount,
         chain: selectedChain,
@@ -226,8 +251,8 @@ const Send = () => {
           abi: [abiItem],
           args: [recipientAddress, amountInWei],
         }),
-        gas: BigInt(21000),
-        gasPrice: parseGwei("20"),
+        gas: gasLimit, // Adjusted gas limit
+        gasPrice: gasPrice, // Dynamic gas price
       };
 
       console.log(tx);
@@ -238,14 +263,13 @@ const Send = () => {
       });
 
       // Wait for the transaction to be mined
-      const final = await capsuleViemSigner.waitForTransactionReceipt({
-        hash: txHash,
-      });
-      console.log(final);
+      console.log(txHash);
       setAmount("");
       setRecipientAddress("");
       setError("");
       setSelectedToken(null);
+
+      navigate("/dashboard");
     } catch (error) {
       console.error("Transaction failed:", error);
       setError(error.message || "Transaction failed");
