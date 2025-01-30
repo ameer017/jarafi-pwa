@@ -12,7 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { cEUR, cUsd, cREAL, celoToken } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
-
+import { IoIosLogOut } from "react-icons/io";
 const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
@@ -91,9 +91,15 @@ const HomePage = () => {
         Finish setting up your account for maximum security!
       </p>
 
-      <p className="text-[20px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
-        {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "N/A"}
-      </p>
+      <div className="flex items-end justify-between flex-col gap-2">
+        <p className="text-[20px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
+          {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "N/A"}
+        </p>
+
+        <button className="mr-2">
+          <IoIosLogOut size={25} color="#ffffff" />
+        </button>
+      </div>
 
       <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
         <section className="flex flex-col justify-between w-full max-w-[1024px] px-4 md:p-6">
