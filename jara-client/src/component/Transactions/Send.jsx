@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { Contract, ethers } from "ethers";
+import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { Loader2 } from "lucide-react";
 import TokenModal from "../Homepage/TokenModal";
 import { useAccount, useConfig, useWalletClient } from "wagmi";
-import { getWalletClient, switchChain } from "wagmi/actions";
+import { switchChain } from "wagmi/actions";
+import { cEUR, cUsd, cREAL, celoToken } from "../../constant/otherChains";
+import capsuleClient from "../../constant/capsuleClient";
+
+import {
+  createCapsuleAccount,
+  createCapsuleViemClient,
+} from "@usecapsule/viem-v2-integration";
+import {
+  encodeFunctionData,
+  http,
+  parseGwei,
+  parseUnits,
+  createPublicClient,
+  getContract,
+} from "viem";
+import { getStorageAt } from "@wagmi/core";
+import { celo } from "viem/chains";
 
 const Send = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -21,6 +38,11 @@ const Send = () => {
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
+  const tokens = [cEUR, cUsd, cREAL, celoToken];
+  // console.log(address)
+  const selectedChain = selectedToken
+    ? tokens[selectedToken.name] || celo
+    : celo;
 
   useEffect(() => {
     if (walletClient) {
@@ -32,9 +54,9 @@ const Send = () => {
     const fetchBalanceAndGas = async () => {
       if (!selectedToken || !address) return;
 
+      // console.log(selectedToken.address);
+      const provider = new JsonRpcProvider("https://forno.celo.org");
       try {
-        const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
-
         const contract = new Contract(
           selectedToken.address,
           [
@@ -44,6 +66,9 @@ const Send = () => {
           ],
           provider
         );
+
+        // console.log(contract)
+        // console.log(selectedToken)
 
         const tokenBalance = await contract.balanceOf(address);
         const formattedBalance = ethers.formatUnits(
@@ -62,40 +87,6 @@ const Send = () => {
 
     fetchBalanceAndGas();
   }, [selectedToken, address]);
-
-  useEffect(() => {
-    const estimateGas = async () => {
-      if (!selectedToken || !amount || !recipientAddress || !address) return;
-
-      try {
-        const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
-        const contract = new Contract(
-          selectedToken.address,
-          ["function transfer(address to, uint256 amount)"],
-          provider
-        );
-
-        const amountInWei = ethers.parseUnits(
-          amount.toString(),
-          selectedToken.decimals
-        );
-
-        const estimate = await contract.estimateGas.transfer(
-          recipientAddress,
-          amountInWei,
-          { from: address }
-        );
-
-        setEstimatedGas(estimate);
-      } catch (error) {
-        console.error("Error estimating gas:", error);
-        setEstimatedGas(null);
-      }
-    };
-
-    const debounceTimer = setTimeout(estimateGas, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [selectedToken, amount, recipientAddress, address]);
 
   const validateTransaction = () => {
     if (!selectedToken) {
@@ -117,6 +108,72 @@ const Send = () => {
     return true;
   };
 
+  const IMPLEMENTATION_SLOT =
+    "0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC";
+
+  async function getImplementationAddress(proxyAddress) {
+    try {
+      const rawImplAddress = await getStorageAt(config, {
+        address: proxyAddress,
+        slot: IMPLEMENTATION_SLOT,
+      });
+
+      return `0x${rawImplAddress.slice(-40)}`;
+    } catch (error) {
+      console.error(
+        `Failed to fetch implementation for ${proxyAddress}:`,
+        error
+      );
+      return null;
+    }
+  }
+
+  async function getAbi(implementationAddress) {
+    try {
+      const contract = getContract({
+        address: implementationAddress,
+        abi: [
+          "function transfer(address to, uint256 amount)",
+          "function balanceOf(address) view returns (uint256)",
+        ],
+        config,
+      });
+
+      return contract.abi;
+    } catch (error) {
+      console.error(`Failed to fetch ABI for ${implementationAddress}:`, error);
+      return null;
+    }
+  }
+
+  async function fetchAllData() {
+    const updatedTokens = await Promise.all(
+      tokens.map(async (token) => {
+        const implementationAddress = await getImplementationAddress(
+          token.address
+        );
+        const abi = implementationAddress
+          ? await getAbi(implementationAddress)
+          : null;
+        return {
+          ...token,
+          implementationAddress,
+          abi,
+        };
+      })
+    );
+
+    // console.log("Updated Tokens with ABI:", updatedTokens);
+    return updatedTokens;
+  }
+
+  fetchAllData().then((updatedTokens) => {
+    // console.log(
+    //   "Final Token List with Implementation Addresses & ABIs:",
+    //   updatedTokens
+    // );
+  });
+
   const handleSend = async () => {
     if (!validateTransaction()) return;
     if (!walletClient) {
@@ -133,42 +190,58 @@ const Send = () => {
         await switchChain(config, { chainId: selectedToken.id });
       }
 
-      const client = await getWalletClient(config);
-      if (!client) throw new Error("Failed to get wallet client");
-
-      const provider = new ethers.JsonRpcProvider("https://forno.celo.org");
-      const signer = await provider.getSigner(address);
-
-      const contract = new Contract(
-        selectedToken.address,
-        [
-          "function transfer(address to, uint256 amount)",
-          "function balanceOf(address) view returns (uint256)",
-        ],
-        signer
-      );
-
-      const amountInWei = ethers.parseUnits(amount, selectedToken.decimals);
-
-      const userBalance = await contract.balanceOf(address);
-      if (userBalance.lt(amountInWei)) {
-        throw new Error("Insufficient balance");
-      }
-
-      const totalGasCost = estimatedGas * gasPrice;
-      const totalCost = amountInWei + totalGasCost;
-
-      if (userBalance.lt(totalCost)) {
-        throw new Error("Insufficient balance to cover amount plus gas fees");
-      }
-
-      const tx = await contract.transfer(recipientAddress, amountInWei, {
-        gasLimit: estimatedGas,
-        gasPrice: gasPrice,
+      // Create a Capsule account and Viem client
+      const viemCapsuleAccount = await createCapsuleAccount(capsuleClient);
+      console.log(viemCapsuleAccount);
+      const capsuleViemSigner = createCapsuleViemClient(capsuleClient, {
+        account: viemCapsuleAccount,
+        chain: selectedChain,
+        transport: http("https://forno.celo.org"),
       });
 
-      await tx.wait();
+      // Prepare the transaction
+      const amountInWei = parseUnits(amount, selectedToken.decimals);
+      const implementationAddress = await getImplementationAddress(
+        selectedToken.address
+      );
 
+      const abiItem = {
+        constant: false,
+        inputs: [
+          { name: "to", type: "address" },
+          { name: "amount", type: "uint256" },
+        ],
+        name: "transfer",
+        outputs: [{ name: "", type: "bool" }],
+        payable: false,
+        stateMutability: "nonpayable",
+        type: "function",
+      };
+
+      const tx = {
+        account: viemCapsuleAccount,
+        chain: selectedChain,
+        to: selectedToken.address,
+        data: encodeFunctionData({
+          abi: [abiItem],
+          args: [recipientAddress, amountInWei],
+        }),
+        gas: BigInt(21000),
+        gasPrice: parseGwei("20"),
+      };
+
+      console.log(tx);
+      // Sign and send the transaction
+      const signedTx = await capsuleViemSigner.signTransaction(tx);
+      const txHash = await capsuleViemSigner.sendRawTransaction({
+        serializedTransaction: signedTx,
+      });
+
+      // Wait for the transaction to be mined
+      const final = await capsuleViemSigner.waitForTransactionReceipt({
+        hash: txHash,
+      });
+      console.log(final);
       setAmount("");
       setRecipientAddress("");
       setError("");
@@ -181,7 +254,6 @@ const Send = () => {
       setIsTransactionPending(false);
     }
   };
-
   const handleQuickAmount = (percentage) => {
     if (!balance) return;
 
@@ -251,10 +323,10 @@ const Send = () => {
                 <div className="flex items-center">
                   <img
                     src={selectedToken.icon}
-                    alt={selectedToken.symbol}
+                    alt={selectedToken.nativeCurrency.symbol}
                     className="w-6 h-6 mr-2 rounded-full"
                   />
-                  <span>{selectedToken.symbol}</span>
+                  <span>{selectedToken.nativeCurrency.symbol}</span>
                 </div>
               ) : (
                 "Select Token"
@@ -265,7 +337,7 @@ const Send = () => {
           <div>
             <label className="text-white text-sm mb-2 block">Amount</label>
             <input
-              type="number"
+              type="text"
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -273,7 +345,7 @@ const Send = () => {
             />
             <div className="text-right mt-2">
               <span className="text-gray-400 text-sm">
-                Available: {parseFloat(balance).toFixed(4)}{" "}
+                Available: {parseFloat(balance).toFixed(2)}{" "}
                 {selectedToken?.symbol || ""}
               </span>
             </div>
@@ -330,7 +402,11 @@ const Send = () => {
       <TokenModal
         isOpen={isTokenModalOpen}
         onClose={() => setIsTokenModalOpen(false)}
-        onSelect={setSelectedToken}
+        onSelect={(token) => {
+          setSelectedToken(token);
+          setIsTokenModalOpen(false);
+        }}
+        tokens={tokens}
       />
     </div>
   );

@@ -1,17 +1,12 @@
 import React from 'react'
-import { cEUR, cUsd, cREAL, Celo } from "../../constant/otherChains";
+import { cEUR, cUsd, cREAL, celoToken } from "../../constant/otherChains";
 
 
-const TokenModal = ({ isOpen, onClose, onSelect }) => {
+const TokenModal = ({ isOpen, onClose, onSelect, tokens }) => {
 
 
-      
-      const availableTokens = [
-        { ...cEUR, symbol: 'cEUR' },
-        { ...cUsd, symbol: 'cUSD' },
-        { ...cREAL, symbol: 'cREAL' },
-        { ...Celo, symbol: 'CELO' }
-      ];
+      // console.log(tokens)
+    
     
 
     if (!isOpen) return null;
@@ -23,9 +18,9 @@ const TokenModal = ({ isOpen, onClose, onSelect }) => {
             <h2 className="text-white text-xl font-medium">Select Token</h2>
           </div>
           <div className="max-h-[60vh] overflow-y-auto p-4">
-            {availableTokens.map((token) => (
+            {tokens.map((token) => (
               <button
-                key={token.symbol}
+                key={token.id}
                 onClick={() => {
                   onSelect(token);
                   onClose();
@@ -38,7 +33,7 @@ const TokenModal = ({ isOpen, onClose, onSelect }) => {
                   className="w-8 h-8 mr-3 rounded-full"
                 />
                 <div>
-                  <span className="text-white font-medium">{token.symbol}</span>
+                  <span className="text-white font-medium">{token.nativeCurrency.symbol}</span>
                   <p className="text-gray-400 text-sm">{token.name}</p>
                 </div>
               </button>

@@ -19,7 +19,9 @@ import {
   WalletShowcase,
   Send
 } from "./index";
+import { celoToken, cEUR, cREAL, cUsd } from "./constant/otherChains";
 
+const tokens = [cEUR, cUsd, cREAL, celoToken];
 function App() {
   return (
     <>
@@ -30,7 +32,7 @@ function App() {
         <Route path="/trade-with-ease" element={<TWE />} />
         <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
         <Route path="/dashboard" element={<HomePage />} />
-        <Route path="/token-details/:id" element={<TokenDetails />} />
+        <Route path="/token-details/:id" element={<TokenDetails tokens={tokens} />} />
         <Route path="/token-details/:id/activities" element={<Activities />} />
         <Route path="/sign-up-user" element={<Register />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />

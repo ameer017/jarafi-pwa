@@ -1,8 +1,18 @@
-import React, { useState } from 'react';
-import SwapAssetsPage from '../Modal/SwapAssetsPage';
-import ExchangeRateModal from '../Modal/ExchangeRateModal';
-import FeesModal from '../Modal/FeesModal';
-import Modal from '../Modal/Modal';
+import React, { useState } from "react";
+import SwapAssetsPage from "../Modal/SwapAssetsPage";
+import ExchangeRateModal from "../Modal/ExchangeRateModal";
+import FeesModal from "../Modal/FeesModal";
+import Modal from "../Modal/Modal";
+// import { useAccount, useSigner } from "wagmi";
+// import { ethers } from "ethers";
+// import {
+//   Trade,
+//   Token,
+//   TradeType,
+//   Fetcher,
+//   Route,
+// } from "@ubeswap/sdk";
+import { cUsd, cEUR, cREAL, celoToken } from "../../constant/otherChains";
 
 const Swap = () => {
   const [currentPage, setCurrentPage] = useState(2);
@@ -60,4 +70,3 @@ const Swap = () => {
 };
 
 export default Swap;
-
