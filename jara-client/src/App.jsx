@@ -19,9 +19,9 @@ import {
   WalletShowcase,
   Send
 } from "./index";
-import { celoToken, cEUR, cREAL, cUsd } from "./constant/otherChains";
+import { celoToken, cEUR, cREAL, cUsd, commons } from "./constant/otherChains";
 
-const tokens = [cEUR, cUsd, cREAL, celoToken];
+const tokens = [cEUR, cUsd, cREAL, celoToken, commons];
 function App() {
   return (
     <>

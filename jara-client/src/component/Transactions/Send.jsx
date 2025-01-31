@@ -4,7 +4,13 @@ import { Loader2 } from "lucide-react";
 import TokenModal from "../Homepage/TokenModal";
 import { useAccount, useConfig, useWalletClient } from "wagmi";
 import { switchChain } from "wagmi/actions";
-import { cEUR, cUsd, cREAL, celoToken } from "../../constant/otherChains";
+import {
+  cEUR,
+  cUsd,
+  cREAL,
+  celoToken,
+  commons,
+} from "../../constant/otherChains";
 import capsuleClient from "../../constant/capsuleClient";
 
 import {
@@ -14,7 +20,6 @@ import {
 import {
   encodeFunctionData,
   http,
-  parseGwei,
   parseUnits,
   createPublicClient,
   getContract,
@@ -22,6 +27,7 @@ import {
 import { getStorageAt } from "@wagmi/core";
 import { celo } from "viem/chains";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const Send = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -40,8 +46,8 @@ const Send = () => {
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
-  const tokens = [cEUR, cUsd, cREAL, celoToken];
-  // console.log(address)
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons];
+
   const selectedChain = selectedToken
     ? tokens[selectedToken.name] || celo
     : celo;
@@ -68,9 +74,6 @@ const Send = () => {
           ],
           provider
         );
-
-        // console.log(contract)
-        // console.log(selectedToken)
 
         const tokenBalance = await contract.balanceOf(address);
         const formattedBalance = ethers.formatUnits(
@@ -170,7 +173,6 @@ const Send = () => {
       })
     );
 
-    // console.log("Updated Tokens with ABI:", updatedTokens);
     return updatedTokens;
   }
 
@@ -190,7 +192,7 @@ const Send = () => {
 
     const isLoggedIn = await capsuleClient.isFullyLoggedIn();
 
-    console.log("isLoggedIn:", isLoggedIn);
+    // console.log("isLoggedIn:", isLoggedIn);
 
     setIsLoading(true);
     setError("");
@@ -202,7 +204,7 @@ const Send = () => {
       }
 
       const viemCapsuleAccount = await createCapsuleAccount(capsuleClient);
-      console.log(viemCapsuleAccount);
+
       const capsuleViemSigner = createCapsuleViemClient(capsuleClient, {
         account: viemCapsuleAccount,
         chain: selectedChain,
@@ -227,8 +229,8 @@ const Send = () => {
         type: "function",
       };
 
-      const gasPrice = await publicClient.getGasPrice(); // Fetch latest gas price
-      console.log(gasPrice);
+      const gasPrice = await publicClient.getGasPrice();
+
       const estimatedGas = await publicClient.estimateGas({
         account: viemCapsuleAccount,
         to: selectedToken.address,
@@ -238,11 +240,13 @@ const Send = () => {
         }),
       });
 
-      console.log(estimatedGas);
+      const gasLimit = (estimatedGas * BigInt(110)) / BigInt(100);
 
-      const gasLimit = (estimatedGas * BigInt(110)) / BigInt(100); // 10% buffer
+      const nonce = await publicClient.getTransactionCount({
+        address: viemCapsuleAccount.address.toLowerCase(),
+        blockTag: "pending",
+      });
 
-      console.log(gasLimit);
       const tx = {
         account: viemCapsuleAccount,
         chain: selectedChain,
@@ -251,24 +255,21 @@ const Send = () => {
           abi: [abiItem],
           args: [recipientAddress, amountInWei],
         }),
-        gas: gasLimit, // Adjusted gas limit
-        gasPrice: gasPrice, // Dynamic gas price
+        gas: gasLimit,
+        gasPrice: gasPrice,
+        nonce: nonce,
       };
 
-      console.log(tx);
-      // Sign and send the transaction
       const signedTx = await capsuleViemSigner.signTransaction(tx);
       const txHash = await capsuleViemSigner.sendRawTransaction({
         serializedTransaction: signedTx,
       });
 
-      // Wait for the transaction to be mined
-      console.log(txHash);
       setAmount("");
       setRecipientAddress("");
       setError("");
       setSelectedToken(null);
-
+      toast.success(`${amountInWei} sent to ${recipientAddress}`);
       navigate("/dashboard");
     } catch (error) {
       console.error("Transaction failed:", error);

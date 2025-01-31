@@ -50,7 +50,11 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setIsModalOpen(true);
 
-    navigate("/dashboard");
+    const isLoggedIn = await capsuleClient.isFullyLoggedIn();
+
+    if (isLoggedIn) {
+      navigate("/dashboard");
+    }
   };
 
   const handleEmailLogin = async (e) => {
