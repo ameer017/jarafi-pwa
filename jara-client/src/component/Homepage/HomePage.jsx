@@ -10,14 +10,16 @@ import { BiScan } from "react-icons/bi";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { cEUR, cUsd, cREAL, celoToken } from "../../constant/otherChains";
+import { cEUR, cUsd, cREAL, celoToken, commons } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
+
 const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
   const [totalBalance, setTotalBalance] = useState(0);
 
+  
   const handleScan = (data) => {
     if (data) {
       setCrypto(data);
@@ -31,7 +33,7 @@ const HomePage = () => {
   };
 
   const [mockData, setMockData] = useState([]);
-  const tokens = [cEUR, cUsd, cREAL, celoToken];
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons];
 
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
@@ -181,7 +183,7 @@ const HomePage = () => {
                         <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
                           <img
                             src={item.icon}
-                            className="w-[20px] h-[20px]"
+                            className="w-[20px] h-[20px] rounded-full"
                             alt="icon"
                           />
                           {item.token_name}
