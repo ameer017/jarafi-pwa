@@ -17,6 +17,7 @@ import {
   celoToken,
   commons,
   cusdt,
+  USDC,
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
@@ -28,6 +29,10 @@ const HomePage = () => {
   const [totalBalance, setTotalBalance] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
   const [scannedAddress, setScannedAddress] = useState("");
+  const [mockData, setMockData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
 
   const handleScan = (data) => {
     if (data) {
@@ -41,12 +46,10 @@ const HomePage = () => {
     console.error("QR Scan Error:", err);
   };
 
-  const [mockData, setMockData] = useState([]);
-  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt];
-
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
       console.error("Address is not provided!");
+      setLoading(false);
       return;
     }
 
@@ -54,45 +57,52 @@ const HomePage = () => {
     const provider = new JsonRpcProvider("https://forno.celo.org");
     let totalBalance = 0;
 
-    for (let token of tokens) {
-      try {
-        const contract = new Contract(
-          token.address,
-          ["function balanceOf(address) view returns (uint256)"],
-          provider
-        );
+    try {
+      for (let token of tokens) {
+        try {
+          const contract = new Contract(
+            token.address,
+            ["function balanceOf(address) view returns (uint256)"],
+            provider
+          );
 
-        const tokenBalance = await contract.balanceOf(address);
-        const formattedBalance = ethers.formatUnits(
-          tokenBalance,
-          token.decimals
-        );
+          const tokenBalance = await contract.balanceOf(address);
+          const formattedBalance = ethers.formatUnits(
+            tokenBalance,
+            token.decimals
+          );
 
-        // Add the token's balance to the total balance
-        totalBalance += parseFloat(formattedBalance);
+          totalBalance += parseFloat(formattedBalance);
 
-        fetchedData.push({
-          id: token.id,
-          token_name: token.name,
-          symbol: token.nativeCurrency?.symbol || "N/A",
-          network: token.network?.name || "Unknown Network",
-          balance: ethers.formatUnits(tokenBalance, token.decimals),
-          icon:
-            token.icon ||
-            "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
-        });
-      } catch (error) {
-        console.error(`Error fetching balance for ${token.name}:`, error);
+          fetchedData.push({
+            id: token.id,
+            token_name: token.name,
+            symbol: token.nativeCurrency?.symbol || "N/A",
+            network: token.network?.name || "Unknown Network",
+            balance: ethers.formatUnits(tokenBalance, token.decimals),
+            icon:
+              token.icon ||
+              "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
+          });
+        } catch (error) {
+          console.error(`Error fetching balance for ${token.name}:`, error);
+        }
       }
-    }
 
-    setMockData(fetchedData);
-    setTotalBalance(totalBalance);
+      setMockData(fetchedData);
+      setTotalBalance(totalBalance);
+    } catch (error) {
+      console.error("Error fetching token balances:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     if (address) {
       fetchTokenBalances(address, tokens);
+    } else {
+      setLoading(false);
     }
   }, [address]);
 
@@ -216,34 +226,42 @@ const HomePage = () => {
             </thead>
           </table>
 
-          <div className="overflow-y-auto h-full">
-            <table className="w-full text-center border-collapse table-fixed">
-              <tbody>
-                {mockData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-100">
-                    <td colSpan={2} className="p-0">
-                      <Link
-                        to={`/token-details/${item.id}`}
-                        className="w-full flex justify-between"
-                      >
-                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
-                          <img
-                            src={item.icon}
-                            className="w-[20px] h-[20px] rounded-full"
-                            alt="icon"
-                          />
-                          {item.token_name}
-                        </div>
-                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                          {item.balance} {item.token_name}
-                        </div>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <p className="text-[#464446] text-[16px]">
+                Loading token balances...
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-y-auto h-full">
+              <table className="w-full text-center border-collapse table-fixed">
+                <tbody>
+                  {mockData.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-100">
+                      <td colSpan={2} className="p-0">
+                        <Link
+                          to={`/token-details/${item.id}`}
+                          className="w-full flex justify-between"
+                        >
+                          <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                            <img
+                              src={item.icon}
+                              className="w-[20px] h-[20px] rounded-full"
+                              alt="icon"
+                            />
+                            {item.token_name}
+                          </div>
+                          <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                            {item.balance} {item.token_name}
+                          </div>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </main>
 

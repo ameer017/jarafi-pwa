@@ -71,3 +71,16 @@ export const cusdt = {
   icon: "https://s2.coinmarketcap.com/static/img/coins/200x200/825.png",
   address: "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e",
 };
+
+
+export const USDC = {
+  ...celo,
+  id: 8,
+  name: "USDC",
+  decimals: 6,
+  nativeCurrency: {symbol: "USDC"},
+  network: { name: "Celo" },
+  symbol: "USDC",
+  icon: "https://s2.coinmarketcap.com/static/img/coins/200x200/3408.png",
+  address: "0xcebA9300f2b948710d2653dD7B07f33A8B32118C",
+}

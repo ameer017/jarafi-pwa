@@ -213,9 +213,7 @@ const Send = () => {
       });
 
       const amountInWei = parseUnits(amount, selectedToken.decimals);
-      const implementationAddress = await getImplementationAddress(
-        selectedToken.address
-      );
+      await getImplementationAddress(selectedToken.address);
 
       const abiItem = {
         constant: false,
@@ -270,7 +268,7 @@ const Send = () => {
       setRecipientAddress("");
       setError("");
       setSelectedToken(null);
-      toast.success(`${amountInWei} sent to ${recipientAddress}`);
+      toast.success(`${amountInWei.toString(1)} sent successfully!`);
       navigate("/dashboard");
     } catch (error) {
       console.error("Transaction failed:", error);

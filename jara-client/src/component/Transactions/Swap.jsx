@@ -14,7 +14,6 @@ import {
   cusdt,
 } from "../../constant/otherChains";
 import { parseUnits } from "viem";
-
 const Swap = () => {
   const { address } = useAccount();
   const [currentPage, setCurrentPage] = useState(2);
@@ -24,8 +23,8 @@ const Swap = () => {
   const [amount, setAmount] = useState("");
   const [swapDetails, setSwapDetails] = useState(null);
   const [selectedChain, setSelectedChain] = useState("Celo");
-  const [tokenIn, setTokenIn] = useState("");
-  const [tokenOut, setTokenOut] = useState("");
+  const [tokenIn, setTokenIn] = useState(cUsd);
+  const [tokenOut, setTokenOut] = useState(celoToken);
 
   const handleExchangeRate = async () => {
     try {
@@ -44,6 +43,17 @@ const Swap = () => {
           TradeType.EXACT_INPUT
         );
         setSwapDetails(trade);
+      } else {
+        // const lifi = new LiFi();
+        // const quote = await lifi.getQuote({
+        //   fromChain: "Celo",
+        //   toChain: selectedChain,
+        //   fromToken: tokenIn.address,
+        //   toToken: otherChains[selectedChain].address,
+        //   amount: ethers.utils.parseUnits(amount, tokenIn.decimals).toString(),
+        //   fromAddress: address,
+        // });
+        // setSwapDetails(quote);
       }
       setCurrentPage(3);
       setShowExchangeRateModal(true);
@@ -70,7 +80,10 @@ const Swap = () => {
   const handleSwap = async () => {
     if (selectedChain === "Celo") {
       executeSwap?.();
-    } 
+    } else {
+      // const lifi = new LiFi();
+      // await lifi.swap(swapDetails);
+    }
     setShowFeesModal(false);
     setShowModal(true);
   };
