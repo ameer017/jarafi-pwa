@@ -10,6 +10,7 @@ import {
   cREAL,
   celoToken,
   commons,
+  cusdt,
 } from "../../constant/otherChains";
 import capsuleClient from "../../constant/capsuleClient";
 
@@ -46,7 +47,7 @@ const Send = () => {
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
-  const tokens = [cEUR, cUsd, cREAL, celoToken, commons];
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt];
 
   const selectedChain = selectedToken
     ? tokens[selectedToken.name] || celo

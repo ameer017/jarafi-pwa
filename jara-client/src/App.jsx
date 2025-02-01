@@ -17,14 +17,25 @@ import {
   TokenDetails,
   TWE,
   WalletShowcase,
-  Send
+  Send,
 } from "./index";
-import { celoToken, cEUR, cREAL, cUsd, commons } from "./constant/otherChains";
+import {
+  cEUR,
+  cUsd,
+  cREAL,
+  celoToken,
+  commons,
+  cusdt,
+} from "./constant/otherChains";
+import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, commons];
+const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt];
+
 function App() {
   return (
     <>
+      <IdleTimeout />
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/p2p" element={<MainPage />} />
@@ -32,16 +43,29 @@ function App() {
         <Route path="/trade-with-ease" element={<TWE />} />
         <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
         <Route path="/dashboard" element={<HomePage />} />
-        <Route path="/token-details/:id" element={<TokenDetails tokens={tokens} />} />
-        <Route path="/token-details/:id/activities" element={<Activities />} />
-        <Route path="/sign-up-user" element={<Register />} />
+
+        <Route
+          path="/token-details/:id"
+          element={<AuthRoute element={<TokenDetails tokens={tokens} />} />}
+        />
+        <Route
+          path="/token-details/:id/activities"
+          element={<AuthRoute element={<Activities />} />}
+        />
+        <Route
+          path="/sign-up-user"
+          element={<AuthRoute element={<Register />} />}
+        />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
         <Route path="/create-wallet" element={<CreateWallet />} />
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
-        <Route path="/send" element={<Send />} />
+        <Route path="/send" element={<AuthRoute element={<Send />} />} />
         <Route path="/congrats" element={<Congratulation />} />
-        <Route path="/swap" element={< Swap/>}/>
-        <Route path="/recieve" element={<ReceiveAssets />} />
+        <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
+        <Route
+          path="/recieve"
+          element={<AuthRoute element={<ReceiveAssets />} />}
+        />
         <Route path="/login" element={<Login />} />
       </Routes>
     </>

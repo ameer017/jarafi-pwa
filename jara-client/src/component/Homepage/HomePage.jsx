@@ -10,30 +10,39 @@ import { BiScan } from "react-icons/bi";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { cEUR, cUsd, cREAL, celoToken, commons } from "../../constant/otherChains";
+import {
+  cEUR,
+  cUsd,
+  cREAL,
+  celoToken,
+  commons,
+  cusdt,
+} from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
+import QrReader from "react-qr-scanner";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
   const [totalBalance, setTotalBalance] = useState(0);
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedAddress, setScannedAddress] = useState("");
 
-  
   const handleScan = (data) => {
     if (data) {
-      setCrypto(data);
+      setScannedAddress(data);
       setShowScanner(false);
-      console.log("Wallet address:", data);
+      console.log("Scanned Wallet Address:", data);
     }
   };
 
   const handleError = (err) => {
-    console.error(err);
+    console.error("QR Scan Error:", err);
   };
 
   const [mockData, setMockData] = useState([]);
-  const tokens = [cEUR, cUsd, cREAL, celoToken, commons];
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt];
 
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
@@ -105,10 +114,47 @@ const HomePage = () => {
 
       <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
         <section className="flex flex-col justify-between w-full max-w-[1024px] px-4 md:p-6">
-          <section className="flex justify-between items-center">
+          <section className="flex justify-between items-center relative">
             <p className="text-[#F2EDE4] text-[16px]">Wallet Balance</p>
             <div className="flex gap-4">
-              <BiScan color="#B0AFB1" size={25} />
+              <div className="relative">
+                <button onClick={() => setShowScanner(!showScanner)}>
+                  <BiScan color="#B0AFB1" size={25} />
+                </button>
+
+                {showScanner && (
+                  <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
+                      <h3 className="text-lg font-bold text-gray-700">
+                        Scan QR Code
+                      </h3>
+
+                      <div className="w-64 h-64 mt-4 flex items-center justify-center border-4 border-gray-300 rounded-lg">
+                        <QrReader
+                          delay={300}
+                          onError={handleError}
+                          onScan={handleScan}
+                          style={{ width: "100%", height: "100%" }}
+                        />
+                      </div>
+
+                      <button
+                        className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg w-full"
+                        onClick={() => setShowScanner(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {scannedAddress && (
+                  <p className="text-green-500 text-center mt-2">
+                    Scanned Address: {scannedAddress}
+                  </p>
+                )}
+              </div>
+
               <IoIosNotificationsOutline color="#B0AFB1" size={25} />
             </div>
           </section>
