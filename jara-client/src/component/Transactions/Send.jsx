@@ -10,6 +10,7 @@ import {
   cREAL,
   celoToken,
   commons,
+  cusdt,
 } from "../../constant/otherChains";
 import capsuleClient from "../../constant/capsuleClient";
 
@@ -46,7 +47,7 @@ const Send = () => {
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
-  const tokens = [cEUR, cUsd, cREAL, celoToken, commons];
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt];
 
   const selectedChain = selectedToken
     ? tokens[selectedToken.name] || celo
@@ -212,9 +213,7 @@ const Send = () => {
       });
 
       const amountInWei = parseUnits(amount, selectedToken.decimals);
-      const implementationAddress = await getImplementationAddress(
-        selectedToken.address
-      );
+      await getImplementationAddress(selectedToken.address);
 
       const abiItem = {
         constant: false,
@@ -269,7 +268,7 @@ const Send = () => {
       setRecipientAddress("");
       setError("");
       setSelectedToken(null);
-      toast.success(`${amountInWei} sent to ${recipientAddress}`);
+      toast.success(`${amountInWei.toString(1)} sent successfully!`);
       navigate("/dashboard");
     } catch (error) {
       console.error("Transaction failed:", error);

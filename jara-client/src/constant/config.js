@@ -2,11 +2,19 @@ import { http, createConfig } from "wagmi";
 import { capsuleConnector } from "@usecapsule/wagmi-v2-integration";
 import { OAuthMethod } from "@usecapsule/web-sdk";
 import capsuleClient from "./capsuleClient";
-import { cEUR, cUsd, cREAL, celoToken, commons } from "./otherChains";
+import {
+  cEUR,
+  cUsd,
+  cREAL,
+  celoToken,
+  commons,
+  cusdt,
+  USDC,
+} from "./otherChains";
 
 const connector = capsuleConnector({
   capsule: capsuleClient,
-  chains: [celoToken, cUsd, cREAL, cEUR, ],
+  chains: [celoToken, cUsd, cREAL, cEUR, cusdt, USDC],
   appName: "Jarafi PWA",
   options: {},
   nameOverride: "Capsule",
@@ -18,7 +26,7 @@ const connector = capsuleConnector({
 });
 
 export const config = createConfig({
-  chains: [celoToken, cUsd, cREAL, cEUR, commons],
+  chains: [celoToken, cUsd, cREAL, cEUR, commons, cusdt, USDC],
   connectors: [connector],
   transports: {
     [celoToken.id]: http(),
@@ -26,5 +34,7 @@ export const config = createConfig({
     [cREAL.id]: http(),
     [cEUR.id]: http(),
     [commons.id]: http(),
+    [cusdt.id]: http(),
+    [USDC.id]: http(),
   },
 });
