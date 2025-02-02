@@ -16,8 +16,7 @@ import {
   cREAL,
   celoToken,
   commons,
-  cusdt,
-  USDC,
+
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
@@ -57,6 +56,36 @@ const HomePage = () => {
     const provider = new JsonRpcProvider("https://forno.celo.org");
     let totalBalance = 0;
 
+
+    for (let token of tokens) {
+      try {
+        const contract = new Contract(
+          token.address,
+          ["function balanceOf(address) view returns (uint256)"],
+          provider
+        );
+
+        const tokenBalance = await contract.balanceOf(address);
+        const formattedBalance = ethers.formatUnits(
+          tokenBalance,
+          token.decimals
+        );
+
+        totalBalance += parseFloat(formattedBalance);
+
+        fetchedData.push({
+          id: token.id,
+          token_name: token.name,
+          symbol: token.nativeCurrency?.symbol || "N/A",
+          network: token.network?.name || "Unknown Network",
+          balance: ethers.formatUnits(tokenBalance, token.decimals),
+          icon:
+            token.icon ||
+            "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
+        });
+      } catch (error) {
+        console.error(`Error fetching balance for ${token.name}:`, error);
+
     try {
       for (let token of tokens) {
         try {
@@ -87,6 +116,7 @@ const HomePage = () => {
         } catch (error) {
           console.error(`Error fetching balance for ${token.name}:`, error);
         }
+
       }
 
       setMockData(fetchedData);
@@ -226,6 +256,50 @@ const HomePage = () => {
             </thead>
           </table>
 
+
+          <div className="overflow-y-auto h-full">
+            <table className="w-full text-center border-collapse table-fixed">
+              <tbody>
+                {mockData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-100">
+                    <td colSpan={2} className="p-0">
+                      <Link
+                        to={`/token-details/${item.id}`}
+                        state={{
+                          tokenData: {
+                            id: item.id,
+                            token_name: item.token_name,
+                            symbol: item.symbol,
+                            network: item.network,
+                            balance: item.balance,
+                            icon: item.icon,
+                            address: tokens.find((t) => t.id === item.id)
+                              ?.address,
+                            decimals: tokens.find((t) => t.id === item.id)
+                              ?.decimals,
+                          },
+                        }}
+                        className="w-full flex justify-between"
+                      >
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                          <img
+                            src={item.icon}
+                            className="w-[20px] h-[20px] rounded-full"
+                            alt="icon"
+                          />
+                          {item.token_name}
+                        </div>
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                          {item.balance} {item.token_name}
+                        </div>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-[#464446] text-[16px]">
@@ -262,6 +336,7 @@ const HomePage = () => {
               </table>
             </div>
           )}
+
         </div>
       </main>
 
