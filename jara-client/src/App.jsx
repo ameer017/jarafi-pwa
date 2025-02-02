@@ -32,7 +32,7 @@ function App() {
         <Route path="/trade-with-ease" element={<TWE />} />
         <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
         <Route path="/dashboard" element={<HomePage />} />
-        <Route path="/token-details/:id" element={<TokenDetails tokens={tokens} />} />
+        <Route path="/token-details/:id" element={<TokenDetails />} />
         <Route path="/token-details/:id/activities" element={<Activities />} />
         <Route path="/sign-up-user" element={<Register />} />
         <Route path="/confirm-email" element={<ConfirmEmail />} />
@@ -40,7 +40,7 @@ function App() {
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/send" element={<Send />} />
         <Route path="/congrats" element={<Congratulation />} />
-        <Route path="/swap" element={< Swap/>}/>
+        <Route path="/swap" element={<Swap/>}/>
         <Route path="/recieve" element={<ReceiveAssets />} />
         <Route path="/login" element={<Login />} />
       </Routes>

@@ -10,7 +10,13 @@ import { BiScan } from "react-icons/bi";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { cEUR, cUsd, cREAL, celoToken, commons } from "../../constant/otherChains";
+import {
+  cEUR,
+  cUsd,
+  cREAL,
+  celoToken,
+  commons,
+} from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
 
@@ -19,7 +25,6 @@ const HomePage = () => {
   const { address } = useAccount();
   const [totalBalance, setTotalBalance] = useState(0);
 
-  
   const handleScan = (data) => {
     if (data) {
       setCrypto(data);
@@ -59,7 +64,6 @@ const HomePage = () => {
           token.decimals
         );
 
-        // Add the token's balance to the total balance
         totalBalance += parseFloat(formattedBalance);
 
         fetchedData.push({
@@ -178,6 +182,20 @@ const HomePage = () => {
                     <td colSpan={2} className="p-0">
                       <Link
                         to={`/token-details/${item.id}`}
+                        state={{
+                          tokenData: {
+                            id: item.id,
+                            token_name: item.token_name,
+                            symbol: item.symbol,
+                            network: item.network,
+                            balance: item.balance,
+                            icon: item.icon,
+                            address: tokens.find((t) => t.id === item.id)
+                              ?.address,
+                            decimals: tokens.find((t) => t.id === item.id)
+                              ?.decimals,
+                          },
+                        }}
                         className="w-full flex justify-between"
                       >
                         <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
