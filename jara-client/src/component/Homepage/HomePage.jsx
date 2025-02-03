@@ -16,7 +16,6 @@ import {
   cREAL,
   celoToken,
   commons,
-
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
@@ -56,36 +55,6 @@ const HomePage = () => {
     const provider = new JsonRpcProvider("https://forno.celo.org");
     let totalBalance = 0;
 
-
-    for (let token of tokens) {
-      try {
-        const contract = new Contract(
-          token.address,
-          ["function balanceOf(address) view returns (uint256)"],
-          provider
-        );
-
-        const tokenBalance = await contract.balanceOf(address);
-        const formattedBalance = ethers.formatUnits(
-          tokenBalance,
-          token.decimals
-        );
-
-        totalBalance += parseFloat(formattedBalance);
-
-        fetchedData.push({
-          id: token.id,
-          token_name: token.name,
-          symbol: token.nativeCurrency?.symbol || "N/A",
-          network: token.network?.name || "Unknown Network",
-          balance: ethers.formatUnits(tokenBalance, token.decimals),
-          icon:
-            token.icon ||
-            "https://img.icons8.com/?size=100&id=DEDR1BLPBScO&format=png&color=000000",
-        });
-      } catch (error) {
-        console.error(`Error fetching balance for ${token.name}:`, error);
-
     try {
       for (let token of tokens) {
         try {
@@ -116,7 +85,6 @@ const HomePage = () => {
         } catch (error) {
           console.error(`Error fetching balance for ${token.name}:`, error);
         }
-
       }
 
       setMockData(fetchedData);
@@ -256,7 +224,6 @@ const HomePage = () => {
             </thead>
           </table>
 
-
           <div className="overflow-y-auto h-full">
             <table className="w-full text-center border-collapse table-fixed">
               <tbody>
@@ -336,7 +303,6 @@ const HomePage = () => {
               </table>
             </div>
           )}
-
         </div>
       </main>
 
