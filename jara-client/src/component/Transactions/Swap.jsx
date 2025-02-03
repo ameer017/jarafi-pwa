@@ -3,6 +3,7 @@ import SwapAssetsPage from '../Modal/SwapAssetsPage';
 import ExchangeRateModal from '../Modal/ExchangeRateModal';
 import FeesModal from '../Modal/FeesModal';
 import Modal from '../Modal/Modal';
+import UniSwap  from '../Modal/UniSwap';
 
 const Swap = () => {
   const [currentPage, setCurrentPage] = useState(2);
@@ -32,6 +33,11 @@ const Swap = () => {
 
   return (
     <div>
+      
+        <UniSwap/>
+     
+
+
       {currentPage === 2 && (
         <SwapAssetsPage onExchangeRate={handleExchangeRate} />
       )}
