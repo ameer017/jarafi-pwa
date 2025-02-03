@@ -16,10 +16,13 @@ import {
   cREAL,
   celoToken,
   commons,
+  cusdt,
+  USDC,
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
 import QrReader from "react-qr-scanner";
+import capsuleClient from "../../constant/capsuleClient";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -42,6 +45,15 @@ const HomePage = () => {
 
   const handleError = (err) => {
     console.error("QR Scan Error:", err);
+  };
+
+  const logoutAccount = async () => {
+    try {
+      await capsuleClient.logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const fetchTokenBalances = async (address, tokens) => {
@@ -115,7 +127,7 @@ const HomePage = () => {
           {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "N/A"}
         </p>
 
-        <button className="mr-2">
+        <button className="mr-2" onClick={logoutAccount}>
           <IoIosLogOut size={25} color="#ffffff" />
         </button>
       </div>
@@ -314,7 +326,10 @@ const HomePage = () => {
           <RiTokenSwapLine size={25} color="#B0AFB1" />
         </Link>
         <LuCreditCard size={25} color="#B0AFB1" />
-        <LuSettings2 size={25} color="#B0AFB1" />
+
+        <Link to="/settings">
+          <LuSettings2 size={25} color="#B0AFB1" />
+        </Link>
       </footer>
     </section>
   );

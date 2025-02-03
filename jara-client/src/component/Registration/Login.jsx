@@ -50,9 +50,9 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setIsModalOpen(true);
 
-    const isLoggedIn = await capsuleClient.isFullyLoggedIn();
+    const loggedIn = await capsuleClient.isFullyLoggedIn();
 
-    if (isLoggedIn) {
+    if (loggedIn) {
       navigate("/dashboard");
     }
   };
