@@ -61,8 +61,10 @@ function App() {
         <Route path="/send" element={<AuthRoute element={<Send />} />} />
         <Route path="/congrats" element={<Congratulation />} />
 
-        <Route path="/swap" element={<Swap />} />
-        <Route path="/recieve" element={<ReceiveAssets />} />
+        <Route
+          path="/recieve"
+          element={<AuthRoute element={<ReceiveAssets />} />}
+        />
 
         <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
         <Route

@@ -99,7 +99,11 @@ const Login = () => {
       } else {
         setIsLoggedIn(true);
         setIsLoading(false);
-        navigate("/dashboard", { state: { email } });
+        const loggedIn = await capsuleClient.isFullyLoggedIn();
+
+        if (loggedIn) {
+          navigate("/dashboard", { state: { email } });
+        }
       }
     } else {
       await capsuleClient.createUser(email);
