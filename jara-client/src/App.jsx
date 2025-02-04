@@ -18,6 +18,7 @@ import {
   TWE,
   WalletShowcase,
   Send,
+  CardPage
 } from "./index";
 import {
   cEUR,
@@ -40,11 +41,12 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/p2p" element={<MainPage />} />
+        <Route path="/Cards" element={<MainPage />} />
         <Route path="/main-screen" element={<MainScreen />} />
         <Route path="/trade-with-ease" element={<TWE />} />
         <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
         <Route path="/dashboard" element={<HomePage />} />
-        <Route path="/token-details/:id" element={<TokenDetails  tokens={tokens} />} />
+        <Route path="/token-details/:id" element={<TokenDetails tokens={tokens} />} />
         <Route path="/token-details/:id/activities" element={<Activities />} />
         <Route path="/sign-up-user" element={<Register />} />
 
@@ -52,9 +54,10 @@ function App() {
         <Route path="/create-wallet" element={<CreateWallet />} />
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/send" element={<AuthRoute element={<Send />} />} />
+        <Route path="/card-display" element={<CardPage />}  />
         <Route path="/congrats" element={<Congratulation />} />
 
-        <Route path="/swap" element={<Swap/>}/>
+        <Route path="/swap" element={<Swap />} />
         <Route path="/recieve" element={<ReceiveAssets />} />
 
         <Route path="/swap" element={<AuthRoute element={<Swap />} />} />

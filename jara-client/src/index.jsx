@@ -17,3 +17,4 @@ export { default as Login } from "./component/Registration/Login";
 export { default as Send } from "./component/Transactions/Send";
 
 export { default as Swap } from "./component/Transactions/Swap";
+export {default as CardPage} from "./component/Cards/CardsPage"
