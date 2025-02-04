@@ -16,6 +16,8 @@ import {
   cREAL,
   celoToken,
   commons,
+  cusdt
+, USDC
 
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
