@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 
 // Custom hook to handle clicks outside of the dropdown
 const useOutsideClick = (callback) => {
@@ -22,13 +20,21 @@ const useOutsideClick = (callback) => {
   return ref;
 };
 
-const SwapAssetsPage = ({ onExchangeRate }) => {
-  const [selectedTokenFrom, setSelectedTokenFrom] = useState("USDT");
-  const [selectedTokenTo, setSelectedTokenTo] = useState("cUSD");
-  const [tokenFromAmount, setTokenFromAmount] = useState("0.00");
-  const [tokenToAmount, setTokenToAmount] = useState("0.00");
-  const [exchangeRate, setExchangeRate] = useState("1 USDT = 0.9997 cUSD");
-  const [slippage, setSlippage] = useState("-0.03%");
+const SwapAssetsPage = ({
+  onExchangeRate,
+  tokenFromAmount,
+  setTokenFromAmount,
+  tokenToAmount,
+  setTokenToAmount,
+  selectedTokenFrom,
+  setSelectedTokenFrom,
+  selectedTokenTo,
+  setSelectedTokenTo,
+  exchangeRate,
+  setExchangeRate,
+  slippage,
+  setSlippage,
+}) => {
   const [isFromDropdownOpen, setIsFromDropdownOpen] = useState(false);
   const [isToDropdownOpen, setIsToDropdownOpen] = useState(false);
 
@@ -45,10 +51,6 @@ const SwapAssetsPage = ({ onExchangeRate }) => {
     setSelectedTokenTo(token);
     setExchangeRate(`1 ${selectedTokenFrom} = 0.9997 ${token}`);
     setIsToDropdownOpen(false);
-  };
-
-  const handleSwap = () => {
-    onExchangeRate();
   };
 
   const TokenSelector = ({
@@ -99,9 +101,8 @@ const SwapAssetsPage = ({ onExchangeRate }) => {
   return (
     <div className="flex bg-[#0F0140] min-h-screen justify-center items-center px-4 sm:px-6 md:px-8">
       <div className="bg-[#fff] w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl p-4 sm:p-6 md:p-8 rounded-lg">
-        {/* <div > */}
+        <div className="space-y-7 sm:space-y-4">
           {/* Token From */}
-          <div className="space-y-7 sm:space-y-4">
           <div className="bg-[#1a1b3e] rounded-lg p-3 sm:p-4">
             <div className="flex justify-between items-center">
               <input
@@ -138,31 +139,29 @@ const SwapAssetsPage = ({ onExchangeRate }) => {
               />
             </div>
           </div>
-          </div>
-          
-
-          {/* Exchange Rate Display */}
-          <div className="bg-[#1a1b3e] rounded-lg py-3 sm:p-10 my-9">
-            <div className="flex justify-between items-center">
-              <span className="text-white text-base sm:text-lg md:text-xl">
-                {exchangeRate}
-              </span>
-              <span className="text-gray-400 text-xs sm:text-sm">
-                {slippage}
-              </span>
-            </div>
-          </div>
-
-          {/* Swap Button */}
-          <button
-            onClick={handleSwap}
-            className="w-full bg-[#FFE600] text-black font-medium py-2 sm:py-3 rounded-lg mt-4 sm:mt-8 hover:bg-[#FFE600]/90 transition-colors text-sm sm:text-base"
-          >
-            Continue
-          </button>
         </div>
+
+        {/* Exchange Rate Display */}
+        <div className="bg-[#1a1b3e] rounded-lg py-3 sm:p-10 my-9">
+          <div className="flex justify-between items-center">
+            <span className="text-white text-base sm:text-lg md:text-xl">
+              {exchangeRate}
+            </span>
+            <span className="text-gray-400 text-xs sm:text-sm">
+              {slippage}
+            </span>
+          </div>
+        </div>
+
+        {/* Swap Button */}
+        <button
+          onClick={onExchangeRate}
+          className="w-full bg-[#FFE600] text-black font-medium py-2 sm:py-3 rounded-lg mt-4 sm:mt-8 hover:bg-[#FFE600]/90 transition-colors text-sm sm:text-base"
+        >
+          Continue
+        </button>
       </div>
-    // </div>
+    </div>
   );
 };
 

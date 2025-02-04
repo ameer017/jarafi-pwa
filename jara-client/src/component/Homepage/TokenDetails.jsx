@@ -1,81 +1,203 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { GoPlus } from "react-icons/go";
+import { RiTokenSwapLine } from "react-icons/ri";
 import {
-  LuArrowUpToLine,
   LuCreditCard,
   LuSettings2,
   LuWalletMinimal,
+  LuArrowUpToLine,
 } from "react-icons/lu";
-import { RiTokenSwapLine } from "react-icons/ri";
+import { Link, useNavigate } from "react-router-dom";
+import { useAccount } from "wagmi";
+import { FaPlus } from "react-icons/fa";
 
-// const mockData = [
-//   {
-//     id: 1,
-//     first_name: "1.00 cUSD",
-//     price: "$1.00",
-//     token_name: "Celo Dollar",
-//     icon: "https://images.ctfassets.net/wr0no19kwov9/2Yfw57sF3oz0UuItz3niKq/066d7923f857cdc91b340d9c17bba416/brand-kit-symbol-image-04.png?fm=webp&w=3840&q=70",
-//   },
-//   // Add more tokens if needed
-// ];
-
-const ActionButton = ({ label, icon, rotate }) => (
-  <div className="flex flex-col items-center gap-2 text-white text-[14px]">
-    <button
-      className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${
-        rotate ? "rotate-180" : ""
-      }`}
-    >
-      {icon}
-    </button>
-    {label}
-  </div>
-);
+import { Contract, ethers, JsonRpcProvider } from "ethers";
+import { useLocation, useParams } from "react-router-dom";
 
 const TokenDetails = () => {
-  const { id } = useParams();
-  const [tokenDetails, setTokenDetails] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [mockData, setMockData] = useState([]);
 
-  console.log(id)
+  const tokenData = location.state?.tokenData;
+  const { address } = useAccount();
+
+  const [tokenBalance, setTokenBalance] = useState(null);
+
+  const fetchTokenBalance = async () => {
+    if (!address || !tokenData?.address) {
+      setError("Token data not available");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const provider = new JsonRpcProvider("https://forno.celo.org");
+      const contract = new Contract(
+        tokenData.address,
+        ["function balanceOf(address) view returns (uint256)"],
+        provider
+      );
+
+      const balance = await contract.balanceOf(address);
+      const formattedBalance = ethers.formatUnits(
+        balance,
+        tokenData.decimals || 18
+      );
+      setTokenBalance(formattedBalance);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching token balance:", error);
+      setError("Failed to fetch token balance");
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Simulate fetching the token details
-    // const token = mockData.find((item) => item.id === parseInt(id));
-    setTokenDetails();
-  }, [id]);
+    fetchTokenBalance();
+  }, [address, tokenData]);
 
-  // if (!tokenDetails) return <p>Loading...</p>;
+  if (isLoading) {
+    return (
+      <section className="bg-[#0F0140] h-screen w-full flex items-center justify-center">
+        <p className="text-white">Loading token details...</p>
+      </section>
+    );
+  }
+
+  if (error || !tokenData) {
+    return (
+      <section className="bg-[#0F0140] h-screen w-full flex flex-col items-center justify-center">
+        <p className="text-white mb-4">{error || "Token data not found"}</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="bg-[#F2E205] rounded-lg px-4 py-2 text-[#0F0140]"
+        >
+          Go Back
+        </button>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
-      {/* <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
+      <div className="flex items-center justify-between px-4 py-2">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-white flex items-center gap-2"
+        >
+          ← Back
+        </button>
+      </div>
+
+      <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
         <section className="flex flex-col justify-between w-full max-w-[1024px] px-4 md:p-6">
-          <section className="mt-4">
-            <p className="text-[#F2EDE4] text-[16px] text-center">
-              {tokenDetails.token_name}
-            </p>
-            <p className="text-[#F2EDE4] text-[30px] text-center">
-              {tokenDetails.price}
-            </p>
+          <section className="flex items-center gap-2">
+            <img
+              src={tokenData.icon}
+              className="w-[24px] h-[24px] rounded-full"
+              alt={tokenData.token_name}
+            />
+            <p className="text-[#F2EDE4] text-[16px]">{tokenData.token_name}</p>
           </section>
-          <section className="flex justify-between mt-4">
+
+          <section className="mt-4">
+            <p className="text-[#F2EDE4] text-[32px]">${tokenBalance}</p>
+          </section>
+
+          <section className="flex justify-between items-center px-8 mt-12">
             {[
-              { label: "Buy", icon: <GoPlus size={25} color="#0F0140" /> },
+              {
+                label: "Buy",
+                icon: <FaPlus size={25} color="#0F0140" />,
+                routes: "/buy",
+              },
               {
                 label: "Send",
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
+                routes: "/send",
               },
               {
                 label: "Withdraw",
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
                 rotate: true,
+                routes: "/withdraw",
               },
-            ].map((action, index) => (
-              <ActionButton key={index} {...action} />
+            ].map(({ label, icon, routes }, index) => (
+              <div
+                key={index}
+                className="flex flex-col items-center gap-2 text-white text-[14px]"
+              >
+                <button
+                  className="bg-[#F2E205] rounded-lg h-[50px] w-[50px] flex items-center justify-center cursor-pointer"
+                  onClick={() => navigate(routes)}
+                >
+                  {icon}
+                </button>
+                {label}
+              </div>
             ))}
           </section>
         </section>
-      </header> */}
+      </header>
+
+      <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
+        <div className="h-full border">
+          <table className="w-full text-center border-collapse">
+            <thead>
+              <tr>
+                <th className="p-4 border-b text-[#464446] text-[14px] font-[400]">
+                  Your Balance
+                </th>
+                <th className="p-4 border-b text-[#464446] text-[14px] font-[400]">
+                  Activity
+                </th>
+              </tr>
+            </thead>
+          </table>
+
+          <div className="overflow-y-auto h-full">
+            <table className="w-full text-center border-collapse table-fixed">
+              <tbody>
+                {mockData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-100">
+                    <td colSpan={2} className="p-0">
+                      <Link
+                        to={`/token-details/${item.id}`}
+                        className="w-full flex justify-between"
+                      >
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                          <img
+                            src={item.icon}
+                            className="w-[20px] h-[20px] rounded-full"
+                            alt="icon"
+                          />
+                          {item.token_name}
+                        </div>
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                          {item.balance} {item.token_name}
+                        </div>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
+        <Link to="/dashboard">
+          <LuWalletMinimal size={25} color="#B0AFB1" />
+        </Link>
+        <Link to="/p2p">
+          <RiTokenSwapLine size={25} color="#B0AFB1" />
+        </Link>
+        <LuCreditCard size={25} color="#B0AFB1" />
+        <LuSettings2 size={25} color="#B0AFB1" />
+      </footer>
     </section>
   );
 };

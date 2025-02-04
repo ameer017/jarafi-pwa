@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   IoCopyOutline,
   IoShieldCheckmarkOutline,
-  IoWalletOutline,
+  IoWalletOutline
 } from "react-icons/io5";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -41,7 +41,7 @@ const WalletShowcase = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F4F1] flex items-center justify-center p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-8  space-y-6">
+      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-8 space-y-6">
         <div className="max-w-md mx-auto flex flex-col items-center">
           <img
             src="/wallet.png"
@@ -50,7 +50,7 @@ const WalletShowcase = () => {
           />
 
           <h1 className="text-[24px] font-bold text-center mt-16 mb-6 text-[#0F0140]">
-            Here&apos;s your wallet!
+            Here's your wallet!
           </h1>
 
           <div className="flex justify-between items-center bg-[#E3D7C5] rounded-[10px] w-full px-4 py-2 mb-4">
@@ -67,6 +67,7 @@ const WalletShowcase = () => {
               onClick={handleCopy}
               className="flex items-center justify-center"
               aria-label="Copy wallet address"
+              disabled={!walletAddress}
             >
               <IoCopyOutline
                 size={24}
@@ -88,7 +89,7 @@ const WalletShowcase = () => {
               <div className="bg-yellow-50 h-9 w-9 flex justify-center items-center rounded-full border border-yellow-200">
                 <IoShieldCheckmarkOutline size={18} />
               </div>
-              <p className="text-[12px] text-[#6F6B6F] ">
+              <p className="text-[12px] text-[#6F6B6F]">
                 Address above acts like an account number for receiving funds
               </p>
             </div>
@@ -97,7 +98,7 @@ const WalletShowcase = () => {
               <div className="bg-yellow-50 h-9 w-9 flex justify-center items-center rounded-full border border-yellow-200">
                 <IoWalletOutline size={18} />
               </div>
-              <p className="text-[12px] text-[#6F6B6F] ">
+              <p className="text-[12px] text-[#6F6B6F]">
                 It's a non-custodial wallet, which means you have total control
                 over your funds.
               </p>
