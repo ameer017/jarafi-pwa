@@ -16,12 +16,12 @@ import {
   cREAL,
   celoToken,
   commons,
-  cusdt,
-  USDC,
+
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
 import QrReader from "react-qr-scanner";
+import capsuleClient from "../../constant/capsuleClient";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -44,6 +44,15 @@ const HomePage = () => {
 
   const handleError = (err) => {
     console.error("QR Scan Error:", err);
+  };
+
+  const logoutAccount = async () => {
+    try {
+      await capsuleClient.logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const fetchTokenBalances = async (address, tokens) => {
@@ -117,7 +126,7 @@ const HomePage = () => {
           {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "N/A"}
         </p>
 
-        <button className="mr-2">
+        <button className="mr-2" onClick={logoutAccount}>
           <IoIosLogOut size={25} color="#ffffff" />
         </button>
       </div>
@@ -226,6 +235,50 @@ const HomePage = () => {
             </thead>
           </table>
 
+
+          <div className="overflow-y-auto h-full">
+            <table className="w-full text-center border-collapse table-fixed">
+              <tbody>
+                {mockData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-100">
+                    <td colSpan={2} className="p-0">
+                      <Link
+                        to={`/token-details/${item.id}`}
+                        state={{
+                          tokenData: {
+                            id: item.id,
+                            token_name: item.token_name,
+                            symbol: item.symbol,
+                            network: item.network,
+                            balance: item.balance,
+                            icon: item.icon,
+                            address: tokens.find((t) => t.id === item.id)
+                              ?.address,
+                            decimals: tokens.find((t) => t.id === item.id)
+                              ?.decimals,
+                          },
+                        }}
+                        className="w-full flex justify-between"
+                      >
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                          <img
+                            src={item.icon}
+                            className="w-[20px] h-[20px] rounded-full"
+                            alt="icon"
+                          />
+                          {item.token_name}
+                        </div>
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                          {item.balance} {item.token_name}
+                        </div>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-[#464446] text-[16px]">
@@ -273,7 +326,10 @@ const HomePage = () => {
           <RiTokenSwapLine size={25} color="#B0AFB1" />
         </Link>
         <LuCreditCard size={25} color="#B0AFB1" />
-        <LuSettings2 size={25} color="#B0AFB1" />
+
+        <Link to="/settings">
+          <LuSettings2 size={25} color="#B0AFB1" />
+        </Link>
       </footer>
     </section>
   );
