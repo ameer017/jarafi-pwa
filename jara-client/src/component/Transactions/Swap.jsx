@@ -4,6 +4,7 @@ import ExchangeRateModal from '../Modal/ExchangeRateModal';
 import FeesModal from '../Modal/FeesModal';
 import Modal from '../Modal/Modal';
 import UniSwap  from '../Modal/UniSwap';
+import { useAccount } from 'wagmi';
 
 const Swap = () => {
   const { address } = useAccount();
@@ -14,8 +15,8 @@ const Swap = () => {
   const [amount, setAmount] = useState("");
   const [swapDetails, setSwapDetails] = useState(null);
   const [selectedChain, setSelectedChain] = useState("Celo");
-  const [tokenIn, setTokenIn] = useState(cUsd);
-  const [tokenOut, setTokenOut] = useState(celoToken);
+  // const [tokenIn, setTokenIn] = useState(cUsd);
+  // const [tokenOut, setTokenOut] = useState(celoToken);
 
   const handleExchangeRate = async () => {
     try {
@@ -53,20 +54,20 @@ const Swap = () => {
     }
   };
 
-  const { write: executeSwap } = useContractWrite({
-    address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-    abi: [
-      "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)",
-    ],
-    functionName: "swapExactTokensForTokens",
-    args: [
-      parseUnits(amount, tokenIn.decimals),
-      swapDetails?.minimumAmountOut.toString(),
-      [tokenIn.address, tokenOut.address],
-      address,
-      Math.floor(Date.now() / 1000) + 60 * 20,
-    ],
-  });
+  // const { write: executeSwap } = useContractWrite({
+  //   address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  //   abi: [
+  //     "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)",
+  //   ],
+  //   functionName: "swapExactTokensForTokens",
+  //   args: [
+  //     parseUnits(amount, tokenIn.decimals),
+  //     swapDetails?.minimumAmountOut.toString(),
+  //     [tokenIn.address, tokenOut.address],
+  //     address,
+  //     Math.floor(Date.now() / 1000) + 60 * 20,
+  //   ],
+  // });
 
   const handleSwap = async () => {
     if (selectedChain === "Celo") {
@@ -99,10 +100,10 @@ const Swap = () => {
           setAmount={setAmount}
           selectedChain={selectedChain}
           setSelectedChain={setSelectedChain}
-          tokenIn={tokenIn}
-          setTokenIn={setTokenIn}
-          tokenOut={tokenOut}
-          setTokenOut={setTokenOut}
+          // tokenIn={tokenIn}
+          // setTokenIn={setTokenIn}
+          // tokenOut={tokenOut}
+          // setTokenOut={setTokenOut}
         />
       )}
       {currentPage === 3 && (
