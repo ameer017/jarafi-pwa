@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { WagmiProvider } from "wagmi";
 import { config } from "./constant/config.js";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "@getpara/react-sdk/styles.css";
 
 const queryClient = new QueryClient();
 

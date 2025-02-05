@@ -1,7 +1,6 @@
 import { http, createConfig } from "wagmi";
 import { capsuleConnector } from "@usecapsule/wagmi-v2-integration";
 import { OAuthMethod } from "@usecapsule/web-sdk";
-import capsuleClient from "./capsuleClient";
 import {
   cEUR,
   cUsd,
@@ -11,9 +10,10 @@ import {
   cusdt,
   USDC,
 } from "./otherChains";
+import para from "./capsuleClient";
 
 const connector = capsuleConnector({
-  capsule: capsuleClient,
+  capsule: para,
   chains: [celoToken, cUsd, cREAL, cEUR, cusdt, USDC],
   appName: "Jarafi PWA",
   options: {},

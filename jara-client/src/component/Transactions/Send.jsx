@@ -12,7 +12,7 @@ import {
   commons,
   cusdt,
 } from "../../constant/otherChains";
-import capsuleClient from "../../constant/capsuleClient";
+import para from "../../constant/capsuleClient";
 
 import {
   createCapsuleAccount,
@@ -192,7 +192,7 @@ const Send = () => {
       return;
     }
 
-    await capsuleClient.isFullyLoggedIn();
+    await para.isFullyLoggedIn();
 
     // console.log("isLoggedIn:", isLoggedIn);
 
@@ -205,9 +205,9 @@ const Send = () => {
         await switchChain(config, { chainId: selectedToken.id });
       }
 
-      const viemCapsuleAccount = await createCapsuleAccount(capsuleClient);
+      const viemCapsuleAccount = await createCapsuleAccount(para);
 
-      const capsuleViemSigner = createCapsuleViemClient(capsuleClient, {
+      const capsuleViemSigner = createCapsuleViemClient(para, {
         account: viemCapsuleAccount,
         chain: selectedChain,
         transport: http("https://forno.celo.org"),
