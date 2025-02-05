@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import para from "../../constant/capsuleClient";
+import para from "../../constant/paraClient";
 
 const IDLE_TIMEOUT = 60 * 60 * 1000;
 
