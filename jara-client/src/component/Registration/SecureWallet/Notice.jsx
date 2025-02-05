@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import para from "../../../constant/capsuleClient";
+import para from "../../../constant/paraClient";
 
 const Notice = ({ onClose, email }) => {
   const navigate = useNavigate();
@@ -9,13 +9,12 @@ const Notice = ({ onClose, email }) => {
   const handleContinue = async () => {
     setIsLoading(true);
     try {
-      const authUrl = await para.getSetUpBiometricsURL(false);
+      const authUrl = await para.getSetUpBiometricsURL({ authType: "email", isForNewDevice: false });
       window.open(authUrl, "signUpPopup", "popup=true");
 
-      console.log("capsule.wallets:", para.wallets);
+      console.log("para.wallets:", para.wallets);
 
-      const { walletIds, recoverySecret } =
-        await para.waitForPasskeyAndCreateWallet();
+      const { walletIds, recoverySecret } = await para.waitForPasskeyAndCreateWallet();
       console.log("walletIds:", walletIds);
 
       const fetchWallet = await para.findWallet(walletIds.EVM[0]);
@@ -53,8 +52,7 @@ const Notice = ({ onClose, email }) => {
             onClick={handleContinue}
             className={`w-full flex items-center justify-center gap-2 py-3 border border-gray-300 rounded-lg bg-[#F2E205] text-sm font-medium text-gray-700 hover:bg-yellow-200 focus:outline-none ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
+            }`}>
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
             ) : (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ParaModal } from "@getpara/react-sdk";
-import para from "../../constant/capsuleClient";
+import para from "../../constant/paraClient";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -32,22 +32,14 @@ const Register = () => {
 
     try {
       await para.logout();
-      const isExistingUser = await para.checkIfUserExists(email);
+      const isExistingUser = await para.checkIfUserExists({ email });
 
       if (isExistingUser) {
-        const webAuthUrlForLogin = await para.initiateUserLogin(
-          email,
-          false,
-          "email"
-        );
+        const webAuthUrlForLogin = await para.initiateUserLogin({ email });
 
-        const popupWindow = window.open(
-          webAuthUrlForLogin,
-          "loginPopup",
-          "popup=true,width=500,height=700"
-        );
+        const popupWindow = window.open(webAuthUrlForLogin, "loginPopup", "popup=true,width=500,height=700");
 
-        await para.waitForLoginAndSetup(popupWindow);
+        await para.waitForLoginAndSetup({ popupWindow });
 
         navigate("/dashboard");
       } else {
@@ -81,12 +73,13 @@ const Register = () => {
           <p className="text-sm text-gray-600 mt-1">Hi, what's your email?</p>
         </div>
 
-        <form onSubmit={handleEmailLogin} className="space-y-4">
+        <form
+          onSubmit={handleEmailLogin}
+          className="space-y-4">
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+              className="block text-sm font-medium text-gray-700">
               Email address
             </label>
             <input
@@ -105,8 +98,7 @@ const Register = () => {
             disabled={isLoading}
             className={`w-full flex justify-center py-3 px-4 rounded-lg text-sm font-medium text-[#4F4E50] bg-[#F2E205] hover:bg-[#F7E353] focus:outline-none ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
+            }`}>
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
@@ -129,8 +121,7 @@ const Register = () => {
             onClick={handleGoogleLogin}
             className={`w-full flex items-center justify-center gap-2 px-4 py-3 border border-[#F2E205] rounded-lg bg-[#FFFEF7] text-sm font-medium text-gray-700 hover:bg-[#FFFEF0] focus:outline-none ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-          >
+            }`}>
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
             ) : (
@@ -160,11 +151,7 @@ const Register = () => {
           />
         </div>
 
-        {localError && (
-          <div className="text-red-500 text-sm text-center mt-2">
-            {localError}
-          </div>
-        )}
+        {localError && <div className="text-red-500 text-sm text-center mt-2">{localError}</div>}
       </div>
     </div>
   );

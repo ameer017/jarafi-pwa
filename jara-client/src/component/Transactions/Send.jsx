@@ -4,28 +4,11 @@ import { Loader2 } from "lucide-react";
 import TokenModal from "../Homepage/TokenModal";
 import { useAccount, useConfig, useWalletClient } from "wagmi";
 import { switchChain } from "wagmi/actions";
-import {
-  cEUR,
-  cUsd,
-  cREAL,
-  celoToken,
-  commons,
-  cusdt,
-} from "../../constant/otherChains";
-import para from "../../constant/capsuleClient";
+import { cEUR, cUsd, cREAL, celoToken, commons, cusdt } from "../../constant/otherChains";
+import para from "../../constant/paraClient";
 
-import {
-  createCapsuleAccount,
-  createCapsuleViemClient,
-} from "@usecapsule/viem-v2-integration";
-import {
-  encodeFunctionData,
-  http,
-  parseUnits,
-  createPublicClient,
-  getContract,
-  formatUnits,
-} from "viem";
+import { createParaAccount, createParaViemClient } from "@getpara/viem-v2-integration";
+import { encodeFunctionData, http, parseUnits, createPublicClient, getContract, formatUnits } from "viem";
 import { getStorageAt } from "@wagmi/core";
 import { celo } from "viem/chains";
 import { useNavigate } from "react-router-dom";
@@ -50,9 +33,7 @@ const Send = () => {
   const { data: walletClient } = useWalletClient();
   const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt];
 
-  const selectedChain = selectedToken
-    ? tokens[selectedToken.name] || celo
-    : celo;
+  const selectedChain = selectedToken ? tokens[selectedToken.name] || celo : celo;
 
   useEffect(() => {
     if (walletClient) {
@@ -78,10 +59,7 @@ const Send = () => {
         );
 
         const tokenBalance = await contract.balanceOf(address);
-        const formattedBalance = ethers.formatUnits(
-          tokenBalance,
-          selectedToken.decimals
-        );
+        const formattedBalance = ethers.formatUnits(tokenBalance, selectedToken.decimals);
         setBalance(formattedBalance);
 
         const currentGasPrice = await provider.getFeeData();
@@ -120,8 +98,7 @@ const Send = () => {
     transport: http("https://forno.celo.org"),
   });
 
-  const IMPLEMENTATION_SLOT =
-    "0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC";
+  const IMPLEMENTATION_SLOT = "0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC";
 
   async function getImplementationAddress(proxyAddress) {
     try {
@@ -132,10 +109,7 @@ const Send = () => {
 
       return `0x${rawImplAddress.slice(-40)}`;
     } catch (error) {
-      console.error(
-        `Failed to fetch implementation for ${proxyAddress}:`,
-        error
-      );
+      console.error(`Failed to fetch implementation for ${proxyAddress}:`, error);
       return null;
     }
   }
@@ -144,10 +118,7 @@ const Send = () => {
     try {
       const contract = getContract({
         address: implementationAddress,
-        abi: [
-          "function transfer(address to, uint256 amount)",
-          "function balanceOf(address) view returns (uint256)",
-        ],
+        abi: ["function transfer(address to, uint256 amount)", "function balanceOf(address) view returns (uint256)"],
         config,
       });
 
@@ -161,12 +132,8 @@ const Send = () => {
   async function fetchAllData() {
     const updatedTokens = await Promise.all(
       tokens.map(async (token) => {
-        const implementationAddress = await getImplementationAddress(
-          token.address
-        );
-        const abi = implementationAddress
-          ? await getAbi(implementationAddress)
-          : null;
+        const implementationAddress = await getImplementationAddress(token.address);
+        const abi = implementationAddress ? await getAbi(implementationAddress) : null;
         return {
           ...token,
           implementationAddress,
@@ -205,10 +172,10 @@ const Send = () => {
         await switchChain(config, { chainId: selectedToken.id });
       }
 
-      const viemCapsuleAccount = await createCapsuleAccount(para);
+      const viemParaAccount = await createParaAccount(para);
 
-      const capsuleViemSigner = createCapsuleViemClient(para, {
-        account: viemCapsuleAccount,
+      const paraViemSigner = createParaViemClient(para, {
+        account: viemParaAccount,
         chain: selectedChain,
         transport: http("https://forno.celo.org"),
       });
@@ -233,7 +200,7 @@ const Send = () => {
       const gasPrice = await publicClient.getGasPrice();
 
       const estimatedGas = await publicClient.estimateGas({
-        account: viemCapsuleAccount,
+        account: viemParaAccount,
         to: selectedToken.address,
         data: encodeFunctionData({
           abi: [abiItem],
@@ -244,12 +211,12 @@ const Send = () => {
       const gasLimit = (estimatedGas * BigInt(110)) / BigInt(100);
 
       const nonce = await publicClient.getTransactionCount({
-        address: viemCapsuleAccount.address.toLowerCase(),
+        address: viemParaAccount.address.toLowerCase(),
         blockTag: "pending",
       });
 
       const tx = {
-        account: viemCapsuleAccount,
+        account: viemParaAccount,
         chain: selectedChain,
         to: selectedToken.address,
         data: encodeFunctionData({
@@ -261,8 +228,8 @@ const Send = () => {
         nonce: nonce,
       };
 
-      const signedTx = await capsuleViemSigner.signTransaction(tx);
-      const txHash = await capsuleViemSigner.sendRawTransaction({
+      const signedTx = await paraViemSigner.signTransaction(tx);
+      const txHash = await paraViemSigner.sendRawTransaction({
         serializedTransaction: signedTx,
       });
 
@@ -270,9 +237,7 @@ const Send = () => {
       setRecipientAddress("");
       setError("");
       setSelectedToken(null);
-      toast.success(
-        `${amountFormatted} ${selectedToken.symbol} sent successfully!`
-      );
+      toast.success(`${amountFormatted} ${selectedToken.symbol} sent successfully!`);
       navigate("/dashboard");
     } catch (error) {
       console.error("Transaction failed:", error);
@@ -309,8 +274,7 @@ const Send = () => {
   const QuickAmountButton = ({ label }) => (
     <button
       onClick={() => handleQuickAmount(label.replace("%", ""))}
-      className="flex-1 py-3 bg-[#1A1831] border border-[#2D2B54] rounded-xl hover:bg-[#231f42] transition-colors"
-    >
+      className="flex-1 py-3 bg-[#1A1831] border border-[#2D2B54] rounded-xl hover:bg-[#231f42] transition-colors">
       <span className="text-white text-sm">{label}</span>
     </button>
   );
@@ -329,9 +293,7 @@ const Send = () => {
           </div>
 
           <div>
-            <label className="text-white text-sm mb-2 block">
-              Recipient Address
-            </label>
+            <label className="text-white text-sm mb-2 block">Recipient Address</label>
             <input
               type="text"
               placeholder="0x..."
@@ -345,8 +307,7 @@ const Send = () => {
             <label className="text-white text-sm mb-2 block">Token</label>
             <button
               onClick={() => setIsTokenModalOpen(true)}
-              className="w-full text-left text-white bg-[#1A1831] border border-[#2D2B54] rounded-xl p-4 hover:bg-[#231f42] transition-colors"
-            >
+              className="w-full text-left text-white bg-[#1A1831] border border-[#2D2B54] rounded-xl p-4 hover:bg-[#231f42] transition-colors">
               {selectedToken ? (
                 <div className="flex items-center">
                   <img
@@ -373,15 +334,17 @@ const Send = () => {
             />
             <div className="text-right mt-2">
               <span className="text-gray-400 text-sm">
-                Available: {parseFloat(balance).toFixed(2)}{" "}
-                {selectedToken?.symbol || ""}
+                Available: {parseFloat(balance).toFixed(2)} {selectedToken?.symbol || ""}
               </span>
             </div>
           </div>
 
           <div className="flex gap-2">
             {["25%", "50%", "75%", "MAX"].map((label) => (
-              <QuickAmountButton key={label} label={label} />
+              <QuickAmountButton
+                key={label}
+                label={label}
+              />
             ))}
           </div>
 
@@ -410,11 +373,8 @@ const Send = () => {
 
           <button
             onClick={handleSend}
-            disabled={
-              isLoading || !selectedToken || !amount || !recipientAddress
-            }
-            className="w-full py-4 rounded-xl bg-[#FFDE00] text-black font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E5C800] transition-colors mt-8"
-          >
+            disabled={isLoading || !selectedToken || !amount || !recipientAddress}
+            className="w-full py-4 rounded-xl bg-[#FFDE00] text-black font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#E5C800] transition-colors mt-8">
             {isLoading ? (
               <div className="flex items-center justify-center">
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
