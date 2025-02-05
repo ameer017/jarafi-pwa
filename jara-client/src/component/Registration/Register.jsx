@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import capsuleClient from "../../constant/capsuleClient";
-import { CapsuleModal } from "@usecapsule/react-sdk";
+import { ParaModal } from "@getpara/react-sdk";
+import para from "../../constant/capsuleClient";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -10,20 +10,20 @@ const Register = () => {
   const [localError, setLocalError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    const checkExistingLogin = async () => {
-      try {
-        const loggedIn = await capsuleClient.isFullyLoggedIn();
-        if (loggedIn) {
-          navigate("/create-wallet");
-        }
-      } catch (error) {
-        console.error("Login check failed:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const checkExistingLogin = async () => {
+  //     try {
+  //       const loggedIn = await para.isFullyLoggedIn();
+  //       if (loggedIn) {
+  //         navigate("/create-wallet");
+  //       }
+  //     } catch (error) {
+  //       console.error("Login check failed:", error);
+  //     }
+  //   };
 
-    checkExistingLogin();
-  }, [navigate]);
+  //   checkExistingLogin();
+  // }, [navigate]);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
@@ -31,11 +31,11 @@ const Register = () => {
     setLocalError(null);
 
     try {
-      await capsuleClient.logout();
-      const isExistingUser = await capsuleClient.checkIfUserExists(email);
+      await para.logout();
+      const isExistingUser = await para.checkIfUserExists(email);
 
       if (isExistingUser) {
-        const webAuthUrlForLogin = await capsuleClient.initiateUserLogin(
+        const webAuthUrlForLogin = await para.initiateUserLogin(
           email,
           false,
           "email"
@@ -47,11 +47,11 @@ const Register = () => {
           "popup=true,width=500,height=700"
         );
 
-        await capsuleClient.waitForLoginAndSetup(popupWindow);
+        await para.waitForLoginAndSetup(popupWindow);
 
         navigate("/dashboard");
       } else {
-        await capsuleClient.createUser(email);
+        await para.createUser(email);
 
         navigate("/confirm-email", { state: { email } });
       }
@@ -66,7 +66,7 @@ const Register = () => {
   const handleGoogleLogin = async () => {
     setIsModalOpen(true);
 
-    const loggedIn = await capsuleClient.isFullyLoggedIn();
+    const loggedIn = await para.isFullyLoggedIn();
 
     if (loggedIn) {
       navigate("/dashboard");
@@ -144,18 +144,12 @@ const Register = () => {
             )}
           </button>
 
-          <CapsuleModal
-            capsule={capsuleClient}
+          <ParaModal
+            para={para}
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             logo={"https://www.jarafi.xyz/assets/full-logo-blue-b7QovqMI.svg"}
-            theme={{
-              foregroundColor: "#ffffff",
-              backgroundColor: "#ffffff",
-              font: "Merriweather",
-              borderRadius: "md",
-              mode: "light",
-            }}
+            theme={{}}
             oAuthMethods={["GOOGLE"]}
             disableEmailLogin
             disablePhoneLogin

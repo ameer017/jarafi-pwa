@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import capsuleClient from "../../constant/capsuleClient";
+import para from "../../constant/capsuleClient";
 
 const ConfirmEmail = () => {
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ const ConfirmEmail = () => {
     setIsLoading(true);
     try {
       const verificationCode = code.join("");
-      const isVerified = await capsuleClient.verifyEmail(verificationCode);
+      const isVerified = await para.verifyEmail(verificationCode);
 
       if (!isVerified) {
         setLocalError("Verification failed. Please try again.");
@@ -69,7 +69,7 @@ const ConfirmEmail = () => {
       }
 
       // Create wallet after email verification
-      // const [wallet, recoverySecret] = await capsuleClient.createWallet();
+      // const [wallet, recoverySecret] = await para.createWallet();
 
       // Navigate to create wallet with wallet details
       navigate("/create-wallet", {

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import capsuleClient from "../../../constant/capsuleClient";
+import para from "../../../constant/capsuleClient";
 
 const Notice = ({ onClose, email }) => {
   const navigate = useNavigate();
@@ -9,16 +9,16 @@ const Notice = ({ onClose, email }) => {
   const handleContinue = async () => {
     setIsLoading(true);
     try {
-      const authUrl = await capsuleClient.getSetUpBiometricsURL(false);
+      const authUrl = await para.getSetUpBiometricsURL(false);
       window.open(authUrl, "signUpPopup", "popup=true");
 
-      console.log("capsule.wallets:", capsuleClient.wallets);
+      console.log("capsule.wallets:", para.wallets);
 
       const { walletIds, recoverySecret } =
-        await capsuleClient.waitForPasskeyAndCreateWallet();
+        await para.waitForPasskeyAndCreateWallet();
       console.log("walletIds:", walletIds);
 
-      const fetchWallet = await capsuleClient.findWallet(walletIds.EVM[0]);
+      const fetchWallet = await para.findWallet(walletIds.EVM[0]);
       console.log(recoverySecret);
       console.log(fetchWallet.address);
 

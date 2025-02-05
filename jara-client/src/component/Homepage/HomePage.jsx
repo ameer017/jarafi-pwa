@@ -23,7 +23,7 @@ import {
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
 import QrReader from "react-qr-scanner";
-import capsuleClient from "../../constant/capsuleClient";
+import para from "../../constant/capsuleClient";
 import { motion } from "framer-motion";
 
 const HomePage = () => {
@@ -52,7 +52,7 @@ const HomePage = () => {
 
   const logoutAccount = async () => {
     try {
-      await capsuleClient.logout();
+      await para.logout();
       navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
