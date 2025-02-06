@@ -24,6 +24,7 @@ import {
   parseUnits,
   createPublicClient,
   getContract,
+  formatUnits,
 } from "viem";
 import { getStorageAt } from "@wagmi/core";
 import { celo } from "viem/chains";
@@ -191,7 +192,7 @@ const Send = () => {
       return;
     }
 
-    const isLoggedIn = await capsuleClient.isFullyLoggedIn();
+    await capsuleClient.isFullyLoggedIn();
 
     // console.log("isLoggedIn:", isLoggedIn);
 
@@ -214,6 +215,7 @@ const Send = () => {
 
       const amountInWei = parseUnits(amount, selectedToken.decimals);
       await getImplementationAddress(selectedToken.address);
+      const amountFormatted = formatUnits(amountInWei, selectedToken.decimals);
 
       const abiItem = {
         constant: false,
@@ -268,7 +270,9 @@ const Send = () => {
       setRecipientAddress("");
       setError("");
       setSelectedToken(null);
-      toast.success(`${amountInWei.toString(1)} sent successfully!`);
+      toast.success(
+        `${amountFormatted} ${selectedToken.symbol} sent successfully!`
+      );
       navigate("/dashboard");
     } catch (error) {
       console.error("Transaction failed:", error);

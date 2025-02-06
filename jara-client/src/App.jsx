@@ -27,9 +27,10 @@ import {
   celoToken,
   commons,
   cusdt,
-  USDC
+  USDC,
 } from "./constant/otherChains";
 import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
+import Settings from "./component/Settings/Settings";
 
 const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
 
@@ -57,7 +58,7 @@ function App() {
         <Route path="/card-display" element={<CardPage />}  />
         <Route path="/congrats" element={<Congratulation />} />
 
-        <Route path="/swap" element={<Swap />} />
+        <Route path="/swap" element={<Swap/>}/>
         <Route path="/recieve" element={<ReceiveAssets />} />
 
         <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
@@ -67,6 +68,7 @@ function App() {
         />
 
         <Route path="/login" element={<Login />} />
+        <Route path="/settings" element={<Settings />} />
       </Routes>
     </>
   );

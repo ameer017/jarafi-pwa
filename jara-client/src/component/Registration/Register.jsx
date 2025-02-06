@@ -15,7 +15,7 @@ const Register = () => {
       try {
         const loggedIn = await capsuleClient.isFullyLoggedIn();
         if (loggedIn) {
-          navigate('/create-wallet');
+          navigate("/create-wallet");
         }
       } catch (error) {
         console.error("Login check failed:", error);
@@ -65,6 +65,12 @@ const Register = () => {
 
   const handleGoogleLogin = async () => {
     setIsModalOpen(true);
+
+    const loggedIn = await capsuleClient.isFullyLoggedIn();
+
+    if (loggedIn) {
+      navigate("/dashboard");
+    }
   };
 
   return (
@@ -128,10 +134,12 @@ const Register = () => {
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-gray-700 border-t-transparent rounded-full animate-spin" />
             ) : (
-              <div className="flex items-center justify-center gap-2">Continue with Google 
-              <img 
-                src="https://image.similarpng.com/file/similarpng/very-thumbnail/2020/06/Logo-google-icon-PNG.png" className="w-[24px] h-[24px] border-2 border-white border-t-transparent rounded-full "
-              />
+              <div className="flex items-center justify-center gap-2">
+                Continue with Google
+                <img
+                  src="https://image.similarpng.com/file/similarpng/very-thumbnail/2020/06/Logo-google-icon-PNG.png"
+                  className="w-[24px] h-[24px] border-2 border-white border-t-transparent rounded-full "
+                />
               </div>
             )}
           </button>

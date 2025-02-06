@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { RiTokenSwapLine } from "react-icons/ri";
+import { GoEye, GoEyeClosed } from "react-icons/go";
 import {
   LuCreditCard,
   LuSettings2,
@@ -16,12 +17,13 @@ import {
   cREAL,
   celoToken,
   commons,
-  cusdt,
-  USDC,
+
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
 import QrReader from "react-qr-scanner";
+import capsuleClient from "../../constant/capsuleClient";
+import { motion } from "framer-motion";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ const HomePage = () => {
   const [scannedAddress, setScannedAddress] = useState("");
   const [mockData, setMockData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(true);
 
   const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
 
@@ -44,6 +47,15 @@ const HomePage = () => {
 
   const handleError = (err) => {
     console.error("QR Scan Error:", err);
+  };
+
+  const logoutAccount = async () => {
+    try {
+      await capsuleClient.logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const fetchTokenBalances = async (address, tokens) => {
@@ -112,12 +124,12 @@ const HomePage = () => {
         Finish setting up your account for maximum security!
       </p>
 
-      <div className="flex items-end justify-between flex-col gap-2">
+      <div className="flex items-center justify-end  gap-2">
         <p className="text-[20px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
           {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "N/A"}
         </p>
 
-        <button className="mr-2">
+        <button className="mr-2" onClick={logoutAccount}>
           <IoIosLogOut size={25} color="#ffffff" />
         </button>
       </div>
@@ -169,8 +181,32 @@ const HomePage = () => {
             </div>
           </section>
 
-          <section className="mt-4">
-            <p className="text-[#F2EDE4] text-[32px]">$ {totalBalance}</p>
+          <section className="mt-4 flex gap-2 items-center justify-between md:justify-normal">
+            <motion.p
+              className="text-[#F2EDE4] text-[32px] w-[100px]"
+              initial={{ opacity: 0.5, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              {isVisible ? `$ ${totalBalance.toFixed(2)}` : "****"}
+            </motion.p>
+
+            <div
+              className="flex gap-2 cursor-pointer"
+              onClick={() => setIsVisible(!isVisible)}
+            >
+              <motion.div
+                initial={{ opacity: 0.7, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+              >
+                {isVisible ? (
+                  <GoEye size={25} color="#fff" />
+                ) : (
+                  <GoEyeClosed size={25} color="#fff" />
+                )}
+              </motion.div>
+            </div>
           </section>
 
           <section className="flex justify-between mt-4">
@@ -225,6 +261,50 @@ const HomePage = () => {
             </thead>
           </table>
 
+
+          <div className="overflow-y-auto h-full">
+            <table className="w-full text-center border-collapse table-fixed">
+              <tbody>
+                {mockData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-100">
+                    <td colSpan={2} className="p-0">
+                      <Link
+                        to={`/token-details/${item.id}`}
+                        state={{
+                          tokenData: {
+                            id: item.id,
+                            token_name: item.token_name,
+                            symbol: item.symbol,
+                            network: item.network,
+                            balance: item.balance,
+                            icon: item.icon,
+                            address: tokens.find((t) => t.id === item.id)
+                              ?.address,
+                            decimals: tokens.find((t) => t.id === item.id)
+                              ?.decimals,
+                          },
+                        }}
+                        className="w-full flex justify-between"
+                      >
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                          <img
+                            src={item.icon}
+                            className="w-[20px] h-[20px] rounded-full"
+                            alt="icon"
+                          />
+                          {item.token_name}
+                        </div>
+                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                          {item.balance} {item.token_name}
+                        </div>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <p className="text-[#464446] text-[16px]">
@@ -251,7 +331,8 @@ const HomePage = () => {
                             {item.token_name}
                           </div>
                           <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                            {item.balance} {item.token_name}
+                            {isVisible ? item.balance : "*******"}
+                            {item.token_name}
                           </div>
                         </Link>
                       </td>
@@ -271,10 +352,7 @@ const HomePage = () => {
         <Link to="/p2p">
           <RiTokenSwapLine size={25} color="#B0AFB1" />
         </Link>
-        <Link to="/card-display">
-
-          <LuCreditCard size={25} color="#B0AFB1" />
-        </Link>
+        <LuCreditCard size={25} color="#B0AFB1" />
         <LuSettings2 size={25} color="#B0AFB1" />
       </footer>
     </section>
