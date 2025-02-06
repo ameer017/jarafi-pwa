@@ -1,24 +1,16 @@
 import { http, createConfig } from "wagmi";
-import { capsuleConnector } from "@usecapsule/wagmi-v2-integration";
-import { OAuthMethod } from "@usecapsule/web-sdk";
-import capsuleClient from "./capsuleClient";
-import {
-  cEUR,
-  cUsd,
-  cREAL,
-  celoToken,
-  commons,
-  cusdt,
-  USDC,
-} from "./otherChains";
+import { paraConnector } from "@getpara/wagmi-v2-integration";
+import { OAuthMethod } from "@getpara/web-sdk";
+import { cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC } from "./otherChains";
+import para from "./paraClient";
 
-const connector = capsuleConnector({
-  capsule: capsuleClient,
+const connector = paraConnector({
+  para: para,
   chains: [celoToken, cUsd, cREAL, cEUR, cusdt, USDC],
   appName: "Jarafi PWA",
   options: {},
-  nameOverride: "Capsule",
-  idOverride: "capsule",
+  nameOverride: "Para",
+  idOverride: "para",
   oAuthMethods: Object.values(OAuthMethod),
   disableEmailLogin: false,
   disablePhoneLogin: false,

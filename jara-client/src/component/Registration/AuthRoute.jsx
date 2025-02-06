@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import capsuleClient from "../../constant/capsuleClient";
 import { toast } from "react-toastify";
+import para from "../../constant/paraClient";
 
 const IDLE_TIMEOUT = 60 * 60 * 1000;
 
@@ -10,7 +10,7 @@ const AuthRoute = ({ element }) => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const isLoggedIn = await capsuleClient.isFullyLoggedIn();
+      const isLoggedIn = await para.isFullyLoggedIn();
       console.log(isLoggedIn);
       if (!isLoggedIn) {
         toast.info("Session expired. Please login again.");
@@ -33,7 +33,7 @@ const IdleTimeout = () => {
     const resetTimer = () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        capsuleClient.logout();
+        para.logout();
         navigate("/login");
       }, IDLE_TIMEOUT);
     };
