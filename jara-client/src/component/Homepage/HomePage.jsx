@@ -40,6 +40,7 @@ const HomePage = () => {
   const [tokenTransactions, setTokenTransactions] = useState({});
   const [selectedToken, setSelectedToken] = useState(null);
 
+// console.log({tokenTransactions})
 
   const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
 
@@ -64,22 +65,6 @@ const HomePage = () => {
     }
   };
 
-  // const updateTokenTransactions = (newTx) => {
-  //   setTokenTransactions(prev => ({
-  //     ...prev,
-  //     [newTx.token]: [
-  //       ...(prev[newTx.token] || []),
-  //       {
-  //         hash: newTx.hash,
-  //         from: newTx.from,
-  //         to: newTx.to,
-  //         value: newTx.value,
-  //         timestamp: Math.floor(Date.now() / 1000),
-  //         token: newTx.token
-  //       }
-  //     ]
-  //   }));
-  // };
 
   //Start
 
@@ -106,6 +91,9 @@ const HomePage = () => {
           contract.queryFilter(filterFrom, -10000),
           contract.queryFilter(filterTo, -10000)
         ]);
+
+        // console.log({receivedEvents})
+        // console.log({sentEvents})
 
         // Process transactions
         const transactions = [
@@ -217,17 +205,17 @@ const HomePage = () => {
     }
   };
 
-  //updates
+  //update
 
   const handleTransaction = (type, route) => {
     navigate(route);
-    // Generate mock transaction for demonstration
+    
     const mockTx = {
       hash: `0x${Math.random().toString(16).slice(2)}`,
       from: type === 'Payment Sent' ? address : 'external_address',
       to: type === 'Payment Sent' ? 'recipient_address' : address,
       value: (Math.random() * 100).toFixed(2),
-      token: mockData[0]?.token_name || 'USDC', // Default to first token if none selected
+      token: mockData[0]?.token_name || 'USDC', 
       type: type,
       timestamp: Date.now()
     };
@@ -237,7 +225,7 @@ const HomePage = () => {
 
   useEffect(() => {
     if (mockData.length > 0 && !Object.keys(tokenTransactions).length) {
-      // Initialize with some mock transactions
+
       const initialTransactions = mockData.reduce((acc, token) => {
         acc[token.token_name] = [
           {
@@ -247,7 +235,7 @@ const HomePage = () => {
             value: (Math.random() * 100).toFixed(2),
             token: token.token_name,
             type: 'Payment Received',
-            timestamp: Date.now() - 3600000 // 1 hour ago
+            timestamp: Date.now() - 3600000 
           }
         ];
         return acc;
@@ -424,10 +412,16 @@ const HomePage = () => {
       {showTnxHistory ? (
         // <TnxHistory isVisible={showTnxHistory} />
 
-        <TnxHistory 
-        isVisible={showTnxHistory} 
-        mockData={mockData}
-        tokenTransactions={tokenTransactions}
+      //   <TnxHistory 
+      //   isVisible={showTnxHistory} 
+      //   mockData={mockData}
+      //   tokenTransactions={tokenTransactions}
+      // />
+
+      <TnxHistory
+      isVisible={showTnxHistory}
+      mockData={mockData}
+      tokenTransactions={tokenTransactions}
       />
 
       ) : (
