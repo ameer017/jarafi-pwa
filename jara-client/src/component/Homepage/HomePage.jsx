@@ -46,12 +46,100 @@ const HomePage = () => {
     }
   };
 
+
+  //Start
+
+  const fetchTransactionHistory = async (address, tokens) => {
+    if (!address) return;
+    const provider = new JsonRpcProvider("https://forno.celo.org");
+    
+    try {
+      for (let token of tokens) {
+        const contract = new Contract(
+          token.address,
+          [
+            "function balanceOf(address) view returns (uint256)",
+            "event Transfer(address indexed from, address indexed to, uint256 value)"
+          ],
+          provider
+        );
+
+        // Get past Transfer events
+        const filterFrom = contract.filters.Transfer(address, null);
+        const filterTo = contract.filters.Transfer(null, address);
+
+        const [sentEvents, receivedEvents] = await Promise.all([
+          contract.queryFilter(filterFrom, -10000),
+          contract.queryFilter(filterTo, -10000)
+        ]);
+
+        // console.log({receivedEvents})
+        // console.log({sentEvents})
+
+        // Process transactions
+        const transactions = [
+          ...sentEvents.map(event => ({
+            hash: event.transactionHash,
+            from: address,
+            to: event.args[1],
+            value: ethers.formatUnits(event.args[2], token.decimals),
+            token: token.name,
+            type: 'Payment Sent',
+            timestamp: Date.now()
+          })),
+          ...receivedEvents.map(event => ({
+            hash: event.transactionHash,
+            from: event.args[0],
+            to: address,
+            value: ethers.formatUnits(event.args[2], token.decimals),
+            token: token.name,
+            type: 'Payment Received',
+            timestamp: Date.now()
+          }))
+        ];
+
+        setTokenTransactions(prev => ({
+          ...prev,
+          [token.name]: [...(prev[token.name] || []), ...transactions]
+            .sort((a, b) => b.timestamp - a.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching transaction history:', error);
+    }
+  };
+
+  
+  const updateTokenTransactions = (newTx) => {
+    setTokenTransactions(prev => {
+      const currentTransactions = prev[newTx.token] || [];
+      return {
+        ...prev,
+        [newTx.token]: [
+          {
+            hash: newTx.hash,
+            from: newTx.from,
+            to: newTx.to,
+            value: newTx.value,
+            timestamp: Date.now(),
+            token: newTx.token,
+            type: newTx.type
+          },
+          ...currentTransactions
+        ]
+      };
+    });
+  };
+
+  //ends
+
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
       console.error("Address is not provided!");
       setLoading(false);
       return;
     }
+
 
     const fetchedData = [];
     const provider = new JsonRpcProvider("https://forno.celo.org");
@@ -93,9 +181,51 @@ const HomePage = () => {
     }
   };
 
+  //update
+
+  const handleTransaction = (type, route) => {
+    navigate(route);
+    
+    const mockTx = {
+      hash: `0x${Math.random().toString(16).slice(2)}`,
+      from: type === 'Payment Sent' ? address : 'external_address',
+      to: type === 'Payment Sent' ? 'recipient_address' : address,
+      value: (Math.random() * 100).toFixed(2),
+      token: mockData[0]?.token_name || 'USDC', 
+      type: type,
+      timestamp: Date.now()
+    };
+    updateTokenTransactions(mockTx);
+  };
+  
+
+  useEffect(() => {
+    if (mockData.length > 0 && !Object.keys(tokenTransactions).length) {
+
+      const initialTransactions = mockData.reduce((acc, token) => {
+        acc[token.token_name] = [
+          {
+            hash: `0x${Math.random().toString(16).slice(2)}`,
+            from: 'initial_address',
+            to: address,
+            value: (Math.random() * 100).toFixed(2),
+            token: token.token_name,
+            type: 'Payment Received',
+            timestamp: Date.now() - 3600000 
+          }
+        ];
+        return acc;
+      }, {});
+      setTokenTransactions(initialTransactions);
+    }
+  }, [mockData]);
+  
+  
+
   useEffect(() => {
     if (address) {
       fetchTokenBalances(address, tokens);
+      fetchTransactionHistory(address, tokens);
     } else {
       setLoading(false);
     }
@@ -210,6 +340,9 @@ const HomePage = () => {
                   />
                 ),
                 routes: "/send",
+                //new
+                onClick: () => handleTransaction('Payment Sent', '/send')
+               
               },
               {
                 label: "Receive",
@@ -221,6 +354,9 @@ const HomePage = () => {
                 ),
                 rotate: true,
                 routes: "/recieve",
+
+                //new
+                onClick: () => handleTransaction('Payment Received', '/recieve')
               },
               {
                 label: "Swap",
@@ -231,8 +367,12 @@ const HomePage = () => {
                   />
                 ),
                 routes: "/swap",
+
+                //new
+                onClick: () => handleTransaction('Swap', '/swap')
               },
-            ].map(({ label, icon, rotate, routes }, index) => (
+              //label, icon, rotate, {/*routes*/}, onClick
+            ].map(({ label, icon, rotate, onClick}, index) => (
               <div
                 key={index}
                 className="flex flex-col items-center gap-2 text-white text-[14px]">
@@ -300,11 +440,13 @@ const HomePage = () => {
                         </div>
                       </Link>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      
+    </div>
+         
 
           {loading ? (
             <div className="flex items-center justify-center h-full">
