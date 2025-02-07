@@ -25,6 +25,7 @@ import { IoIosLogOut } from "react-icons/io";
 import QrReader from "react-qr-scanner";
 import para from "../../constant/paraClient";
 import { motion } from "framer-motion";
+import TnxHistory from "../Transactions/TnxHistory";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -35,7 +36,9 @@ const HomePage = () => {
   const [mockData, setMockData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
+  const [showTnxHistory, setShowTnxHistory] = useState(false);
 
+  const [tokenTransactions, setTokenTransactions] = useState({});
   const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
 
   const location = useLocation();
@@ -62,20 +65,19 @@ const HomePage = () => {
     }
   };
 
-
   //Start
 
   const fetchTransactionHistory = async (address, tokens) => {
     if (!address) return;
     const provider = new JsonRpcProvider("https://forno.celo.org");
-    
+
     try {
       for (let token of tokens) {
         const contract = new Contract(
           token.address,
           [
             "function balanceOf(address) view returns (uint256)",
-            "event Transfer(address indexed from, address indexed to, uint256 value)"
+            "event Transfer(address indexed from, address indexed to, uint256 value)",
           ],
           provider
         );
@@ -86,7 +88,7 @@ const HomePage = () => {
 
         const [sentEvents, receivedEvents] = await Promise.all([
           contract.queryFilter(filterFrom, -10000),
-          contract.queryFilter(filterTo, -10000)
+          contract.queryFilter(filterTo, -10000),
         ]);
 
         // console.log({receivedEvents})
@@ -94,40 +96,40 @@ const HomePage = () => {
 
         // Process transactions
         const transactions = [
-          ...sentEvents.map(event => ({
+          ...sentEvents.map((event) => ({
             hash: event.transactionHash,
             from: address,
             to: event.args[1],
             value: ethers.formatUnits(event.args[2], token.decimals),
             token: token.name,
-            type: 'Payment Sent',
-            timestamp: Date.now()
+            type: "Payment Sent",
+            timestamp: Date.now(),
           })),
-          ...receivedEvents.map(event => ({
+          ...receivedEvents.map((event) => ({
             hash: event.transactionHash,
             from: event.args[0],
             to: address,
             value: ethers.formatUnits(event.args[2], token.decimals),
             token: token.name,
-            type: 'Payment Received',
-            timestamp: Date.now()
-          }))
+            type: "Payment Received",
+            timestamp: Date.now(),
+          })),
         ];
 
-        setTokenTransactions(prev => ({
+        setTokenTransactions((prev) => ({
           ...prev,
-          [token.name]: [...(prev[token.name] || []), ...transactions]
-            .sort((a, b) => b.timestamp - a.timestamp)
+          [token.name]: [...(prev[token.name] || []), ...transactions].sort(
+            (a, b) => b.timestamp - a.timestamp
+          ),
         }));
       }
     } catch (error) {
-      console.error('Error fetching transaction history:', error);
+      console.error("Error fetching transaction history:", error);
     }
   };
 
-  
   const updateTokenTransactions = (newTx) => {
-    setTokenTransactions(prev => {
+    setTokenTransactions((prev) => {
       const currentTransactions = prev[newTx.token] || [];
       return {
         ...prev,
@@ -139,10 +141,10 @@ const HomePage = () => {
             value: newTx.value,
             timestamp: Date.now(),
             token: newTx.token,
-            type: newTx.type
+            type: newTx.type,
           },
-          ...currentTransactions
-        ]
+          ...currentTransactions,
+        ],
       };
     });
   };
@@ -155,7 +157,6 @@ const HomePage = () => {
       setLoading(false);
       return;
     }
-
 
     const fetchedData = [];
     const provider = new JsonRpcProvider("https://forno.celo.org");
@@ -206,42 +207,38 @@ const HomePage = () => {
 
   const handleTransaction = (type, route) => {
     navigate(route);
-    
+
     const mockTx = {
       hash: `0x${Math.random().toString(16).slice(2)}`,
-      from: type === 'Payment Sent' ? address : 'external_address',
-      to: type === 'Payment Sent' ? 'recipient_address' : address,
+      from: type === "Payment Sent" ? address : "external_address",
+      to: type === "Payment Sent" ? "recipient_address" : address,
       value: (Math.random() * 100).toFixed(2),
-      token: mockData[0]?.token_name || 'USDC', 
+      token: mockData[0]?.token_name || "USDC",
       type: type,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     updateTokenTransactions(mockTx);
   };
-  
 
   useEffect(() => {
     if (mockData.length > 0 && !Object.keys(tokenTransactions).length) {
-
       const initialTransactions = mockData.reduce((acc, token) => {
         acc[token.token_name] = [
           {
             hash: `0x${Math.random().toString(16).slice(2)}`,
-            from: 'initial_address',
+            from: "initial_address",
             to: address,
             value: (Math.random() * 100).toFixed(2),
             token: token.token_name,
-            type: 'Payment Received',
-            timestamp: Date.now() - 3600000 
-          }
+            type: "Payment Received",
+            timestamp: Date.now() - 3600000,
+          },
         ];
         return acc;
       }, {});
       setTokenTransactions(initialTransactions);
     }
   }, [mockData]);
-  
-  
 
   useEffect(() => {
     if (address) {
@@ -311,7 +308,14 @@ const HomePage = () => {
                 )}
               </div>
 
-              <IoIosNotificationsOutline color="#B0AFB1" size={25} />
+              <div>
+                <IoIosNotificationsOutline
+                  color="#B0AFB1"
+                  size={25}
+                  onClick={() => setShowTnxHistory(!showTnxHistory)}
+                  style={{ cursor: "pointer" }}
+                />
+              </div>
             </div>
           </section>
 
@@ -350,8 +354,7 @@ const HomePage = () => {
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
                 routes: "/send",
                 //new
-                onClick: () => handleTransaction('Payment Sent', '/send')
-               
+                onClick: () => handleTransaction("Payment Sent", "/send"),
               },
               {
                 label: "Receive",
@@ -360,7 +363,8 @@ const HomePage = () => {
                 routes: "/recieve",
 
                 //new
-                onClick: () => handleTransaction('Payment Received', '/recieve')
+                onClick: () =>
+                  handleTransaction("Payment Received", "/recieve"),
               },
               {
                 label: "Swap",
@@ -368,10 +372,10 @@ const HomePage = () => {
                 routes: "/swap",
 
                 //new
-                onClick: () => handleTransaction('Swap', '/swap')
+                onClick: () => handleTransaction("Swap", "/swap"),
               },
               //label, icon, rotate, {/*routes*/}, onClick
-            ].map(({ label, icon, rotate, onClick}, index) => (
+            ].map(({ label, icon, rotate, routes, onClick }, index) => (
               <div
                 key={index}
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
@@ -393,64 +397,81 @@ const HomePage = () => {
 
       <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
         <div className="h-full border">
-          <table className="w-full text-center border-collapse">
+          <table className="w-full text-center border-collapse ">
             <thead>
               <tr>
-                <th className="p-4 border-b text-[#464446] text-[14px] font-[400]">
-                  Token
-                </th>
-                <th className="p-4 border-b text-[#464446] text-[14px] font-[400]">
-                  Available
-                </th>
+                {showTnxHistory ? (
+                  <th
+                    className="p-4 border-b text-[#464446] text-[14px] text-left font-[400]"
+                    colSpan={2}
+                  >
+                    History
+                  </th>
+                ) : (
+                  <>
+                    <th className="p-4 border-b text-[#464446] text-[14px] font-[400]">
+                      Token
+                    </th>
+                    <th className="p-4 border-b text-[#464446] text-[14px] font-[400]">
+                      Available
+                    </th>
+                  </>
+                )}
               </tr>
             </thead>
           </table>
 
           <div className="overflow-y-auto h-full">
-            <table className="w-full text-center border-collapse table-fixed">
-              <tbody>
-                {mockData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-100">
-                    <td colSpan={2} className="p-0">
-                      <Link
-                        to={`/token-details/${item.id}`}
-                        state={{
-                          tokenData: {
-                            id: item.id,
-                            token_name: item.token_name,
-                            symbol: item.symbol,
-                            network: item.network,
-                            balance: item.balance,
-                            icon: item.icon,
-                            address: tokens.find((t) => t.id === item.id)
-                              ?.address,
-                            decimals: tokens.find((t) => t.id === item.id)
-                              ?.decimals,
-                          },
-                        }}
-                        className="w-full flex justify-between"
-                      >
-                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
-                          <img
-                            src={item.icon}
-                            className="w-[20px] h-[20px] rounded-full"
-                            alt="icon"
-                          />
-                          {item.token_name}
-                        </div>
-                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                          {parseFloat(item.balance).toFixed(1)}{" "}
-                          {item.token_name}
-                        </div>
-                      </Link>
-                    </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      
-    </div>
-         
+            {showTnxHistory ? (
+              <TnxHistory
+                isVisible={showTnxHistory}
+                mockData={mockData}
+                tokenTransactions={tokenTransactions}
+              />
+            ) : (
+              <table className="w-full text-center border-collapse table-fixed">
+                <tbody>
+                  {mockData.map((item) => (
+                    <tr key={item.id} className="hover:bg-gray-100">
+                      <td colSpan={2} className="p-0">
+                        <Link
+                          to={`/token-details/${item.id}`}
+                          state={{
+                            tokenData: {
+                              id: item.id,
+                              token_name: item.token_name,
+                              symbol: item.symbol,
+                              network: item.network,
+                              balance: item.balance,
+                              icon: item.icon,
+                              address: tokens.find((t) => t.id === item.id)
+                                ?.address,
+                              decimals: tokens.find((t) => t.id === item.id)
+                                ?.decimals,
+                            },
+                          }}
+                          className="w-full flex justify-between"
+                        >
+                          <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                            <img
+                              src={item.icon}
+                              className="w-[20px] h-[20px] rounded-full"
+                              alt="icon"
+                            />
+                            {item.token_name}
+                          </div>
+                          <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                            {parseFloat(item.balance).toFixed(1)}{" "}
+                            {item.token_name}
+                          </div>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
 
           {loading ? (
             <div className="flex items-center justify-center h-full">
