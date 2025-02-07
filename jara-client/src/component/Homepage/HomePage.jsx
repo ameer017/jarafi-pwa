@@ -65,13 +65,13 @@ const HomePage = () => {
     }
   };
 
-  //Start
-
   const fetchTransactionHistory = async (address, tokens) => {
     if (!address) return;
     const provider = new JsonRpcProvider("https://forno.celo.org");
 
     try {
+      setTokenTransactions({});
+
       for (let token of tokens) {
         const contract = new Contract(
           token.address,
@@ -82,7 +82,6 @@ const HomePage = () => {
           provider
         );
 
-        // Get past Transfer events
         const filterFrom = contract.filters.Transfer(address, null);
         const filterTo = contract.filters.Transfer(null, address);
 
@@ -91,34 +90,48 @@ const HomePage = () => {
           contract.queryFilter(filterTo, -10000),
         ]);
 
-        // console.log({receivedEvents})
-        // console.log({sentEvents})
+        const transactions = await Promise.all([
+          ...sentEvents.map(async (event) => {
+            const block = await provider.getBlock(event.blockNumber);
+            const timestamp = block.timestamp * 1000;
+            const date = new Date(timestamp).toLocaleString();
 
-        // Process transactions
-        const transactions = [
-          ...sentEvents.map((event) => ({
-            hash: event.transactionHash,
-            from: address,
-            to: event.args[1],
-            value: ethers.formatUnits(event.args[2], token.decimals),
-            token: token.name,
-            type: "Payment Sent",
-            timestamp: Date.now(),
-          })),
-          ...receivedEvents.map((event) => ({
-            hash: event.transactionHash,
-            from: event.args[0],
-            to: address,
-            value: ethers.formatUnits(event.args[2], token.decimals),
-            token: token.name,
-            type: "Payment Received",
-            timestamp: Date.now(),
-          })),
-        ];
+            return {
+              hash: event.transactionHash,
+              from: address,
+              to: event.args[1],
+              value: ethers.formatUnits(event.args[2], token.decimals),
+              token: token.name,
+              type: "Payment Sent",
+              timestamp: timestamp,
+              date: date,
+            };
+          }),
+          ...receivedEvents.map(async (event) => {
+            const block = await provider.getBlock(event.blockNumber);
+            const timestamp = block.timestamp * 1000;
+            const date = new Date(timestamp).toLocaleString();
+
+            return {
+              hash: event.transactionHash,
+              from: event.args[0],
+              to: address,
+              value: ethers.formatUnits(event.args[2], token.decimals),
+              token: token.name,
+              type: "Payment Received",
+              timestamp: timestamp,
+              date: date,
+            };
+          }),
+        ]);
+
+        const uniqueTransactions = Array.from(
+          new Set(transactions.map((tx) => tx.hash))
+        ).map((hash) => transactions.find((tx) => tx.hash === hash));
 
         setTokenTransactions((prev) => ({
           ...prev,
-          [token.name]: [...(prev[token.name] || []), ...transactions].sort(
+          [token.name]: uniqueTransactions.sort(
             (a, b) => b.timestamp - a.timestamp
           ),
         }));
@@ -242,12 +255,23 @@ const HomePage = () => {
 
   useEffect(() => {
     if (address) {
-      fetchTokenBalances(address, tokens);
-      fetchTransactionHistory(address, tokens);
+      setLoading(true);
+      Promise.all([
+        fetchTokenBalances(address, tokens),
+        fetchTransactionHistory(address, tokens),
+      ]).finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
   }, [address]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#0F0140]">
+        <p className="text-white text-[20px]">Loading ...</p>
+      </div>
+    );
+  }
 
   return (
     <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
@@ -265,8 +289,9 @@ const HomePage = () => {
         </button>
       </div>
 
-      <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
+      <header className="h-auto bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
         <section className="flex flex-col justify-between w-full max-w-[1024px] px-4 md:p-6">
+          {/* Wallet Balance and Icons Section */}
           <section className="flex justify-between items-center relative">
             <p className="text-[#F2EDE4] text-[16px]">Wallet Balance</p>
             <div className="flex gap-4">
@@ -319,14 +344,14 @@ const HomePage = () => {
             </div>
           </section>
 
-          <section className="mt-4 flex gap-2 items-center justify-between md:justify-normal">
+          <section className="mt-4 flex gap-4 items-center justify-start  ">
             <motion.p
-              className="text-[#F2EDE4] text-[32px] w-[100px]"
+              className="text-[#F2EDE4] text-[32px] w-[110px] "
               initial={{ opacity: 0.5, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              {isVisible ? `$ ${totalBalance.toFixed(2)}` : "****"}
+              {isVisible ? `$ ${totalBalance.toFixed(1)}` : "****"}
             </motion.p>
 
             <div
@@ -347,13 +372,13 @@ const HomePage = () => {
             </div>
           </section>
 
+          {/* Send, Receive, Swap Buttons Section */}
           <section className="flex justify-between mt-4">
             {[
               {
                 label: "Send",
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
                 routes: "/send",
-                //new
                 onClick: () => handleTransaction("Payment Sent", "/send"),
               },
               {
@@ -361,8 +386,6 @@ const HomePage = () => {
                 icon: <LuArrowUpToLine size={25} color="#0F0140" />,
                 rotate: true,
                 routes: "/recieve",
-
-                //new
                 onClick: () =>
                   handleTransaction("Payment Received", "/recieve"),
               },
@@ -370,11 +393,8 @@ const HomePage = () => {
                 label: "Swap",
                 icon: <RiTokenSwapLine size={25} color="#0F0140" />,
                 routes: "/swap",
-
-                //new
                 onClick: () => handleTransaction("Swap", "/swap"),
               },
-              //label, icon, rotate, {/*routes*/}, onClick
             ].map(({ label, icon, rotate, routes, onClick }, index) => (
               <div
                 key={index}
@@ -461,7 +481,10 @@ const HomePage = () => {
                             {item.token_name}
                           </div>
                           <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                            {parseFloat(item.balance).toFixed(1)}{" "}
+                            {isVisible
+                              ? `${parseFloat(item.balance).toFixed(1)}`
+                              : "**"}{" "}
+                            &nbsp;
                             {item.token_name}
                           </div>
                         </Link>
@@ -472,44 +495,6 @@ const HomePage = () => {
               </table>
             )}
           </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-[#464446] text-[16px]">
-                Loading token balances...
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-y-auto h-full">
-              <table className="w-full text-center border-collapse table-fixed">
-                <tbody>
-                  {mockData.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-100">
-                      <td colSpan={2} className="p-0">
-                        <Link
-                          to={`/token-details/${item.id}`}
-                          className="w-full flex justify-between"
-                        >
-                          <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
-                            <img
-                              src={item.icon}
-                              className="w-[20px] h-[20px] rounded-full"
-                              alt="icon"
-                            />
-                            {item.token_name}
-                          </div>
-                          <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                            {isVisible ? item.balance : "*******"}
-                            {item.token_name}
-                          </div>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       </main>
 
