@@ -1,23 +1,33 @@
-import React, { useState } from "react"
-import Buy from "./Buy"
-import Sell from "./Sell"
-import { Bell, Wallet, Users2, LayoutGrid, Settings, ChevronDown } from "lucide-react"
-import { Link } from "react-router-dom"
-import { LuCreditCard, LuSettings2, LuWalletMinimal } from "react-icons/lu"
-import { RiTokenSwapLine } from "react-icons/ri"
+import React, { useState } from "react";
+import Buy from "./Buy";
+import Sell from "./Sell";
+import {
+  Bell,
+  Wallet,
+  Users2,
+  LayoutGrid,
+  Settings,
+  ChevronDown,
+} from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { LuCreditCard, LuSettings2, LuWalletMinimal } from "react-icons/lu";
+import { RiTokenSwapLine } from "react-icons/ri";
 
 const MainPage = () => {
-  const [activeTab, setActiveTab] = useState("buy")
-  const [selectedToken, setSelectedToken] = useState("USDT")
-  const [selectedCurrency, setSelectedCurrency] = useState("NGN")
-  const [showTokens, setShowTokens] = useState(false)
-  const [showAmounts, setShowAmounts] = useState(false)
-  const [showCurrencies, setShowCurrencies] = useState(false)
-  const [selectedAmount, setSelectedAmount] = useState("All")
+  const [activeTab, setActiveTab] = useState("buy");
+  const [selectedToken, setSelectedToken] = useState("USDT");
+  const [selectedCurrency, setSelectedCurrency] = useState("NGN");
+  const [showTokens, setShowTokens] = useState(false);
+  const [showAmounts, setShowAmounts] = useState(false);
+  const [showCurrencies, setShowCurrencies] = useState(false);
+  const [selectedAmount, setSelectedAmount] = useState("All");
+  const location = useLocation();
 
-  const tokens = ["USDT", "BTC", "ETH", "BNB"]
-  const amounts = ["All", "100-1000", "1000-5000", "5000-10000", "10000+"]
-  const currencies = ["NGN", "USD", "EUR", "GBP"]
+  const isActive = (path) => location.pathname === path;
+
+  const tokens = ["USDT", "BTC", "ETH", "BNB"];
+  const amounts = ["All", "100-1000", "1000-5000", "5000-10000", "10000+"];
+  const currencies = ["NGN", "USD", "EUR", "GBP"];
 
   return (
     <div className="min-h-screen bg-white text-black pb-20">
@@ -31,7 +41,10 @@ const MainPage = () => {
           </div>
           <div className="flex-1 flex justify-end items-center gap-4">
             <div className="relative">
-              <button onClick={() => setShowCurrencies(!showCurrencies)} className="flex items-center gap-2 text-white">
+              <button
+                onClick={() => setShowCurrencies(!showCurrencies)}
+                className="flex items-center gap-2 text-white"
+              >
                 {selectedCurrency} <ChevronDown size={16} />
               </button>
               {showCurrencies && (
@@ -40,8 +53,8 @@ const MainPage = () => {
                     <button
                       key={currency}
                       onClick={() => {
-                        setSelectedCurrency(currency)
-                        setShowCurrencies(false)
+                        setSelectedCurrency(currency);
+                        setShowCurrencies(false);
                       }}
                       className="w-full px-4 py-2 text-left hover:bg-gray-100"
                     >
@@ -61,7 +74,9 @@ const MainPage = () => {
           <button
             onClick={() => setActiveTab("buy")}
             className={`px-6 py-2 rounded-lg transition-colors ${
-              activeTab === "buy" ? "bg-[#0F0140] text-white" : "bg-[#E7E6E7] text-black hover:bg-[#E7E6E7]/90"
+              activeTab === "buy"
+                ? "bg-[#0F0140] text-white"
+                : "bg-[#E7E6E7] text-black hover:bg-[#E7E6E7]/90"
             }`}
           >
             Buy
@@ -69,7 +84,9 @@ const MainPage = () => {
           <button
             onClick={() => setActiveTab("sell")}
             className={`px-6 py-2 rounded-lg transition-colors ${
-              activeTab === "sell" ? "bg-[#0F0140] text-white" : "bg-[#E7E6E7] text-black hover:bg-[#E7E6E7]/90"
+              activeTab === "sell"
+                ? "bg-[#0F0140] text-white"
+                : "bg-[#E7E6E7] text-black hover:bg-[#E7E6E7]/90"
             }`}
           >
             Sell
@@ -81,7 +98,10 @@ const MainPage = () => {
       {/* Filters */}
       <div className="px-4 py-2 flex items-center gap-4 border-b">
         <div className="relative">
-          <button onClick={() => setShowTokens(!showTokens)} className="flex items-center gap-2">
+          <button
+            onClick={() => setShowTokens(!showTokens)}
+            className="flex items-center gap-2"
+          >
             <span className="w-2 h-2 rounded-full bg-green-400" />
             {selectedToken}
             <ChevronDown size={16} />
@@ -92,8 +112,8 @@ const MainPage = () => {
                 <button
                   key={token}
                   onClick={() => {
-                    setSelectedToken(token)
-                    setShowTokens(false)
+                    setSelectedToken(token);
+                    setShowTokens(false);
                   }}
                   className="w-full px-4 py-2 text-left hover:bg-gray-100"
                 >
@@ -105,7 +125,10 @@ const MainPage = () => {
         </div>
 
         <div className="relative">
-          <button onClick={() => setShowAmounts(!showAmounts)} className="flex items-center gap-2 text-gray-500">
+          <button
+            onClick={() => setShowAmounts(!showAmounts)}
+            className="flex items-center gap-2 text-gray-500"
+          >
             Amount <ChevronDown size={16} />
           </button>
           {showAmounts && (
@@ -114,8 +137,8 @@ const MainPage = () => {
                 <button
                   key={amount}
                   onClick={() => {
-                    setSelectedAmount(amount)
-                    setShowAmounts(false)
+                    setSelectedAmount(amount);
+                    setShowAmounts(false);
                   }}
                   className="w-full px-4 py-2 text-left hover:bg-gray-100"
                 >
@@ -131,19 +154,32 @@ const MainPage = () => {
 
       <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
         <Link to="/dashboard">
-
-          <LuWalletMinimal size={25} color="#B0AFB1" />
+          <LuWalletMinimal
+            size={25}
+            color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
+          />
         </Link>
-        <Link to="/p2p" >
-
-          <RiTokenSwapLine size={25} color="#B0AFB1" />
+        <Link to="/p2p">
+          <RiTokenSwapLine
+            size={25}
+            color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
+          />
         </Link>
-        <LuCreditCard size={25} color="#B0AFB1" />
-        <LuSettings2 size={25} color="#B0AFB1" />
+        <Link to="/card-display">
+          <LuCreditCard
+            size={25}
+            color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
+          />
+        </Link>
+        <Link to="/settings">
+          <LuSettings2
+            size={25}
+            color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
+          />
+        </Link>
       </footer>
     </div>
-  )
-}
+  );
+};
 
-export default MainPage
-
+export default MainPage;

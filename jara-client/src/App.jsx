@@ -18,7 +18,8 @@ import {
   TWE,
   WalletShowcase,
   Send,
-  CardPage
+  CardPage,
+  Settings,
 } from "./index";
 import {
   cEUR,
@@ -30,7 +31,6 @@ import {
   USDC,
 } from "./constant/otherChains";
 import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
-import Settings from "./component/Settings/Settings";
 
 const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
 
@@ -47,7 +47,10 @@ function App() {
         <Route path="/trade-with-ease" element={<TWE />} />
         <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
         <Route path="/dashboard" element={<HomePage />} />
-        <Route path="/token-details/:id" element={<TokenDetails tokens={tokens} />} />
+        <Route
+          path="/token-details/:id"
+          element={<TokenDetails tokens={tokens} />}
+        />
         <Route path="/token-details/:id/activities" element={<Activities />} />
         <Route path="/sign-up-user" element={<Register />} />
 
@@ -55,10 +58,14 @@ function App() {
         <Route path="/create-wallet" element={<CreateWallet />} />
         <Route path="/wallet-showcase" element={<WalletShowcase />} />
         <Route path="/send" element={<AuthRoute element={<Send />} />} />
-        <Route path="/card-display" element={<CardPage />}  />
+        <Route
+          path="/card-display"
+          element={<AuthRoute element={<CardPage />} />}
+        />
+
         <Route path="/congrats" element={<Congratulation />} />
 
-        <Route path="/swap" element={<Swap/>}/>
+        <Route path="/swap" element={<Swap />} />
         <Route path="/recieve" element={<ReceiveAssets />} />
 
         <Route path="/swap" element={<AuthRoute element={<Swap />} />} />

@@ -241,7 +241,7 @@ const Send = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Transaction failed:", error);
-      setError("Transaction failed");
+      setError(error.message || "Transaction failed");
     } finally {
       setIsLoading(false);
       setIsTransactionPending(false);

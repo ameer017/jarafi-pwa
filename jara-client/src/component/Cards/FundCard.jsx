@@ -1,237 +1,152 @@
-// import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import { LuCreditCard, LuSettings2, LuWalletMinimal } from "react-icons/lu";
+import { RiTokenSwapLine } from "react-icons/ri";
+import { FundWithBalance, FundWithExternal } from "./FundingOption";
+import { IoIosArrowBack } from "react-icons/io";
 
-// export default function FundCard({ onBackClick, onAssetClick }) {
-//     return (
-//         <div className="min-h-screen bg-gray-50 p-6">
-//             <div className="max-w-md mx-auto space-y-6">
-//                 <div className="flex items-center">
-//                     <button onClick={onBackClick} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-//                         <ChevronLeft className="h-6 w-6" />
-//                     </button>
-//                 </div>
+const FundCard = ({ onClose }) => {
+  const [activeModal, setActiveModal] = useState("fundOptions");
+  const [selectedMethod, setSelectedMethod] = useState(null);
+  const [selectedNetwork, setSelectedNetwork] = useState("Celo");
 
-//                 <div className="space-y-6 px-4">
-//                     <h1 className="text-2xl font-bold">How would you like to fund your card?</h1>
+  const navigTE = useNavigate();
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
-//                     <div className="space-y-4">
-//                         <button
-//                             onClick={onAssetClick}
-//                             className="w-full flex justify-between items-center p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-//                         >
-//                             <div className="flex items-center gap-4">
-//                                 <div className="bg-yellow-100 p-2 rounded-full">
-//                                     <svg className="h-6 w-6" viewBox="0 0 24 24">
-//                                         <path
-//                                             fill="currentColor"
-//                                             d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
-//                                         />
-//                                     </svg>
-//                                 </div>
-//                                 <div className="text-left">
-//                                     <div className="font-semibold">JaraFi wallet</div>
-//                                     <div className="text-sm text-gray-500">Pay with wallet balance</div>
-//                                 </div>
-//                             </div>
-//                             <ChevronRight className="h-5 w-5 text-gray-400" />
-//                         </button>
+  const handleMethodSelected = (method) => {
+    console.log("Method selected:", method);
+    setSelectedMethod(method);
+    if (method === "balance") {
+      setActiveModal("fundWithBalance");
+    } else if (method === "external") {
+      setActiveModal("fundWithExternal");
+    }
+  };
 
-//                         <button
-//                             onClick={onAssetClick}
-//                             className="w-full flex justify-between items-center p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-//                         >
-//                             <div className="flex items-center gap-4">
-//                                 <div className="bg-yellow-100 p-2 rounded-full">
-//                                     <svg className="h-6 w-6" viewBox="0 0 24 24">
-//                                         <path
-//                                             fill="currentColor"
-//                                             d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
-//                                         />
-//                                     </svg>
-//                                 </div>
-//                                 <div className="text-left">
-//                                     <div className="font-semibold">External wallet</div>
-//                                     <div className="text-sm text-gray-500">Deposit funds from an external wallet</div>
-//                                 </div>
-//                             </div>
-//                             <ChevronRight className="h-5 w-5 text-gray-400" />
-//                         </button>
-//                     </div>
-//                 </div>
-//             </div>
-//         </div>
-//     )
-// }
-
-
-import { useState } from "react"
-import { Plus, Eye, ChevronLeft, X, ChevronRight } from "lucide-react"
-import { Button } from "@/components/ui/button"
-
-export const FundCard = () => {
-  const [currentView, setCurrentView] = useState("card")
-
-  const renderCardScreen = () => (
-    <div className="space-y-8">
-      <div className="relative w-full max-w-[400px] aspect-[1.6/1] mx-auto">
-        <div className="absolute inset-0 bg-black rounded-2xl p-6 text-white">
-          <div className="flex flex-col h-full justify-between">
-            <div className="space-y-[84px]">
-              <div className="flex justify-between items-center w-full">
-                <span className="text-2xl font-light">Jara Card</span>
-                <img src="/visa.svg" alt="VISA" className="h-6" />
-              </div>
-              <div className="font-mono text-lg">4922****7383</div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-light">$1576.56</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 max-w-[400px] mx-auto">
-        <Button variant="outline" className="flex flex-col gap-2 h-auto py-4" onClick={() => setCurrentView("fund")}>
-          <Plus className="h-6 w-6" />
-          <span>Fund</span>
-        </Button>
-        <Button variant="outline" className="flex flex-col gap-2 h-auto py-4">
-          <Eye className="h-6 w-6" />
-          <span>Details</span>
-        </Button>
-      </div>
-    </div>
-  )
-
-  const renderFundScreen = () => (
-    <div className="space-y-6">
-      <div className="flex items-center">
-        <Button variant="ghost" size="icon" onClick={() => setCurrentView("card")}>
-          <ChevronLeft className="h-6 w-6" />
-        </Button>
-      </div>
-
-      <div className="space-y-6 px-4">
-        <h1 className="text-2xl font-bold">How would you like to fund your card?</h1>
-
-        <div className="space-y-4">
-          <Button
-            variant="outline"
-            className="w-full flex justify-between items-center p-4 h-auto"
-            onClick={() => setCurrentView("asset")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-yellow-100 p-2 rounded-full">
-                <svg className="h-6 w-6" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
-                  />
-                </svg>
-              </div>
-              <div className="text-left">
-                <div className="font-semibold">JaraFi wallet</div>
-                <div className="text-sm text-muted-foreground">Pay with wallet balance</div>
-              </div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </Button>
-
-          <Button
-            variant="outline"
-            className="w-full flex justify-between items-center p-4 h-auto"
-            onClick={() => setCurrentView("asset")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-yellow-100 p-2 rounded-full">
-                <svg className="h-6 w-6" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"
-                  />
-                </svg>
-              </div>
-              <div className="text-left">
-                <div className="font-semibold">External wallet</div>
-                <div className="text-sm text-muted-foreground">Deposit funds from an external wallet</div>
-              </div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderAssetScreen = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center px-4">
-        <div className="w-8" /> {/* Spacer for centering */}
-        <h1 className="text-2xl font-bold">Select asset</h1>
-        <Button variant="ghost" size="icon" onClick={() => setCurrentView("fund")}>
-          <X className="h-6 w-6" />
-        </Button>
-      </div>
-
-      <div className="px-4 space-y-6">
-        <p className="text-center text-muted-foreground">Fund your card with any of the supported stablecoin</p>
-
-        <div className="space-y-4">
-          <Button variant="outline" className="w-full flex justify-between items-center p-4 h-auto">
-            <div className="flex items-center gap-4">
-              <div className="bg-emerald-100 p-2 rounded-full">
-                <svg className="h-6 w-6" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" fill="currentColor" className="text-emerald-500" />
-                  <text
-                    x="50%"
-                    y="50%"
-                    dominantBaseline="middle"
-                    textAnchor="middle"
-                    fill="white"
-                    className="text-xs font-bold"
-                  >
-                    T
-                  </text>
-                </svg>
-              </div>
-              <div className="font-semibold">Tether USDT</div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </Button>
-
-          <Button variant="outline" className="w-full flex justify-between items-center p-4 h-auto">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-2 rounded-full">
-                <svg className="h-6 w-6" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" fill="currentColor" className="text-blue-500" />
-                  <text
-                    x="50%"
-                    y="50%"
-                    dominantBaseline="middle"
-                    textAnchor="middle"
-                    fill="white"
-                    className="text-xs font-bold"
-                  >
-                    $
-                  </text>
-                </svg>
-              </div>
-              <div className="font-semibold">USDC</div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
+  const networks = [
+    { id: "Celo", name: "Celo" },
+    { id: "Ethereum", name: "Ethereum" },
+    { id: "BSC", name: "BNB Smart Chain" },
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-md mx-auto">
-        {currentView === "card" && renderCardScreen()}
-        {currentView === "fund" && renderFundScreen()}
-        {currentView === "asset" && renderAssetScreen()}
-      </div>
-    </div>
-  )
-}
+    <div className="fixed inset-0 w-screen h-screen flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+      <div className="bg-white shadow-xl p-6 w-full space-y-6 h-full flex justify-center relative">
+        <div className="w-full max-w-md">
+          <div>
+            <button onClick={onClose}>
+              <IoIosArrowBack size={25} />
+            </button>
 
+            <h2 className="text-[24px] font-semibold text-[#262526]">
+              How would you like to fund your card?
+            </h2>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700">
+              Select Network
+            </label>
+            <select
+              className="p-2 border rounded-md w-full"
+              value={selectedNetwork}
+              onChange={(e) => setSelectedNetwork(e.target.value)}
+            >
+              {networks.map((network) => (
+                <option key={network.id} value={network.id}>
+                  {network.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {activeModal === "fundOptions" && (
+            <div className="space-y-4 mt-4">
+              <button
+                className="w-full flex items-center p-4 border gap-4 rounded-lg shadow-sm hover:bg-gray-100"
+                onClick={() => handleMethodSelected("balance")}
+              >
+                <div className="border-2 border-[#F2E205] bg-[#FCFEE8] rounded-full h-10 w-10 text-center flex items-center justify-center">
+                  <LuWalletMinimal className=" text-[#262526]" size={25} />
+                </div>
+                <div>
+                  <h3 className="text-md font-semibold text-left">
+                    JaraFi Wallet
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Pay with wallet balance
+                  </p>
+                </div>
+              </button>
+              <button
+                className="w-full flex items-center p-4 border gap-4 rounded-lg shadow-sm hover:bg-gray-100"
+                onClick={() => handleMethodSelected("external")}
+              >
+                <div className="border-2 border-[#F2E205] bg-[#FCFEE8] rounded-full h-10 w-10 text-center flex items-center justify-center">
+                  <RiTokenSwapLine className=" text-[#262526]" size={25} />
+                </div>
+                <div>
+                  <h3 className="text-md font-semibold text-left">
+                    External Wallet
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Deposit funds from an external wallet
+                  </p>
+                </div>
+              </button>
+            </div>
+          )}
+          {activeModal === "fundWithBalance" && (
+            <FundWithBalance
+              network={selectedNetwork}
+              onCloseClick={() => setActiveModal("fundOptions")}
+            />
+          )}
+          {activeModal === "fundWithExternal" && (
+            <FundWithExternal
+              network={selectedNetwork}
+              onCloseClick={() => setActiveModal("fundOptions")}
+            />
+          )}
+        </div>
+      </div>
+      <FooterNav isActive={isActive} />
+    </div>
+  );
+};
+
+const FooterNav = ({ isActive }) => (
+  <footer className="fixed bottom-0 left-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t border-gray-300">
+    <Link to="/dashboard">
+      <LuWalletMinimal
+        size={25}
+        color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
+      />
+    </Link>
+    <Link to="/p2p">
+      <RiTokenSwapLine
+        size={25}
+        color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
+      />
+    </Link>
+    <Link to="/card-display">
+      <LuCreditCard
+        size={25}
+        color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
+      />
+    </Link>
+    <Link to="/settings">
+      <LuSettings2
+        size={25}
+        color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
+      />
+    </Link>
+  </footer>
+);
+
+export default FundCard;
