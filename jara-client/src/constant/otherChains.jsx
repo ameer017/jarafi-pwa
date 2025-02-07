@@ -62,7 +62,7 @@ export const commons = {
 
 export const cusdt = {
   ...celo,
-  id: 7,
+  id: 6,
   name: "USDT",
   decimals: 18,
   nativeCurrency: { symbol: "USDT" },
@@ -75,7 +75,7 @@ export const cusdt = {
 
 export const USDC = {
   ...celo,
-  id: 8,
+  id: 7,
   name: "USDC",
   decimals: 6,
   nativeCurrency: {symbol: "USDC"},

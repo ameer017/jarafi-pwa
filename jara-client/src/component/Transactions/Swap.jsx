@@ -20,37 +20,27 @@ const Swap = () => {
 
   const handleExchangeRate = async () => {
     try {
-      if (selectedChain === "Celo") {
-        const tokenInObj = new Token(42220, tokenIn.address, tokenIn.decimals);
-        const tokenOutObj = new Token(
-          42220,
-          tokenOut.address,
-          tokenOut.decimals
-        );
-        const pair = await Fetcher.fetchPairData(tokenInObj, tokenOutObj);
-        const route = new Route([pair], tokenInObj);
-        const trade = new Trade(
-          route,
-          parseUnits(amount, tokenIn.decimals),
-          TradeType.EXACT_INPUT
-        );
-        setSwapDetails(trade);
-      } else {
-        // const lifi = new LiFi();
-        // const quote = await lifi.getQuote({
-        //   fromChain: "Celo",
-        //   toChain: selectedChain,
-        //   fromToken: tokenIn.address,
-        //   toToken: otherChains[selectedChain].address,
-        //   amount: ethers.utils.parseUnits(amount, tokenIn.decimals).toString(),
-        //   fromAddress: address,
-        // });
-        // setSwapDetails(quote);
-      }
+      const tokenInObj = new Token(42220, tokenIn.address, tokenIn.decimals);
+      const tokenOutObj = new Token(42220, tokenOut.address, tokenOut.decimals);
+
+      console.log(tokenInObj);
+      console.log(tokenOutObj);
+      const amountIn = parseUnits(amount, tokenIn.decimals).toString();
+
+      const quoterContract = new Contract(QUOTER_CONTRACT, QuoterABI, provider);
+      const amountOut = await quoterContract.callStatic.quoteExactInputSingle(
+        tokenIn.address,
+        tokenOut.address,
+        3000,
+        amountIn,
+        0
+      );
+
+      setSwapDetails({ amountOut });
       setCurrentPage(3);
       setShowExchangeRateModal(true);
     } catch (error) {
-      console.error("Error fetching swap details:", error);
+      console.error("Error fetching Uniswap exchange rate:", error);
     }
   };
 
@@ -70,12 +60,7 @@ const Swap = () => {
   // });
 
   const handleSwap = async () => {
-    if (selectedChain === "Celo") {
-      executeSwap?.();
-    } else {
-      // const lifi = new LiFi();
-      // await lifi.swap(swapDetails);
-    }
+    executeSwap?.();
     setShowFeesModal(false);
     setShowModal(true);
   };
