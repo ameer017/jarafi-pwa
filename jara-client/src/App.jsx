@@ -20,6 +20,7 @@ import {
   Send,
   CardPage,
   Settings,
+  FinalFundingExt,
 } from "./index";
 import {
   cEUR,
@@ -63,6 +64,7 @@ function App() {
           element={<AuthRoute element={<CardPage />} />}
         />
 
+        <Route path="/final-funding" element={<FinalFundingExt />} />
         <Route path="/congrats" element={<Congratulation />} />
 
         <Route path="/swap" element={<Swap />} />
