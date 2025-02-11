@@ -44,6 +44,13 @@ const HomePage = () => {
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
+
+  useEffect(() => {
+    if (!address || address === "N/A") {
+      window.location.reload();
+    }
+  }, [address]);
+  
   const handleScan = (data) => {
     if (data) {
       setScannedAddress(data);
