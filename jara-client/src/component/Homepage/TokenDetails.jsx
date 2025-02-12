@@ -9,7 +9,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { FaPlus } from "react-icons/fa";
-
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { useLocation, useParams } from "react-router-dom";
 
