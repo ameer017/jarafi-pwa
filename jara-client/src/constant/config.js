@@ -1,12 +1,12 @@
 import { http, createConfig } from "wagmi";
 import { paraConnector } from "@getpara/wagmi-v2-integration";
 import { OAuthMethod } from "@getpara/web-sdk";
-import { cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC } from "./otherChains";
+import { cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC } from "./otherChains";
 import para from "./paraClient";
 
 const connector = paraConnector({
   para: para,
-  chains: [celoToken, cUsd, cREAL, cEUR, cusdt, USDC],
+  chains: [celoToken, cUsd, cREAL, cEUR, usdt, USDC],
   appName: "Jarafi PWA",
   options: {},
   nameOverride: "Para",
@@ -18,7 +18,7 @@ const connector = paraConnector({
 });
 
 export const config = createConfig({
-  chains: [celoToken, cUsd, cREAL, cEUR, commons, cusdt, USDC],
+  chains: [celoToken, cUsd, cREAL, cEUR, commons, usdt, USDC],
   connectors: [connector],
   transports: {
     [celoToken.id]: http(),
@@ -26,7 +26,7 @@ export const config = createConfig({
     [cREAL.id]: http(),
     [cEUR.id]: http(),
     [commons.id]: http(),
-    [cusdt.id]: http(),
+    [usdt.id]: http(),
     [USDC.id]: http(),
   },
 });

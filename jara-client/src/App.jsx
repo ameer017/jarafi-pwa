@@ -28,12 +28,12 @@ import {
   cREAL,
   celoToken,
   commons,
-  cusdt,
+  usdt,
   USDC,
 } from "./constant/otherChains";
 import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
+const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
 
 function App() {
   return (
