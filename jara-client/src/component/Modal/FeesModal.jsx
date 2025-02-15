@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const FeesModal = ({ onClose, onContinue }) => {
+const FeesModal = ({ swapDetails, onClose, onContinue }) => {
   const feeDetails = {
-    estimatedNetworkFee: '~ $0.026 (0.044 Crossfi)',
-    maxNetworkFee: '~ $0.026 (0.044 Crossfi)',
-    jarafiFee: '~ $0.013 (0.044 Crossfi)',
+    estimatedNetworkFee: `~ $${swapDetails?.estimatedGasInUSD?.toFixed(3) || '0.00'}`,
+    maxNetworkFee: `~ $${(swapDetails?.estimatedGasInUSD * 1.2)?.toFixed(3) || '0.00'}`,
+    jarafiFee: `~ $${swapDetails?.jarafiFee?.toFixed(3) || '0.00'}`,
+    totalFees: `~ $${swapDetails?.totalFees?.toFixed(3) || '0.00'}`,
     message: 'The network fee is required by the network to process the transaction. The JarafiFee of 0.4% is charged for your use of our product.'
   };
 
@@ -41,22 +42,33 @@ const FeesModal = ({ onClose, onContinue }) => {
           <div className="space-y-4 sm:space-y-6">
             <h2 className="text-xl sm:text-2xl font-semibold text-white text-center">Network Fees</h2>
             
-            <div className="bg-[#1a1b3e] rounded-lg p-3 sm:p-6 space-y-2 sm:space-y-4">
+            <div className="bg-[#1a1b3e] rounded-lg p-3 sm:p-6 space-y-3 sm:space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-white/80 text-xs sm:text-sm">Estimated Network Fee</span>
                 <span className="text-white text-xs sm:text-sm">{feeDetails.estimatedNetworkFee}</span>
               </div>
+              
               <div className="flex justify-between items-center">
                 <span className="text-white/80 text-xs sm:text-sm">Max Network Fee</span>
                 <span className="text-white text-xs sm:text-sm">{feeDetails.maxNetworkFee}</span>
               </div>
+              
               <div className="flex justify-between items-center">
                 <span className="text-white/80 text-xs sm:text-sm">JarafiFee</span>
                 <span className="text-white text-xs sm:text-sm">{feeDetails.jarafiFee}</span>
               </div>
+
+              <div className="pt-3 border-t border-white/10">
+                <div className="flex justify-between items-center">
+                  <span className="text-white/80 text-sm sm:text-base font-medium">Total Fees</span>
+                  <span className="text-white text-sm sm:text-base font-medium">{feeDetails.totalFees}</span>
+                </div>
+              </div>
             </div>
 
-            <p className="text-white/80 text-center text-xs sm:text-sm">{feeDetails.message}</p>
+            <p className="text-white/80 text-center text-xs sm:text-sm">
+              {feeDetails.message}
+            </p>
           </div>
 
           {/* Continue Button */}
@@ -64,7 +76,7 @@ const FeesModal = ({ onClose, onContinue }) => {
             onClick={onContinue}
             className="w-full bg-[#FFE600] text-black font-medium py-2 sm:py-3 rounded-lg hover:bg-[#FFE600]/90 transition-colors text-sm sm:text-base mt-4 sm:mt-0"
           >
-            Got it
+            Confirm Swap
           </button>
         </motion.div>
       </motion.div>

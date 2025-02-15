@@ -1,8 +1,18 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ExchangeRateModal = ({ onClose, onContinue }) => {
-  const message = "We've found the best exchange rate for you. Your trade will be completed at a price within 1% of the estimated or the transaction will be cancelled and funds returned to your wallet.";
+const ExchangeRateModal = ({ 
+  swapDetails, 
+  tokenFrom, 
+  tokenTo, 
+  amount, 
+  onClose, 
+  onContinue 
+}) => {
+  const message = `We've found the best exchange rate for you. Your trade will be completed at a price within 1% of the estimated or the transaction will be cancelled and funds returned to your wallet.`;
+
+  const expectedAmount = swapDetails?.expectedOutput || '0';
+  const exchangeRate = swapDetails?.formattedPrice || `1 ${tokenFrom?.nativeCurrency.symbol} = 0 ${tokenTo?.nativeCurrency.symbol}`;
 
   return (
     <AnimatePresence>
@@ -34,8 +44,45 @@ const ExchangeRateModal = ({ onClose, onContinue }) => {
 
           {/* Content */}
           <div className="flex-grow flex flex-col justify-center text-center space-y-4 sm:space-y-6">
-            <h2 className="text-xl sm:text-2xl font-semibold text-white">Slippage Tolerance</h2>
-            <p className="text-white/80 text-sm sm:text-base text-center">{message}</p>
+            <h2 className="text-xl sm:text-2xl font-semibold text-white">Exchange Rate</h2>
+            
+            <div className="bg-[#1a1b3e] rounded-lg p-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-white/80 text-sm">You Pay</span>
+                <div className="flex items-center space-x-2">
+                  <img 
+                    src={tokenFrom?.icon} 
+                    alt={tokenFrom?.symbol} 
+                    className="w-5 h-5 rounded-full"
+                  />
+                  <span className="text-white">
+                    {amount} {tokenFrom?.nativeCurrency.symbol}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-white/80 text-sm">You Receive</span>
+                <div className="flex items-center space-x-2">
+                  <img 
+                    src={tokenTo?.icon} 
+                    alt={tokenTo?.symbol} 
+                    className="w-5 h-5 rounded-full"
+                  />
+                  <span className="text-white">
+                    {expectedAmount} {tokenTo?.nativeCurrency.symbol}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/10">
+                <span className="text-white text-sm">{exchangeRate}</span>
+              </div>
+            </div>
+
+            <p className="text-white/80 text-sm sm:text-base text-center">
+              {message}
+            </p>
           </div>
 
           {/* Continue Button */}
@@ -43,7 +90,7 @@ const ExchangeRateModal = ({ onClose, onContinue }) => {
             onClick={onContinue}
             className="w-full bg-[#FFE600] text-black font-medium py-2 sm:py-3 rounded-lg hover:bg-[#FFE600]/90 transition-colors text-sm sm:text-base"
           >
-            Got it
+            Continue
           </button>
         </motion.div>
       </motion.div>
