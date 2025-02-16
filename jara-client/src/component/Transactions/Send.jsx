@@ -10,7 +10,7 @@ import {
   cREAL,
   celoToken,
   commons,
-  cusdt,
+  usdt,
 } from "../../constant/otherChains";
 import para from "../../constant/paraClient";
 import {
@@ -43,12 +43,13 @@ const Send = () => {
   const [gasPrice, setGasPrice] = useState(null);
   const [isTransactionPending, setIsTransactionPending] = useState(false);
   const [currentChainId, setCurrentChainId] = useState(null);
+  const [isEstimatingGas, setIsEstimatingGas] = useState(false);
 
   const navigate = useNavigate();
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
-  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt];
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt];
 
   const selectedChain = selectedToken
     ? tokens[selectedToken.name] || celo
@@ -122,6 +123,18 @@ const Send = () => {
 
   const IMPLEMENTATION_SLOT =
     "0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC";
+  const USDC_ADAPTER_MAINNET = "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B";
+  const USDC_MAINNET = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
+
+  const USDT_ADAPTER_MAINNET = "0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72";
+  const USDT_MAINNET = "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e";
+
+  const isStablecoin = (token) =>
+    [USDC_MAINNET, USDT_MAINNET].includes(token?.address?.toLowerCase());
+  const isUSDC = (token) =>
+    token?.address?.toLowerCase() === USDC_MAINNET.toLowerCase();
+
+  const hexToBigInt = (hexValue) => BigInt(hexValue);
 
   async function getImplementationAddress(proxyAddress) {
     try {
@@ -185,16 +198,73 @@ const Send = () => {
     // );
   });
 
+  useEffect(() => {
+    const estimateGasFee = async () => {
+      setIsEstimatingGas(true);
+      setEstimatedGas(null);
+      setGasPrice(null);
+      if (!selectedToken || !amount || !recipientAddress || !address) {
+        setIsEstimatingGas(false);
+        return;
+      }
+      try {
+        const isStable = [USDC_MAINNET, USDT_MAINNET].includes(
+          selectedToken.address.toLowerCase()
+        );
+        const feeCurrency = isStable
+          ? selectedToken.address === USDC_MAINNET.toLowerCase()
+            ? USDC_ADAPTER_MAINNET
+            : USDT_ADAPTER_MAINNET
+          : selectedToken.address;
+        const minGasPrice = await publicClient
+          .request({
+            method: "eth_gasPrice",
+            params: [feeCurrency],
+          })
+          .then((hexValue) => BigInt(hexValue));
+        const gasPriceWithBuffer = (minGasPrice * BigInt(125)) / BigInt(100);
+        setGasPrice(gasPriceWithBuffer);
+        const amountInWei = parseUnits(amount, selectedToken.decimals);
+        const transferAbi = {
+          constant: false,
+          inputs: [
+            { name: "to", type: "address" },
+            { name: "value", type: "uint256" },
+          ],
+          name: "transfer",
+          outputs: [{ name: "", type: "bool" }],
+          payable: false,
+          stateMutability: "nonpayable",
+          type: "function",
+        };
+        const data = encodeFunctionData({
+          abi: [transferAbi],
+          args: [recipientAddress, amountInWei],
+        });
+        const gasEstimate = await publicClient.estimateGas({
+          account: address,
+          to: selectedToken.address,
+          data,
+          feeCurrency,
+          gasPrice: gasPriceWithBuffer,
+        });
+        setEstimatedGas(gasEstimate);
+      } catch (error) {
+        console.error("Gas estimation error:", error);
+      } finally {
+        setIsEstimatingGas(false);
+      }
+    };
+    const debounceTimer = setTimeout(estimateGasFee, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [amount, recipientAddress, selectedToken, address]);
+
   const handleSend = async () => {
     if (!validateTransaction()) return;
     if (!walletClient) {
       setError("Wallet not connected");
       return;
     }
-
-    const isLoggedIn = await para.isFullyLoggedIn();
-
-    console.log("isLoggedIn:", isLoggedIn);
 
     setIsLoading(true);
     setError("");
@@ -206,22 +276,39 @@ const Send = () => {
       }
 
       const viemParaAccount = await createParaAccount(para);
-
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
-        chain: selectedChain,
+        chain: celo,
         transport: http("https://forno.celo.org"),
       });
 
       const amountInWei = parseUnits(amount, selectedToken.decimals);
-      await getImplementationAddress(selectedToken.address);
-      const amountFormatted = formatUnits(amountInWei, selectedToken.decimals);
+      const getAdapterAddress = (token) => {
+        if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
+          return USDC_ADAPTER_MAINNET;
+        if (token.address.toLowerCase() === USDT_MAINNET.toLowerCase())
+          return USDT_ADAPTER_MAINNET;
+        return token.address;
+      };
 
-      const abiItem = {
+      const feeCurrency = isStablecoin(selectedToken)
+        ? getAdapterAddress(selectedToken)
+        : selectedToken.address;
+
+      const minGasPrice = await publicClient
+        .request({
+          method: "eth_gasPrice",
+          params: [feeCurrency],
+        })
+        .then(hexToBigInt);
+
+      const gasPrice = (minGasPrice * BigInt(125)) / BigInt(100);
+
+      const transferAbi = {
         constant: false,
         inputs: [
           { name: "to", type: "address" },
-          { name: "amount", type: "uint256" },
+          { name: "value", type: "uint256" },
         ],
         name: "transfer",
         outputs: [{ name: "", type: "bool" }],
@@ -230,56 +317,70 @@ const Send = () => {
         type: "function",
       };
 
-      const gasPrice = await publicClient.getGasPrice();
+      const unsignedTx = {
+        account: viemParaAccount,
+        to: selectedToken.address,
+        data: encodeFunctionData({
+          abi: [transferAbi],
+          args: [recipientAddress, amountInWei],
+        }),
+        gasPrice,
+        feeCurrency,
+      };
 
       const estimatedGas = await publicClient.estimateGas({
-        account: viemParaAccount,
-        to: selectedToken.address,
+        ...unsignedTx,
+        chain: celo,
+      });
+
+      const transactionFee = gasPrice * estimatedGas;
+
+      const adjustedAmount = isUSDC
+        ? amountInWei - transactionFee / BigInt(1e12)
+        : amountInWei - transactionFee;
+
+      if (adjustedAmount <= BigInt(0)) {
+        throw new Error("Insufficient balance after fee deduction");
+      }
+
+      const txParams = {
+        ...unsignedTx,
+        chain: celo,
         data: encodeFunctionData({
-          abi: [abiItem],
-          args: [recipientAddress, amountInWei],
+          abi: [transferAbi],
+          args: [recipientAddress, adjustedAmount],
         }),
-      });
-
-      const gasLimit = (estimatedGas * BigInt(110)) / BigInt(100);
-
-      const nonce = await publicClient.getTransactionCount({
-        address: viemParaAccount.address.toLowerCase(),
-        blockTag: "pending",
-      });
-
-      const signedTx = await paraViemSigner.signTransaction({
-        account: viemParaAccount,
-        chain: selectedChain,
-        to: selectedToken.address,
-        data: encodeFunctionData({
-          abi: [abiItem],
-          args: [recipientAddress, amountInWei],
+        gas: estimatedGas,
+        nonce: await publicClient.getTransactionCount({
+          address: viemParaAccount.address,
+          blockTag: "pending",
         }),
-        gas: gasLimit,
-        gasPrice: gasPrice,
-        nonce: nonce,
-        type: "legacy",
-      });
-      console.log("Signed Transaction:", signedTx);
+        type: "cip42",
+        gatewayFee: BigInt(0),
+        gatewayFeeRecipient: "0x0000000000000000000000000000000000000000",
+      };
 
+      const signedTx = await paraViemSigner.signTransaction(txParams);
       const txHash = await paraViemSigner.sendRawTransaction({
         serializedTransaction: signedTx,
       });
 
-      console.log("Transaction Hash:", txHash);
-
       setAmount("");
       setRecipientAddress("");
-      setError("");
       setSelectedToken(null);
       toast.success(
-        `${amountFormatted} ${selectedToken.symbol} sent successfully!`
+        `${formatUnits(adjustedAmount, selectedToken.decimals)} ${
+          selectedToken.symbol
+        } sent successfully!`
       );
       navigate("/dashboard");
     } catch (error) {
       console.error("Transaction failed:", error);
-      setError(error.message || "Transaction failed");
+      setError(
+        error.message.includes("gas price")
+          ? "Transaction failed: Network fee issue. Please try again."
+          : error.shortMessage || error.message || "Transaction failed"
+      );
     } finally {
       setIsLoading(false);
       setIsTransactionPending(false);
@@ -300,15 +401,26 @@ const Send = () => {
   const getEstimatedTotalCost = () => {
     if (!estimatedGas || !gasPrice || !amount) return null;
 
-    const gasCostInWei = estimatedGas * gasPrice;
-    const gasCostInEther = ethers.formatEther(gasCostInWei);
+    if (isUSDC(selectedToken)) {
+      const transactionFee = (gasPrice * estimatedGas) / BigInt(1e12);
+      console.log(transactionFee);
+      return {
+        gas: formatUnits(transactionFee, 6),
+        total: (
+          parseFloat(amount) - parseFloat(formatUnits(transactionFee, 6))
+        ).toFixed(6),
+        symbol: "USDC",
+      };
+    }
 
+    // Existing logic for other tokens
+    const gasCostInWei = estimatedGas * gasPrice;
     return {
-      gas: gasCostInEther,
-      total: (parseFloat(amount) + parseFloat(gasCostInEther)).toFixed(6),
+      gas: formatUnits(gasCostInWei, 18),
+      total: parseFloat(amount).toFixed(6),
+      symbol: "CELO",
     };
   };
-
   const QuickAmountButton = ({ label }) => (
     <button
       onClick={() => handleQuickAmount(label.replace("%", ""))}
@@ -391,22 +503,35 @@ const Send = () => {
             ))}
           </div>
 
-          {estimatedCost && (
+          {isEstimatingGas ? (
+            <div className="bg-[#1A1831] border border-[#2D2B54] rounded-xl p-4">
+              <div className="flex items-center justify-center text-gray-400 text-sm">
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Calculating fees...
+              </div>
+            </div>
+          ) : estimatedCost ? (
             <div className="bg-[#1A1831] border border-[#2D2B54] rounded-xl p-4">
               <div className="text-gray-400 text-sm space-y-2">
                 <div className="flex justify-between">
-                  <span>Estimated Gas Fee:</span>
-                  <span>{parseFloat(estimatedCost.gas).toFixed(6)} CELO</span>
-                </div>
-                <div className="flex justify-between text-white font-medium">
-                  <span>Total Cost:</span>
+                  <span>Network Fees:</span>
                   <span>
-                    {estimatedCost.total} {selectedToken?.symbol}
+                    {estimatedCost.gas} {selectedToken.symbol}
                   </span>
                 </div>
+                {[USDC_MAINNET, USDT_MAINNET].includes(
+                  selectedToken?.address.toLowerCase()
+                ) && (
+                  <div className="flex justify-between text-white font-medium">
+                    <span>Total Sent:</span>
+                    <span>
+                      {estimatedCost.total} {selectedToken.symbol}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          ) : null}
 
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-500 text-sm text-center">
