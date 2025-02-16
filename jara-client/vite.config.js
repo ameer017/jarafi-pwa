@@ -53,5 +53,6 @@ export default defineConfig({
 
   optimizeDeps: {
     exclude: ["chunk-OTONJH47.js"],
+    include: ["bs58"]
   },
 });

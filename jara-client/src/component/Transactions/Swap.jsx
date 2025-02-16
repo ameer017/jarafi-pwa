@@ -1,111 +1,118 @@
-import React, { useState } from 'react';
-import SwapAssetsPage from '../Modal/SwapAssetsPage';
-import ExchangeRateModal from '../Modal/ExchangeRateModal';
-import FeesModal from '../Modal/FeesModal';
-import Modal from '../Modal/Modal';
-import UniSwap  from '../Modal/UniSwap';
-import { useAccount } from 'wagmi';
+import { SquidWidget } from "@0xsquid/widget";
+import { squidConfig } from "../../constant/squidClient";
+import { http, useAccount, useWalletClient } from "wagmi";
+import {
+  cEUR,
+  cUsd,
+  cREAL,
+  celoToken,
+  commons,
+  usdt,
+  USDC,
+} from "../../constant/otherChains";
+import { JsonRpcProvider } from "ethers";
+import {
+  createParaAccount,
+  createParaViemClient,
+} from "@getpara/viem-v2-integration";
+import para from "../../constant/paraClient";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { celo } from "viem/chains";
 
 const Swap = () => {
-  const { address } = useAccount();
-  const [currentPage, setCurrentPage] = useState(2);
-  const [showModal, setShowModal] = useState(false);
-  const [showExchangeRateModal, setShowExchangeRateModal] = useState(false);
-  const [showFeesModal, setShowFeesModal] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [swapDetails, setSwapDetails] = useState(null);
-  const [selectedChain, setSelectedChain] = useState("Celo");
-  // const [tokenIn, setTokenIn] = useState(cUsd);
-  // const [tokenOut, setTokenOut] = useState(celoToken);
+  const { address } = useAccount(); // Get connected wallet address
+  const { data: walletClient } = useWalletClient(); // Get the wallet signer
 
-  const handleExchangeRate = async () => {
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
+  const provider = new JsonRpcProvider("https://forno.celo.org");
+
+  const [paraSigner, setParaSigner] = useState(null);
+
+  useEffect(() => {
+    const initPara = async () => {
+      try {
+        const viemParaAccount = await createParaAccount(para);
+        const paraViemSigner = createParaViemClient(para, {
+          account: viemParaAccount,
+          chain: celo,
+          transport: http("https://forno.celo.org"),
+        });
+        setParaSigner(paraViemSigner);
+      } catch (error) {
+        console.error("Error initializing Para signer:", error);
+      }
+    };
+
+    initPara();
+  }, []);
+
+  const getRoute = async (params) => {
     try {
-      const tokenInObj = new Token(42220, tokenIn.address, tokenIn.decimals);
-      const tokenOutObj = new Token(42220, tokenOut.address, tokenOut.decimals);
-
-      console.log(tokenInObj);
-      console.log(tokenOutObj);
-      const amountIn = parseUnits(amount, tokenIn.decimals).toString();
-
-      const quoterContract = new Contract(QUOTER_CONTRACT, QuoterABI, provider);
-      const amountOut = await quoterContract.callStatic.quoteExactInputSingle(
-        tokenIn.address,
-        tokenOut.address,
-        3000,
-        amountIn,
-        0
+      const result = await axios.post(
+        "https://apiplus.squidrouter.com/v2/route",
+        params,
+        {
+          headers: {
+            "x-integrator-id": import.meta.env.VITE_APP_SQUID_INTEGRATOR_ID,
+            "Content-Type": "application/json",
+          },
+        }
       );
-
-      setSwapDetails({ amountOut });
-      setCurrentPage(3);
-      setShowExchangeRateModal(true);
+      return { data: result.data, requestId: result.headers["x-request-id"] };
     } catch (error) {
-      console.error("Error fetching Uniswap exchange rate:", error);
+      console.error("Route error:", error.response?.data || error);
+      throw error;
     }
   };
 
-  // const { write: executeSwap } = useContractWrite({
-  //   address: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-  //   abi: [
-  //     "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline)",
-  //   ],
-  //   functionName: "swapExactTokensForTokens",
-  //   args: [
-  //     parseUnits(amount, tokenIn.decimals),
-  //     swapDetails?.minimumAmountOut.toString(),
-  //     [tokenIn.address, tokenOut.address],
-  //     address,
-  //     Math.floor(Date.now() / 1000) + 60 * 20,
-  //   ],
-  // });
+  const handleSwap = async (fromToken, toToken, amount) => {
+    if (!address || !walletClient) {
+      console.error("Wallet or Para signer not available");
+      return;
+    }
 
-  const handleSwap = async () => {
-    executeSwap?.();
-    setShowFeesModal(false);
-    setShowModal(true);
-  };
+    try {
+      const params = {
+        fromAddress: address,
+        fromChain: celo,
+        fromToken,
+        fromAmount: amount,
+        toChain: celo,
+        toToken,
+        toAddress: address,
+      };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setShowExchangeRateModal(false);
-    setShowFeesModal(false);
+      console.log("Swap Params:", params);
+      const { data: route, requestId } = await getRoute(params);
+      const transactionRequest = route.transactionRequest;
+
+      // Approve spending
+      await walletClient.sendTransaction({
+        to: transactionRequest.target,
+        data: transactionRequest.data,
+        value: transactionRequest.value,
+        gasPrice: await provider.getGasPrice(),
+        gasLimit: transactionRequest.gasLimit,
+      });
+
+      console.log("Transaction Sent:", transactionRequest);
+    } catch (error) {
+      console.error("Swap error:", error);
+    }
   };
 
   return (
-    <div>
-      
-        <UniSwap/>
-     
-
-
-      {currentPage === 2 && (
-        <SwapAssetsPage
-          onExchangeRate={handleExchangeRate}
-          amount={amount}
-          setAmount={setAmount}
-          selectedChain={selectedChain}
-          setSelectedChain={setSelectedChain}
-          // tokenIn={tokenIn}
-          // setTokenIn={setTokenIn}
-          // tokenOut={tokenOut}
-          // setTokenOut={setTokenOut}
-        />
-      )}
-      {currentPage === 3 && (
-        <ExchangeRateModal
-          swapDetails={swapDetails}
-          onClose={handleCloseModal}
-          onContinue={() => {
-            setShowExchangeRateModal(false);
-            setShowFeesModal(true);
-          }}
-        />
-      )}
-      {currentPage === 4 && (
-        <FeesModal onClose={handleCloseModal} onContinue={handleSwap} />
-      )}
-      {showModal && <Modal onClose={handleCloseModal} />}
-    </div>
+    <section className="bg-[#0F0140] h-screen w-full flex justify-center items-center">
+      <SquidWidget
+        config={{
+          ...squidConfig,
+          wallet: walletClient,
+          tokens,
+          onSwap: handleSwap,
+        }}
+      />
+    </section>
   );
 };
 

@@ -134,6 +134,7 @@ const Login = () => {
             </button>
           </div>
 
+
           {loginType === "email" ? (
             <div className="w-full flex flex-col">
               <label>Email</label>
