@@ -43,7 +43,7 @@ const Register = () => {
 
         navigate("/dashboard");
       } else {
-        await para.createUser(email);
+        await para.createUser({email});
 
         navigate("/confirm-email", { state: { email } });
       }

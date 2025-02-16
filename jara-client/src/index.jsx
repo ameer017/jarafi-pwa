@@ -21,3 +21,4 @@ export { default as CardPage } from "./component/Cards/CardsPage";
 
 export { default as Settings } from "./component/Settings/Settings";
 export { default as SelectAsset } from "./component/Cards/SelectAssest";
+export {default as FinalFundingExt} from "./component/Cards/FinalFundingExt"
