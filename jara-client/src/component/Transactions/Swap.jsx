@@ -21,9 +21,7 @@ import {
   createParaViemClient,
 } from "@getpara/viem-v2-integration";
 import para from "../../constant/paraClient";
-import { getGasPrice, getTransactionReceipt } from "@wagmi/core";
-import { config } from "../../constant/config";
-import { createPublicClient, encodeFunctionData } from "viem";
+import { createPublicClient } from "viem";
 
 // Utility: format token data for use in the widget
 const formatToken = (token) => ({
@@ -54,8 +52,24 @@ const Swap = () => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [fees, setFees] = useState(null);
   const [slippageTolerance, setSlippageTolerance] = useState("0");
+  const [transactionRequest, setTransactionRequest] = useState(null);
 
-  
+  const hexToBigInt = (hexValue) => BigInt(hexValue);
+
+  const USDC_ADAPTER_MAINNET = "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B";
+  const USDC_MAINNET = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
+
+  const USDT_ADAPTER_MAINNET = "0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72";
+  const USDT_MAINNET = "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e";
+  const CELO_MAINNET = "0x471EcE3750Da237f93B8E339c536989b8978a438";
+
+  const isStablecoin = (token) =>
+    [USDC_MAINNET, USDT_MAINNET].includes(token?.address?.toLowerCase());
+
+  const publicClient = createPublicClient({
+    chain: celo,
+    transport: http("https://forno.celo.org"),
+  });
   // Fetch token balances from the blockchain
   const fetchTokenBalance = async () => {
     if (!address) {
@@ -180,9 +194,17 @@ const Swap = () => {
 
   // Approve the SquidRouter contract to spend your token.
 
-  // Helper: poll for a transaction receipt manually
-
   const erc20Abi = [
+    {
+      inputs: [
+        { internalType: "address", name: "owner", type: "address" },
+        { internalType: "address", name: "spender", type: "address" },
+      ],
+      name: "allowance",
+      outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+      stateMutability: "view",
+      type: "function",
+    },
     {
       inputs: [
         { internalType: "address", name: "spender", type: "address" },
@@ -195,68 +217,70 @@ const Swap = () => {
     },
   ];
 
-  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-  const approveSpending = async (
-    transactionRequestTarget,
-    tokenAddress,
-    amount
-  ) => {
+  const approveSpending = async (spender, tokenAddress, amount) => {
     try {
-
-      const publicClient = createPublicClient({
-        chain: celo,
-        transport: http("https://forno.celo.org"),
-      });
-      const gasPrice = await publicClient.getGasPrice();
-      
-      // Create the viem account and client
       const viemParaAccount = await createParaAccount(para);
+      if (!viemParaAccount) {
+        throw new Error("Failed to retrieve account details.");
+      }
+
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
         chain: celo,
         transport: http("https://forno.celo.org"),
       });
 
-      const tx = await paraViemSigner.sendTransaction({
-        to: tokenAddress,
-        data: encodeFunctionData({
-          abi: erc20Abi,
-          functionName: "approve",
-          args: [transactionRequestTarget, amount],
-        }),
+      // Use existing publicClient instead of creating new provider
+      const allowance = await publicClient.readContract({
+        address: tokenAddress,
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [viemParaAccount.address, spender],
       });
 
-      console.log("Approval transaction hash:", tx);
+      console.log("Current Allowance:", allowance.toString());
 
-      let receipt = null;
-      let attempts = 0;
-      const maxAttempts = 10;
-      const pollInterval = 3000;
-
-      while (!receipt && attempts < maxAttempts) {
-        await sleep(pollInterval);
-        receipt = await getTransactionReceipt(config, { hash: tx });
-        attempts++;
-        console.log(`Polling for receipt... Attempt ${attempts}`);
+      if (allowance >= BigInt(amount)) {
+        console.log("Sufficient allowance already granted.");
+        return;
       }
 
-      if (!receipt) {
-        throw new Error(
-          "Approval transaction receipt not found after polling."
-        );
-      }
+      console.log("Initiating approval transaction...");
 
-      console.log("Received approval receipt:", receipt);
-      console.log(
-        `Approved ${fromAmount} tokens for ${transactionRequestTarget}`
-      );
-      navigate("/dashboard");
+      const txHash = await paraViemSigner.writeContract({
+        address: tokenAddress,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [spender, amount],
+      });
+
+      console.log("Approval transaction hash:", txHash);
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations: 2,
+      });
+
+      if (receipt.status === "success") {
+        console.log("Approval successful:", receipt);
+        toast.success("Token approval successful ✅");
+        return receipt;
+      } else {
+        throw new Error("Transaction reverted");
+      }
     } catch (error) {
       console.error("Approval failed:", error);
-      throw error;
+
+      if (error.reason) {
+        toast.error("Approval failed: " + error.reason);
+      } else if (error.data && error.data.message) {
+        toast.error("Approval failed: " + error.data.message);
+      } else {
+        toast.error("Approval failed: " + error.message);
+      }
     }
   };
+
   // ---------------- End SquidRouter Helpers ----------------
 
   // Fetch exchange details and update exchangeRate, fees, and the calculated tokenTo amount.
@@ -325,6 +349,41 @@ const Swap = () => {
       setExchangeRate(rate.toFixed(4));
       setFees(estimatedFees.toFixed(4));
       setToAmount(toAmountFormatted);
+
+      let transactionValue = BigInt(0);
+
+      if (
+        route.transactionRequest?.value &&
+        route.transactionRequest.value !== "0"
+      ) {
+        transactionValue = BigInt(route.transactionRequest.value);
+        console.log(
+          "Using pre-set transactionRequest value:",
+          transactionValue
+        );
+      } else if (fromToken.symbol.toUpperCase() === "CELO") {
+        console.log(
+          "Swapping CELO - Amount:",
+          amount,
+          "Decimals:",
+          fromToken.decimals
+        );
+        let parsedValue = ethers
+          .parseUnits(amount, fromToken.decimals)
+          .toString();
+        console.log("Parsed CELO Value:", parsedValue);
+        transactionValue = BigInt(parsedValue);
+      } else {
+        console.log("Transaction value remains 0.");
+      }
+
+      console.log("Final Transaction Value:", transactionValue.toString());
+
+      // ✅ Ensure the transaction request value is updated
+      setTransactionRequest({
+        ...route.transactionRequest,
+        value: transactionValue,
+      });
     } catch (error) {
       console.error("Error fetching exchange details:", error);
       // Optionally, show the error message to the user via toast:
@@ -352,26 +411,43 @@ const Swap = () => {
   const handleSwap = async () => {
     setIsSwapping(true);
 
-    const viemParaAccount = await createParaAccount(para);
-    const paraViemSigner = createParaViemClient(para, {
-      account: viemParaAccount,
-      chain: celo,
-      transport: http("https://forno.celo.org"),
-    });
-    if (!fromAmount || parseFloat(fromAmount) <= 0) {
-      toast.warn("Enter a valid amount");
-      return;
-    }
-    if (!paraViemSigner) {
-      toast.error("Wallet not connected");
-      setIsSwapping(false);
-
-      return;
-    }
     try {
+      // Ensure necessary variables are initialized
+      if (!address || !fromToken || !toToken || !fromAmount) {
+        toast.error("Missing required parameters for swap.");
+        setIsSwapping(false);
+        return;
+      }
+
+      // Create the Para account and signer
+      const viemParaAccount = await createParaAccount(para);
+      const paraViemSigner = createParaViemClient(para, {
+        account: viemParaAccount,
+        chain: celo,
+        transport: http("https://forno.celo.org"),
+      });
+
+      if (!paraViemSigner) {
+        toast.error("Wallet not connected");
+        setIsSwapping(false);
+        return;
+      }
+
+      if (fromToken.decimals === undefined || fromToken.decimals === null) {
+        toast.error("Invalid token decimals");
+        setIsSwapping(false);
+        return;
+      }
+
+      console.log("From Token Symbol:", fromToken.symbol);
+      console.log("From Amount:", fromAmount);
+      console.log("Decimals:", fromToken.decimals);
+
       const fromAmountInUnits = ethers
         .parseUnits(fromAmount, fromToken.decimals)
         .toString();
+      console.log("Parsed Amount in Units:", fromAmountInUnits);
+
       const params = {
         fromAddress: address,
         fromChain: `${celo.id}`,
@@ -386,45 +462,160 @@ const Swap = () => {
 
       // 1. Get the optimal swap route from SquidRouter.
       const { route, requestId } = await getRoute(params);
-      console.log("Calculated route:", route, "Request ID:", requestId);
+      console.log("Route response:", route, "Request ID:", requestId);
 
-      const transactionRequest = route.transactionRequest;
+      if (!route || !route.transactionRequest) {
+        throw new Error("Invalid route received from SquidRouter");
+      }
+
+      let transactionRequest = route.transactionRequest;
+
       if (!transactionRequest?.target || !transactionRequest?.data) {
         throw new Error("Invalid transaction request");
       }
 
-      // 2. Approve the SquidRouter contract to spend your token.
-      await approveSpending(
-        transactionRequest.target,
-        fromToken.address,
-        fromAmountInUnits
-      );
+      transactionRequest.value =
+        fromToken.symbol.toUpperCase() === "CELO" ? fromAmountInUnits : "0";
 
-      // 3. Execute the swap transaction.
-      const gasPrice = await getGasPrice(config)
-      console.log(gasPrice)
-      const tx = await paraViemSigner.sendTransaction({
-        to: transactionRequest.target,
-        data: transactionRequest.data,
-        value: BigInt(transactionRequest.value),
-        gasPrice: BigInt(gasPrice.toString()),
-        gasLimit: BigInt(transactionRequest.gasLimit),
+      console.log("Transaction Request:", transactionRequest);
+
+      // 2. Check token allowance before approving spending
+      const allowance = await publicClient.readContract({
+        address: fromToken.address,
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [address, transactionRequest.target],
       });
 
-      const txReceipt = await tx.wait();
-      console.log("Transaction Receipt:", txReceipt);
+      console.log("Token Allowance:", allowance.toString());
 
-      const explorerLink = `https://explorer.celo.org/tx/${txReceipt.transactionHash}`;
-      console.log(explorerLink);
+      // Add more detailed approval verification
+      if (BigInt(allowance) < BigInt(fromAmountInUnits)) {
+        console.log(
+          "Approval needed. Current allowance:",
+          allowance.toString()
+        );
+        const approveTx = await approveSpending(
+          transactionRequest.target,
+          fromToken.address,
+          fromAmountInUnits
+        );
+        console.log("Approval transaction:", approveTx);
+        await publicClient.waitForTransactionReceipt({ hash: approveTx });
+        console.log("Approval confirmed");
+      }
+
+      const isCelo =
+        fromToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
+
+      const getAdapterAddress = (token) => {
+        if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
+          return USDC_ADAPTER_MAINNET;
+        if (token.address.toLowerCase() === USDT_MAINNET.toLowerCase())
+          return USDT_ADAPTER_MAINNET;
+        return token.address;
+      };
+
+      let feeCurrency;
+      if (isCelo) {
+        feeCurrency = undefined;
+      } else if (isStablecoin(fromToken)) {
+        feeCurrency = getAdapterAddress(fromToken);
+      } else {
+        feeCurrency = fromToken.address;
+      }
+
+      const gasPriceParams = feeCurrency ? [feeCurrency] : [];
+      const minGasPrice = await publicClient
+        .request({
+          method: "eth_gasPrice",
+          params: gasPriceParams,
+        })
+        .then(hexToBigInt);
+
+      const gasPrice = (minGasPrice * BigInt(125)) / BigInt(100);
+
+      // 4. Estimate Gas
+      const estimatedGas = await publicClient.estimateGas({
+        to: transactionRequest.target,
+        data: transactionRequest.data,
+        value: BigInt(transactionRequest.value || 0),
+        chain: celo,
+        ...(feeCurrency && { feeCurrency }),
+        account: viemParaAccount, // Add this line
+      });
+
+      console.log("Estimated Gas:", estimatedGas.toString());
+
+      const transactionFee = gasPrice * estimatedGas;
+
+      const isUSDC =
+        fromToken.address.toLowerCase() === USDC_MAINNET.toLowerCase();
+
+      const adjustedAmount = isUSDC
+        ? BigInt(fromAmountInUnits) -
+          transactionFee / 10n ** (18n - BigInt(fromToken.decimals))
+        : BigInt(fromAmountInUnits) - transactionFee;
+
+      if (adjustedAmount <= BigInt(0)) {
+        throw new Error("Insufficient balance after fee deduction");
+      }
+
+      const nonce = await publicClient.getTransactionCount({
+        address: viemParaAccount.address,
+        blockTag: "pending",
+      });
+
+      const transactionValue = BigInt(transactionRequest.value || 0);
+
+      console.log("Final Transaction Value:", transactionValue.toString());
+
+      const tx = {
+        to: transactionRequest.target,
+        data: transactionRequest.data,
+        value: transactionValue,
+        gasPrice,
+        gas: estimatedGas,
+        nonce,
+        chain: celo,
+        ...(feeCurrency && { feeCurrency }),
+        type: "cip42",
+        gatewayFee: BigInt(0),
+        gatewayFeeRecipient: "0x0000000000000000000000000000000000000000",
+      };
+
+      console.log("Final Transaction:", tx);
+
+      await publicClient.call({
+        ...tx,
+        account: viemParaAccount,
+      });
+
+      // 6. Sign the transaction
+      const signedTx = await paraViemSigner.signTransaction(tx);
+      console.log("Signed Transaction:", signedTx);
+
+      // 7. Send the signed transaction
+      const txHash = await paraViemSigner.sendRawTransaction({
+        serializedTransaction: signedTx,
+      });
+      console.log("Transaction Hash:", txHash);
+
+      const explorerLink = `https://explorer.celo.org/tx/${txHash}`;
+      console.log("Explorer Link:", explorerLink);
       toast.info(`Transaction sent! Check: ${explorerLink}`);
 
-      // 4. Poll for the transaction status until completion.
-      await updateTransactionStatus(tx.hash, requestId);
-      toast.success("Swap successful! 🔥");
+      // 8. Poll for transaction status until completion
+      await updateTransactionStatus(txHash, requestId);
+      toast.success("Swap successful! 🎉");
       navigate("/dashboard");
     } catch (error) {
-      console.error("Swap failed:", error);
-      toast.error("Swap failed: " + error.message);
+      console.error("Swap failed:", {
+        message: error.message,
+        data: error.cause?.data || error.cause?.cause?.data,
+        stack: error.stack,
+      });
+      toast.error(`Swap failed: ${error.shortMessage || error.message}`);
     } finally {
       setIsSwapping(false);
     }
@@ -566,7 +757,11 @@ const Swap = () => {
         </div>
 
         <button
-          className="bg-[#F2E205] p-[10px] rounded-[10px] w-full absolute bottom-6 text-[16px] text-[#4F4E50]"
+          className={
+            isSwapping
+              ? "bg-[#4F4E50] text-[#F2E205] p-[10px] rounded-[10px] w-full absolute bottom-6 text-[16px] cursor-not-allowed "
+              : "bg-[#F2E205] p-[10px] rounded-[10px] w-full absolute bottom-6 text-[16px] text-[#4F4E50]"
+          }
           onClick={handleSwap}
           disabled={isSwapping}
         >

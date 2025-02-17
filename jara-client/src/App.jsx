@@ -67,7 +67,7 @@ function App() {
         <Route path="/final-funding" element={<FinalFundingExt />} />
         <Route path="/congrats" element={<Congratulation />} />
 
-        <Route path="/swap" element={<Swap />} />
+        <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
         <Route path="/recieve" element={<ReceiveAssets />} />
 
         <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
