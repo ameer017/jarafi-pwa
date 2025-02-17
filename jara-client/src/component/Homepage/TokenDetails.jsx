@@ -9,7 +9,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { FaPlus } from "react-icons/fa";
-
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { useLocation, useParams } from "react-router-dom";
 
@@ -19,11 +18,22 @@ const TokenDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mockData, setMockData] = useState([]);
+  const { id } = useParams();
+  const [activeTab, setActiveTab] = useState("balance");
 
   const tokenData = location.state?.tokenData;
   const { address } = useAccount();
 
   const [tokenBalance, setTokenBalance] = useState(null);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === "activity") {
+      navigate(`/token-details/${id}/activities`);
+    } else {
+      navigate(`/token-details/${id}`);
+    }
+  };
 
   const fetchTokenBalance = async () => {
     if (!address || !tokenData?.address) {
@@ -103,7 +113,9 @@ const TokenDetails = () => {
           </section>
 
           <section className="mt-4">
-            <p className="text-[#F2EDE4] text-[32px]">${tokenBalance}</p>
+            <p className="text-[#F2EDE4] text-[30px]">
+              ${tokenBalance || tokenData?.quote?.USD?.price?.toFixed(2)}
+            </p>{" "}
           </section>
 
           <section className="flex justify-between items-center px-8 mt-12">
@@ -144,18 +156,28 @@ const TokenDetails = () => {
 
       <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
         <div className="h-full border">
-          <table className="w-full text-center border-collapse">
-            <thead>
-              <tr>
-                <th className="p-4 border-b text-[#464446] text-[14px] font-[400]">
-                  Your Balance
-                </th>
-                <th className="p-4 border-b text-[#464446] text-[14px] font-[400]">
-                  Activity
-                </th>
-              </tr>
-            </thead>
-          </table>
+          <div className="flex border-b">
+            <button
+              onClick={() => handleTabChange("balance")}
+              className={`p-4 text-[14px] w-1/2 ${
+                activeTab === "balance"
+                  ? "text-[#0F0140] border-b-2 border-[#0F0140] font-medium"
+                  : "text-[#464446] font-normal"
+              }`}
+            >
+              Your Balance
+            </button>
+            <button
+              onClick={() => handleTabChange("activity")}
+              className={`p-4 text-[14px] w-1/2 ${
+                activeTab === "activity"
+                  ? "text-[#0F0140] border-b-2 border-[#0F0140] font-medium"
+                  : "text-[#464446] font-normal"
+              }`}
+            >
+              Activity
+            </button>
+          </div>
 
           <div className="overflow-y-auto h-full">
             <table className="w-full text-center border-collapse table-fixed">

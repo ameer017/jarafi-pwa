@@ -6,13 +6,13 @@ import {
   cREAL,
   celoToken,
   commons,
-  usdt,
+  cusdt,
   USDC,
 } from "../../constant/otherChains";
 import { FaMinus, FaEquals, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
+const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
 
 // FundWithBalance Component
 const FundWithBalance = ({ onClose }) => {
