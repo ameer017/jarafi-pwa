@@ -55,4 +55,17 @@ export default defineConfig({
     exclude: ["chunk-OTONJH47.js"],
     include: ["bs58"]
   },
+  server: {
+    proxy: {
+      '/squid-api': {
+        target: 'https://api.squidrouter.com/',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/squid-api/, ''),
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
+        }
+      }
+    }
+  }
 });

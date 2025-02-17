@@ -30,7 +30,7 @@ const SeedPhrase = () => {
         ))}
       </div>
 
-      <button className="bg-[#F2E205] rounded-lg p-[10px] text-[16px] font-[Montserrat] font-[600] text-[#4F4E50] w-full ">
+      <button className="bg-[#F2E205] rounded-lg p-[10px] text-[16px] font-[Montserrat] font-[600] text-[#4F4E50] w-full text-center ">
         Login
       </button>
     </form>
