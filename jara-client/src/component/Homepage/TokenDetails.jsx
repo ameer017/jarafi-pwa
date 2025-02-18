@@ -114,7 +114,9 @@ const TokenDetails = () => {
 
           <section className="mt-4">
             <p className="text-[#F2EDE4] text-[30px]">
-              ${tokenBalance || tokenData?.quote?.USD?.price?.toFixed(2)}
+              $
+              {parseFloat(tokenBalance).toFixed(2) ||
+                tokenData?.quote?.USD?.price?.toFixed(2)}
             </p>{" "}
           </section>
 

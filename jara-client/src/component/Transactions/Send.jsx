@@ -128,6 +128,7 @@ const Send = () => {
 
   const USDT_ADAPTER_MAINNET = "0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72";
   const USDT_MAINNET = "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e";
+  const CELO_MAINNET = "0x471EcE3750Da237f93B8E339c536989b8978a438";
 
   const isStablecoin = (token) =>
     [USDC_MAINNET, USDT_MAINNET].includes(token?.address?.toLowerCase());
@@ -211,19 +212,33 @@ const Send = () => {
         const isStable = [USDC_MAINNET, USDT_MAINNET].includes(
           selectedToken.address.toLowerCase()
         );
-        const feeCurrency = isStable
-          ? selectedToken.address === USDC_MAINNET.toLowerCase()
-            ? USDC_ADAPTER_MAINNET
-            : USDT_ADAPTER_MAINNET
-          : selectedToken.address;
+        const isCelo =
+          selectedToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
+
+        let feeCurrency;
+        if (isCelo) {
+          feeCurrency = undefined;
+        } else if (isStable) {
+          feeCurrency =
+            selectedToken.address === USDC_MAINNET.toLowerCase()
+              ? USDC_ADAPTER_MAINNET
+              : USDT_ADAPTER_MAINNET;
+        } else {
+          feeCurrency = selectedToken.address;
+        }
+
+        const gasPriceParams = feeCurrency ? [feeCurrency] : [];
+
         const minGasPrice = await publicClient
           .request({
             method: "eth_gasPrice",
-            params: [feeCurrency],
+            params: gasPriceParams,
           })
           .then((hexValue) => BigInt(hexValue));
+
         const gasPriceWithBuffer = (minGasPrice * BigInt(125)) / BigInt(100);
         setGasPrice(gasPriceWithBuffer);
+
         const amountInWei = parseUnits(amount, selectedToken.decimals);
         const transferAbi = {
           constant: false,
@@ -282,6 +297,9 @@ const Send = () => {
         transport: http("https://forno.celo.org"),
       });
 
+      const isCelo =
+        selectedToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
+
       const amountInWei = parseUnits(amount, selectedToken.decimals);
       const getAdapterAddress = (token) => {
         if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
@@ -291,14 +309,20 @@ const Send = () => {
         return token.address;
       };
 
-      const feeCurrency = isStablecoin(selectedToken)
-        ? getAdapterAddress(selectedToken)
-        : selectedToken.address;
+      let feeCurrency;
+      if (isCelo) {
+        feeCurrency = undefined;
+      } else if (isStablecoin(selectedToken)) {
+        feeCurrency = getAdapterAddress(selectedToken);
+      } else {
+        feeCurrency = selectedToken.address;
+      }
 
+      const gasPriceParams = feeCurrency ? [feeCurrency] : [];
       const minGasPrice = await publicClient
         .request({
           method: "eth_gasPrice",
-          params: [feeCurrency],
+          params: gasPriceParams,
         })
         .then(hexToBigInt);
 
@@ -325,7 +349,7 @@ const Send = () => {
           args: [recipientAddress, amountInWei],
         }),
         gasPrice,
-        feeCurrency,
+        ...(feeCurrency && { feeCurrency }),
       };
 
       const estimatedGas = await publicClient.estimateGas({
