@@ -1,7 +1,6 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import {
-  Activities,
   ConfirmEmail,
   Congratulation,
   CreateWallet,
@@ -52,7 +51,6 @@ function App() {
           path="/token-details/:id"
           element={<TokenDetails tokens={tokens} />}
         />
-        <Route path="/token-details/:id/activities" element={<Activities />} />
         <Route path="/sign-up-user" element={<Register />} />
 
         <Route path="/confirm-email" element={<ConfirmEmail />} />
