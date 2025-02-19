@@ -19,7 +19,6 @@ import {
 } from "recharts";
 import axios from "axios";
 
-// Action Button Component
 const ActionButton = ({ label, icon, rotate }) => (
   <div className="flex flex-col items-center gap-2 text-white text-[14px]">
     <button
@@ -39,6 +38,8 @@ const Activities = () => {
   const [tokenData, setTokenData] = useState(null);
   const [priceHistory, setPriceHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+    const [tokenBalance, setTokenBalance] = useState(null);
+
 
   const COINMARKETCAP_BASE_URL = import.meta.env
     .VITE_APP_COINMARKETCAP_BASE_URL;
@@ -99,7 +100,7 @@ const Activities = () => {
           <div className="mt-4 text-center">
             <p className="text-[#F2EDE4] text-[16px]">{tokenData?.name}</p>
             <p className="text-[#F2EDE4] text-[30px]">
-              ${tokenData?.quote?.USD?.price.toFixed(2)}
+              ${tokenBalance || tokenData?.quote?.USD?.price?.toFixed(2)}
             </p>
           </div>
           <div className="flex justify-between mt-4">
