@@ -28,12 +28,12 @@ import {
   cREAL,
   celoToken,
   commons,
-  cusdt,
+  usdt,
   USDC,
 } from "./constant/otherChains";
 import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
+const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
 
 function App() {
   return (
@@ -67,7 +67,7 @@ function App() {
         <Route path="/final-funding" element={<FinalFundingExt />} />
         <Route path="/congrats" element={<Congratulation />} />
 
-        <Route path="/swap" element={<Swap />} />
+        <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
         <Route path="/recieve" element={<ReceiveAssets />} />
 
         <Route path="/swap" element={<AuthRoute element={<Swap />} />} />

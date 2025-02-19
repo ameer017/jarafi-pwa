@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@0xsquid/sdk": "^2.9.0",
+    "@0xsquid/widget": "^3.4.1",
     "@esbuild/darwin-x64": "^0.24.2",
     "@ethereumjs/rlp": "^5.0.2",
     "@getpara/ethers-v6-integration": "1.0.1",
@@ -22,6 +24,8 @@
     "@uniswap/v3-sdk": "^3.24.0",
     "@uniswap/v4-sdk": "^1.18.0",
     "axios": "^1.7.9",
+    "base-x": "^5.0.0",
+    "bs58": "^6.0.0",
     "chart.js": "^4.4.7",
     "ethers": "^6.13.5",
     "eventemitter3": "^5.0.1",
@@ -38,6 +42,7 @@
     "react-icons": "^5.4.0",
     "react-qr-scanner": "^1.0.0-alpha.11",
     "react-router-dom": "^7.1.3",
+    "react-select": "^5.10.0",
     "react-spinner": "^0.2.7",
     "react-toastify": "^11.0.3",
     "react-transition-group": "^4.4.5",

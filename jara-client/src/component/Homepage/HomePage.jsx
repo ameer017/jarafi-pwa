@@ -17,7 +17,7 @@ import {
   cREAL,
   celoToken,
   commons,
-  cusdt,
+  usdt,
   USDC,
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
@@ -39,7 +39,7 @@ const HomePage = () => {
   const [showTnxHistory, setShowTnxHistory] = useState(false);
 
   const [tokenTransactions, setTokenTransactions] = useState({});
-  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, cusdt, USDC];
+  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
 
   const location = useLocation();
 
