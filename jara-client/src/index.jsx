@@ -10,7 +10,6 @@ export { default as CreateWallet } from "./component/Registration/SecureWallet/C
 export { default as WalletShowcase } from "./component/Registration/SecureWallet/WalletShowcase";
 export { default as Congratulation } from "./component/Registration/SecureWallet/Congratulation";
 export { default as Home } from "./pages/Home";
-export { default as Activities } from "./component/Homepage/Activities";
 export { default as ReceiveAssets } from "./component/Transactions/Receive";
 export { default as Login } from "./component/Registration/Login";
 
