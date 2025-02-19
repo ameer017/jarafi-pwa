@@ -20,18 +20,36 @@ const TokenDetails = () => {
   const [mockData, setMockData] = useState([]);
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("balance");
-
-  const tokenData = location.state?.tokenData;
+  const [tokenData, setTokenData] = useState(null);
   const { address } = useAccount();
-
   const [tokenBalance, setTokenBalance] = useState(null);
+
+  useEffect(() => {
+    const initializeTokenData = () => {
+      if (location.state?.tokenData) {
+        setTokenData(location.state.tokenData);
+        localStorage.setItem("tokenData", JSON.stringify(location.state.tokenData));
+      } else {
+        const storedData = localStorage.getItem("tokenData");
+        if (storedData) {
+          setTokenData(JSON.parse(storedData));
+        }
+      }
+    };
+
+    initializeTokenData();
+  }, [location.state]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     if (tab === "activity") {
-      navigate(`/token-details/${id}/activities`);
+      navigate(`/token-details/${id}/activities`, {
+        state: { tokenData: tokenData }
+      });
     } else {
-      navigate(`/token-details/${id}`);
+      navigate(`/token-details/${id}`, {
+        state: { tokenData: tokenData }
+      });
     }
   };
 
@@ -65,7 +83,9 @@ const TokenDetails = () => {
   };
 
   useEffect(() => {
-    fetchTokenBalance();
+    if (tokenData) {
+      fetchTokenBalance();
+    }
   }, [address, tokenData]);
 
   if (isLoading) {
@@ -90,15 +110,44 @@ const TokenDetails = () => {
     );
   }
 
-  return (
-    <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
+    return (
+      <div className="overflow-y-auto h-full">
+        <table className="w-full text-center border-collapse table-fixed">
+          <tbody>
+            {mockData.map((item) => (
+              <tr key={item.id} className="hover:bg-gray-100">
+                <td colSpan={2} className="p-0">
+                  <Link
+                    to={`/token-details/${item.id}`}
+                    className="w-full flex justify-between"
+                  >
+                    <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
+                      <img
+                        src={item.icon}
+                        className="w-[20px] h-[20px] rounded-full"
+                        alt="icon"
+                      />
+                      {item.token_name}
+                    </div>
+                    <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                      {item.balance} {item.token_name}
+                    </div>
+                  </Link>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
       <div className="flex items-center justify-between px-4 py-2">
-        <button
+      <Link to="/dashboard">
+      <button
           onClick={() => navigate(-1)}
           className="text-white flex items-center gap-2"
         >
           ← Back
         </button>
+      </Link>
       </div>
 
       <header className="h-[225px] bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
@@ -115,7 +164,7 @@ const TokenDetails = () => {
           <section className="mt-4">
             <p className="text-[#F2EDE4] text-[30px]">
               ${tokenBalance || tokenData?.quote?.USD?.price?.toFixed(2)}
-            </p>{" "}
+            </p>
           </section>
 
           <section className="flex justify-between items-center px-8 mt-12">
@@ -158,9 +207,9 @@ const TokenDetails = () => {
         <div className="h-full border">
           <div className="flex border-b">
             <button
-              onClick={() => handleTabChange("balance")}
+              onClick={() => handleTabChange('balance')}
               className={`p-4 text-[14px] w-1/2 ${
-                activeTab === "balance"
+                activeTab === 'balance'
                   ? "text-[#0F0140] border-b-2 border-[#0F0140] font-medium"
                   : "text-[#464446] font-normal"
               }`}
@@ -168,9 +217,9 @@ const TokenDetails = () => {
               Your Balance
             </button>
             <button
-              onClick={() => handleTabChange("activity")}
+              onClick={() => handleTabChange('activity')}
               className={`p-4 text-[14px] w-1/2 ${
-                activeTab === "activity"
+                activeTab === 'activity'
                   ? "text-[#0F0140] border-b-2 border-[#0F0140] font-medium"
                   : "text-[#464446] font-normal"
               }`}
@@ -179,34 +228,6 @@ const TokenDetails = () => {
             </button>
           </div>
 
-          <div className="overflow-y-auto h-full">
-            <table className="w-full text-center border-collapse table-fixed">
-              <tbody>
-                {mockData.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-100">
-                    <td colSpan={2} className="p-0">
-                      <Link
-                        to={`/token-details/${item.id}`}
-                        className="w-full flex justify-between"
-                      >
-                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex gap-1 w-full">
-                          <img
-                            src={item.icon}
-                            className="w-[20px] h-[20px] rounded-full"
-                            alt="icon"
-                          />
-                          {item.token_name}
-                        </div>
-                        <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                          {item.balance} {item.token_name}
-                        </div>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </main>
 
@@ -221,7 +242,11 @@ const TokenDetails = () => {
         <LuSettings2 size={25} color="#B0AFB1" />
       </footer>
     </section>
-  );
+      </div>
+    );
+  
+
+
 };
 
 export default TokenDetails;
