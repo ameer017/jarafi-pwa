@@ -327,7 +327,7 @@ const Swap = () => {
       const route = data.route;
 
       // Log the response for debugging
-      console.log("Squid API response:", route);
+      // console.log("Squid API response:", route);
 
       // Check if the estimate object exists
       if (!route.estimate || !route.estimate.toAmount) {
@@ -374,10 +374,10 @@ const Swap = () => {
         console.log("Parsed CELO Value:", parsedValue);
         transactionValue = BigInt(parsedValue);
       } else {
-        console.log("Transaction value remains 0.");
+        // console.log("Transaction value remains 0.");
       }
 
-      console.log("Final Transaction Value:", transactionValue.toString());
+      // console.log("Final Transaction Value:", transactionValue.toString());
 
       // ✅ Ensure the transaction request value is updated
       setTransactionRequest({
@@ -439,9 +439,9 @@ const Swap = () => {
         return;
       }
 
-      console.log("From Token Symbol:", fromToken.symbol);
-      console.log("From Amount:", fromAmount);
-      console.log("Decimals:", fromToken.decimals);
+      // console.log("From Token Symbol:", fromToken.symbol);
+      // console.log("From Amount:", fromAmount);
+      // console.log("Decimals:", fromToken.decimals);
 
       const fromAmountInUnits = ethers
         .parseUnits(fromAmount, fromToken.decimals)
@@ -458,7 +458,7 @@ const Swap = () => {
         toAddress: address,
       };
 
-      console.log("Swap parameters:", params);
+      // console.log("Swap parameters:", params);
 
       // 1. Get the optimal swap route from SquidRouter.
       const { route, requestId } = await getRoute(params);
@@ -477,7 +477,7 @@ const Swap = () => {
       transactionRequest.value =
         fromToken.symbol.toUpperCase() === "CELO" ? fromAmountInUnits : "0";
 
-      console.log("Transaction Request:", transactionRequest);
+      // console.log("Transaction Request:", transactionRequest);
 
       // 2. Check token allowance before approving spending
       const allowance = await publicClient.readContract({
@@ -487,7 +487,7 @@ const Swap = () => {
         args: [address, transactionRequest.target],
       });
 
-      console.log("Token Allowance:", allowance.toString());
+      // console.log("Token Allowance:", allowance.toString());
 
       // Add more detailed approval verification
       if (BigInt(allowance) < BigInt(fromAmountInUnits)) {
@@ -500,7 +500,7 @@ const Swap = () => {
           fromToken.address,
           fromAmountInUnits
         );
-        console.log("Approval transaction:", approveTx);
+        toast.success("Approval transaction:", approveTx);
         await publicClient.waitForTransactionReceipt({ hash: approveTx });
         console.log("Approval confirmed");
       }
@@ -545,7 +545,7 @@ const Swap = () => {
         account: viemParaAccount, // Add this line
       });
 
-      console.log("Estimated Gas:", estimatedGas.toString());
+      // console.log("Estimated Gas:", estimatedGas.toString());
 
       const transactionFee = gasPrice * estimatedGas;
 
@@ -568,7 +568,7 @@ const Swap = () => {
 
       const transactionValue = BigInt(transactionRequest.value || 0);
 
-      console.log("Final Transaction Value:", transactionValue.toString());
+      // console.log("Final Transaction Value:", transactionValue.toString());
 
       const tx = {
         to: transactionRequest.target,
@@ -593,13 +593,13 @@ const Swap = () => {
 
       // 6. Sign the transaction
       const signedTx = await paraViemSigner.signTransaction(tx);
-      console.log("Signed Transaction:", signedTx);
+      // console.log("Signed Transaction:", signedTx);
 
       // 7. Send the signed transaction
       const txHash = await paraViemSigner.sendRawTransaction({
         serializedTransaction: signedTx,
       });
-      console.log("Transaction Hash:", txHash);
+      // console.log("Transaction Hash:", txHash);
 
       const explorerLink = `https://explorer.celo.org/tx/${txHash}`;
       console.log("Explorer Link:", explorerLink);

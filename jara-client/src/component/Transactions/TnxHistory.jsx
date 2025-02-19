@@ -21,6 +21,8 @@ const TnxHistory = ({ isVisible, mockData, tokenTransactions }) => {
       .map((tx, index) => {
         const token = mockData.find((t) => t.token_name === tx.token);
         const isReceived = tx.type === "Payment Received";
+        // Convert tx.value to a floating point number with 2 decimals
+        const displayValue = parseFloat(tx.value).toFixed(2);
 
         return (
           <tr key={`${index}`} className="hover:bg-gray-50">
@@ -54,7 +56,7 @@ const TnxHistory = ({ isVisible, mockData, tokenTransactions }) => {
                   }`}
                 >
                   {isReceived ? "+" : "-"}
-                  {tx.value} {tx.token}
+                  {displayValue} {tx.token}
                 </span>
               </div>
             </td>
