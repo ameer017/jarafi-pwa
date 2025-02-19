@@ -21,6 +21,11 @@ import {
   CardPage,
   Settings,
   FinalFundingExt,
+  RequestCard,
+  Verify,
+  GetVerified,
+  SelectResidence,
+  SelectId
 } from "./index";
 import {
   cEUR,
@@ -78,6 +83,12 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/settings" element={<Settings />} />
+
+        <Route path="/requestCard" element={<RequestCard />} />
+        <Route path="/verify" element={<Verify />} />
+        <Route path="/getVerified" element={<GetVerified />} />
+        <Route path="/selectResidence" element={<SelectResidence/>} />
+        <Route path="/selectId" element={<SelectId/>} />
       </Routes>
     </>
   );
