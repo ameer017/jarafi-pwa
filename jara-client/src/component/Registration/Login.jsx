@@ -30,7 +30,7 @@ const SeedPhrase = () => {
         ))}
       </div>
 
-      <button className="bg-[#F2E205] rounded-lg p-[10px] text-[16px] font-[Montserrat] font-[600] text-[#4F4E50] w-full ">
+      <button className="bg-[#F2E205] rounded-lg p-[10px] text-[16px] font-[Montserrat] font-[600] text-[#4F4E50] w-full text-center ">
         Login
       </button>
     </form>
@@ -72,7 +72,6 @@ const Login = () => {
     setIsLoading(true);
 
     const isExistingUser = await para.checkIfUserExists({ email });
-    console.log(isExistingUser);
 
     if (isExistingUser) {
       const webAuthUrlForLogin = await para.initiateUserLogin({
@@ -134,6 +133,7 @@ const Login = () => {
               Seed Phrase
             </button>
           </div>
+
 
           {loginType === "email" ? (
             <div className="w-full flex flex-col">

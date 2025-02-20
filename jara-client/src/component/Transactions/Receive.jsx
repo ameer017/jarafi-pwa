@@ -2,10 +2,12 @@ import { QRCodeSVG } from "qrcode.react";
 import { Copy, Share } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAccount } from "wagmi";
-
+import { useNavigate } from "react-router-dom";
+import { IoIosArrowBack } from "react-icons/io";
 const ReceiveAssets = () => {
-  const {address} = useAccount();
+  const { address } = useAccount();
 
+  const navigate = useNavigate();
   const handleCopy = async () => {
     await navigator.clipboard.writeText(address);
     toast("Address copied to clipboard!");
@@ -31,7 +33,10 @@ const ReceiveAssets = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0140] flex flex-col items-center justify-center font-montserrat text-[#F6F5F6]">
+    <div className="min-h-screen bg-[#0F0140] flex flex-col items-center justify-center font-montserrat text-[#F6F5F6] relative">
+      <button onClick={() => navigate(-1)} className="absolute top-4 left-4">
+        <IoIosArrowBack size={25} color="#F6F5F6" />
+      </button>
       <h1 className="text-2xl font-bold mb-[40px] ">Receive Assets</h1>
 
       <div className="bg-white rounded-[20px] w-[90%] max-w-[600px] h-[516px] p-[40px] flex flex-col items-center shadow-md space-y-6">

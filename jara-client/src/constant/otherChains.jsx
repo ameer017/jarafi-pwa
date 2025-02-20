@@ -60,11 +60,11 @@ export const commons = {
   address: "0x7b97031b6297bc8e030B07Bd84Ce92FEa1B00c3e",
 };
 
-export const cusdt = {
+export const usdt = {
   ...celo,
   id: 6,
   name: "USDT",
-  decimals: 18,
+  decimals: 6,
   nativeCurrency: { symbol: "USDT" },
   network: { name: "Celo" },
   symbol: "USDT",

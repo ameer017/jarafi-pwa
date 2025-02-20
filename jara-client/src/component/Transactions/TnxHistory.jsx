@@ -1,90 +1,3 @@
-// import React, { useState } from 'react';
-
-// const TnxHistory = ({ isVisible }) => {
-//   const [transactions] = useState([
-//     {
-//       id: 1,
-//       address: '0x72ou...7929',
-//       type: 'Payment Sent',
-//       amount: -200.00,
-//       token: 'USDC',
-//       tokenAmount: 200,
-//       time: '12:00 PM'
-//     },
-//     {
-//       id: 2,
-//       address: '0x72ou...6375',
-//       type: 'Payment Received',
-//       amount: 1200.00,
-//       token: 'USDT',
-//       tokenAmount: 1200,
-//       time: '1:30 PM'
-//     },
-//     {
-//       id: 3,
-//       address: '0x89ou...4523',
-//       type: 'Payment Sent',
-//       amount: -50.00,
-//       token: 'USDC',
-//       tokenAmount: 50,
-//       time: '2:45 PM'
-//     }
-//   ]);
-
-//   if (!isVisible) return null;
-
-//   return (
-//     <div className="w-full h-screen" style={{ overflow: 'scroll', '::-webkit-scrollbar': { display: 'none' } }}>
-//       <main className="bg-white">
-//         {transactions.map((tx) => (
-//           <div 
-//             key={tx.id} 
-//             className="border-b border-gray-100 px-4 py-3 hover:bg-gray-50"
-//           >
-//             <div className="flex justify-between items-center">
-//               <div>
-//                 <div className="text-[#4B5563] text-sm">
-//                   {tx.address}
-//                 </div>
-//                 <div className="text-gray-500 text-xs">
-//                   {tx.type}
-//                 </div>
-//                 <div className="text-gray-400 text-xs mt-1">
-//                   {tx.time}
-//                 </div>
-//               </div>
-//               <div className="text-right">
-//                 <div className={`text-sm ${
-//                   tx.amount < 0 ? 'text-red-500' : 'text-green-500'
-//                 }`}>
-//                   {tx.amount < 0 ? '-' : '+'}${Math.abs(tx.amount).toFixed(2)}
-//                 </div>
-//                 <div className="text-gray-500 text-xs">
-//                   {tx.tokenAmount} {tx.token}
-//                 </div>
-//               </div>
-//             </div>
-//           </div>
-//         ))}
-//       </main>
-//       <style>
-//         {`
-//           ::-webkit-scrollbar {
-//             display: none;
-//           }
-//           * {
-//             -ms-overflow-style: none;
-//             scrollbar-width: none;
-//           }
-//         `}
-//       </style>
-//     </div>
-//   );
-// };
-
-// export default TnxHistory;
-
-
 import React, { useState } from 'react';
 import { CircleArrowDown, CircleArrowUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -202,9 +115,6 @@ const TnxHistory = ({ mockData, tokenTransactions, isVisible }) => {
       `}</style>
     </div>
   );
-};
 
+}
 export default TnxHistory;
-
-
-
