@@ -1,73 +1,120 @@
-import React from "react";
-import { format } from "date-fns";
+import React, { useState } from 'react';
+import { CircleArrowDown, CircleArrowUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const TnxHistory = ({ isVisible, mockData, tokenTransactions }) => {
+const TnxHistory = ({ mockData, tokenTransactions, isVisible }) => {
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
   if (!isVisible) return null;
 
-  const renderTransactions = () => {
-    const allTransactions = [];
-
-    Object.entries(tokenTransactions).forEach(([tokenName, transactions]) => {
-      transactions.forEach((tx) => {
-        allTransactions.push({
-          ...tx,
-          tokenName,
-        });
-      });
-    });
-
-    return allTransactions
-      .sort((a, b) => b.timestamp - a.timestamp)
-      .map((tx, index) => {
-        const token = mockData.find((t) => t.token_name === tx.token);
-        const isReceived = tx.type === "Payment Received";
-
-        return (
-          <tr key={`${index}`} className="hover:bg-gray-50">
-            <td className="p-4 border-b">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <img
-                    src={token?.icon}
-                    alt={tx.token}
-                    className="w-6 h-6 rounded-full"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900">
-                    {tx.type}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {format(tx.timestamp, "MMM dd, yyyy HH:mm")}
-                  </span>
-                  <span className="text-xs text-gray-500 truncate w-32">
-                    {isReceived ? `From: ${tx.from}` : `To: ${tx.to}`}
-                  </span>
-                </div>
-              </div>
-            </td>
-            <td className="p-4 border-b text-right">
-              <div className="flex flex-col items-end">
-                <span
-                  className={`text-sm font-medium ${
-                    isReceived ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {isReceived ? "+" : "-"}
-                  {tx.value} {tx.token}
-                </span>
-              </div>
-            </td>
-          </tr>
-        );
-      });
+  const formatValue = (value, decimals = 18) => {
+    if (!value || !decimals) return '0.000';
+    
+    // Convert from wei to token amount
+    const divisor = Math.pow(10, Number(decimals));
+    const convertedValue = Number(value) / divisor;
+    
+    return isNaN(convertedValue) ? '0.000' : convertedValue.toFixed(3);
   };
 
-  return (
-    <table className="w-full">
-      <tbody>{renderTransactions()}</tbody>
-    </table>
+  const TransactionIcon = ({ type }) => (
+    type === 'Sent' || type === 'Payment Sent'
+      ? <CircleArrowUp className="w-4 h-4 text-red-500" />
+      : <CircleArrowDown className="w-4 h-4 text-green-500" />
   );
-};
 
+  const groupTransactionsByDate = () => {
+    const grouped = {};
+    
+    if (!Array.isArray(tokenTransactions)) return grouped;
+
+    tokenTransactions.forEach(tx => {
+      const date = new Date(tx.timestamp).toLocaleDateString();
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(tx);
+    });
+
+    return grouped;
+  };
+
+  const groupedTransactions = groupTransactionsByDate();
+
+  return (
+    <div className="w-full flex flex-col">
+
+      <div className="overflow-y-auto">
+        {Object.entries(groupedTransactions).map(([date, transactions]) => (
+          <div key={date} className="border-b border-gray-100">
+            <div className="px-4 py-2 bg-gray-50">
+              <h3 className="text-xs font-medium text-gray-500">{date}</h3>
+            </div>
+
+            {transactions.map((tx, index) => (
+              <div 
+                key={`${date}-${index}`}
+                className="border-b border-gray-100 px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                onClick={() => setSelectedTransaction(tx)}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col gap-2">
+                    <div className="text-gray-700 text-sm font-medium flex items-center gap-2">
+                      {mockData.find(item => item.token_name === tx.tokenSymbol)?.icon && (
+                        <img
+                          src={mockData.find(item => item.token_name === tx.tokenSymbol)?.icon}
+                          className="w-[20px] h-[20px] rounded-full"
+                          alt={tx.tokenSymbol}
+                        />
+                      )}
+                      {tx.tokenSymbol}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-gray-500 text-xs">
+                      <TransactionIcon type={tx.transactionType} />
+                      <span>{tx.transactionType}</span>
+                    </div>
+                    
+                    <div className="text-gray-400 text-xs">
+                      {new Date(tx.timestamp).toLocaleTimeString()}
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className={
+                      `text-sm font-medium ${tx.transactionType.includes('Sent') ? 'text-red-500' : 'text-green-500'}`
+                    }>
+                      {tx.transactionType.includes('Sent') ? '-' : '+'}
+                      {formatValue(tx.value, tx.tokenDecimal)}
+                    </div>
+                    <div className="text-gray-500 text-xs">
+                      {tx.tokenSymbol}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        {Object.keys(groupedTransactions).length === 0 && (
+          <div className="p-4 text-center text-gray-500">
+            No transactions found
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        .overflow-y-auto::-webkit-scrollbar {
+          display: none;
+        }
+        .overflow-y-auto {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </div>
+  );
+
+}
 export default TnxHistory;

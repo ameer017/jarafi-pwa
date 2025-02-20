@@ -1,7 +1,6 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import {
-  Activities,
   ConfirmEmail,
   Congratulation,
   CreateWallet,
@@ -21,6 +20,11 @@ import {
   CardPage,
   Settings,
   FinalFundingExt,
+  RequestCard,
+  Verify,
+  GetVerified,
+  SelectResidence,
+  SelectId,
 } from "./index";
 import {
   cEUR,
@@ -41,6 +45,8 @@ function App() {
       <IdleTimeout />
 
       <Routes>
+        {/* <Route path="*" element={<IdleTimeout />} /> */}
+
         <Route path="/" element={<Home />} />
         <Route path="/p2p" element={<MainPage />} />
         <Route path="/Cards" element={<MainPage />} />
@@ -52,7 +58,6 @@ function App() {
           path="/token-details/:id"
           element={<TokenDetails tokens={tokens} />}
         />
-        <Route path="/token-details/:id/activities" element={<Activities />} />
         <Route path="/sign-up-user" element={<Register />} />
 
         <Route path="/confirm-email" element={<ConfirmEmail />} />
@@ -67,7 +72,7 @@ function App() {
         <Route path="/final-funding" element={<FinalFundingExt />} />
         <Route path="/congrats" element={<Congratulation />} />
 
-        <Route path="/swap" element={<Swap />} />
+        <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
         <Route path="/recieve" element={<ReceiveAssets />} />
 
         <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
@@ -78,6 +83,15 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/settings" element={<Settings />} />
+
+        <Route
+          path="/request-card"
+          element={<AuthRoute element={<RequestCard />} />}
+        />
+        <Route path="/verify" element={<Verify />} />
+        <Route path="/get-verified" element={<GetVerified />} />
+        <Route path="/select-residence" element={<SelectResidence />} />
+        <Route path="/selectId" element={<SelectId />} />
       </Routes>
     </>
   );
