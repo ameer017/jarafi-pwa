@@ -37,8 +37,8 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(true);
   const [showTnxHistory, setShowTnxHistory] = useState(false);
-
-  const [tokenTransactions, setTokenTransactions] = useState({});
+  const [tokenTransactions, setTokenTransactions] = useState([]);
+  
   const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
 
   const location = useLocation();
@@ -75,78 +75,64 @@ const HomePage = () => {
   const fetchTransactionHistory = async (address, tokens) => {
     if (!address) return;
     const provider = new JsonRpcProvider("https://forno.celo.org");
-
+    
     try {
-      setTokenTransactions({});
+
+      const allTransactions = [];
 
       for (let token of tokens) {
         const contract = new Contract(
           token.address,
           [
             "function balanceOf(address) view returns (uint256)",
-            "event Transfer(address indexed from, address indexed to, uint256 value)",
+            "event Transfer(address indexed from, address indexed to, uint256 value)"
           ],
           provider
         );
 
+        // Get past Transfer events
         const filterFrom = contract.filters.Transfer(address, null);
         const filterTo = contract.filters.Transfer(null, address);
 
         const [sentEvents, receivedEvents] = await Promise.all([
           contract.queryFilter(filterFrom, -10000),
-          contract.queryFilter(filterTo, -10000),
+          contract.queryFilter(filterTo, -10000)
         ]);
 
-        const transactions = await Promise.all([
-          ...sentEvents.map(async (event) => {
-            const block = await provider.getBlock(event.blockNumber);
-            const timestamp = block.timestamp * 1000;
-            const date = new Date(timestamp).toLocaleString();
+        // console.log({receivedEvents})
+        // console.log({sentEvents})
 
-            return {
-              hash: event.transactionHash,
-              from: address,
-              to: event.args[1],
-              value: ethers.formatUnits(event.args[2], token.decimals),
-              token: token.name,
-              type: "Payment Sent",
-              timestamp: timestamp,
-              date: date,
-            };
-          }),
-          ...receivedEvents.map(async (event) => {
-            const block = await provider.getBlock(event.blockNumber);
-            const timestamp = block.timestamp * 1000;
-            const date = new Date(timestamp).toLocaleString();
+        // Process transactions
+        const transactions = [
+          ...sentEvents.map(event => ({
+          tokenSymbol: token.name,
+          transactionType: 'Sent',
+          value: event.args[2].toString(),
+          tokenDecimal: token.decimals.toString(),
+          timestamp: Date.now()
+          })),
+          ...receivedEvents.map(event => ({
+          tokenSymbol: token.name,
+          transactionType: 'Received',
+          value: event.args[2].toString(),
+          tokenDecimal: token.decimals.toString(),
+          timestamp: Date.now(),
+          hash: event.transactionHash
+          }))
+        ];
 
-            return {
-              hash: event.transactionHash,
-              from: event.args[0],
-              to: address,
-              value: ethers.formatUnits(event.args[2], token.decimals),
-              token: token.name,
-              type: "Payment Received",
-              timestamp: timestamp,
-              date: date,
-            };
-          }),
-        ]);
+        allTransactions.push(...transactions)
 
-        const uniqueTransactions = Array.from(
-          new Set(transactions.map((tx) => tx.hash))
-        ).map((hash) => transactions.find((tx) => tx.hash === hash));
-
-        setTokenTransactions((prev) => ({
-          ...prev,
-          [token.name]: uniqueTransactions.sort(
-            (a, b) => b.timestamp - a.timestamp
-          ),
-        }));
+        
       }
+
+      const sortedTransactions = allTransactions.sort((a, b) => b.timestamp - a.timestamp);
+      setTokenTransactions(sortedTransactions);
     } catch (error) {
-      console.error("Error fetching transaction history:", error);
+      console.error('Error fetching transaction history:', error);
     }
   };
+
 
   const updateTokenTransactions = (newTx) => {
     setTokenTransactions((prev) => {
