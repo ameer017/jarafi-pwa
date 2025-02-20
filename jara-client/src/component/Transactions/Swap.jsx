@@ -5,7 +5,7 @@ import SwapAssetsPage from '../Modal/SwapAssetsPage';
 import ExchangeRateModal from '../Modal/ExchangeRateModal';
 import FeesModal from '../Modal/FeesModal';
 import Modal from '../Modal/Modal';
-import { useSwapSystem } from '../hooks/useSwapSystem';
+// import { useSwapSystem } from '../hooks/useSwapSystem';
 import { cUsd, celoToken } from "../../constant/otherChains";
 
 const Swap = () => {
