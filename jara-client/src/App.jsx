@@ -24,7 +24,7 @@ import {
   Verify,
   GetVerified,
   SelectResidence,
-  SelectId
+  SelectId,
 } from "./index";
 import {
   cEUR,
@@ -45,6 +45,8 @@ function App() {
       <IdleTimeout />
 
       <Routes>
+        {/* <Route path="*" element={<IdleTimeout />} /> */}
+
         <Route path="/" element={<Home />} />
         <Route path="/p2p" element={<MainPage />} />
         <Route path="/Cards" element={<MainPage />} />
@@ -82,11 +84,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/settings" element={<Settings />} />
 
-        <Route path="/requestCard" element={<RequestCard />} />
+        <Route
+          path="/request-card"
+          element={<AuthRoute element={<RequestCard />} />}
+        />
         <Route path="/verify" element={<Verify />} />
-        <Route path="/getVerified" element={<GetVerified />} />
-        <Route path="/selectResidence" element={<SelectResidence/>} />
-        <Route path="/selectId" element={<SelectId/>} />
+        <Route path="/get-verified" element={<GetVerified />} />
+        <Route path="/select-residence" element={<SelectResidence />} />
+        <Route path="/selectId" element={<SelectId />} />
       </Routes>
     </>
   );

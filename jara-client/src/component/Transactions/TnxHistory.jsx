@@ -16,6 +16,7 @@ const TnxHistory = ({ isVisible, mockData, tokenTransactions }) => {
       });
     });
 
+    // console.log(allTransactions)
     return allTransactions
       .sort((a, b) => b.timestamp - a.timestamp)
       .map((tx, index) => {
