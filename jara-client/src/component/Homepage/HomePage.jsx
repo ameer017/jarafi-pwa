@@ -38,7 +38,7 @@ const HomePage = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [showTnxHistory, setShowTnxHistory] = useState(false);
   const [tokenTransactions, setTokenTransactions] = useState([]);
-  
+
   const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
 
   const location = useLocation();
@@ -50,7 +50,7 @@ const HomePage = () => {
       window.location.reload();
     }
   }, [address]);
-  
+
   const handleScan = (data) => {
     if (data) {
       setScannedAddress(data);
@@ -74,85 +74,62 @@ const HomePage = () => {
 
   const fetchTransactionHistory = async (address, tokens) => {
     if (!address) return;
-    const provider = new JsonRpcProvider("https://forno.celo.org");
-    
+
+    const apiKey = import.meta.env.VITE_APP_CELOSCAN_API;
+    const url = `https://api.celoscan.io/api?module=account&action=tokentx&address=${address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=${apiKey}`;
+
     try {
+      const response = await fetch(url);
+      const data = await response.json();
 
-      const allTransactions = [];
-
-      for (let token of tokens) {
-        const contract = new Contract(
-          token.address,
-          [
-            "function balanceOf(address) view returns (uint256)",
-            "event Transfer(address indexed from, address indexed to, uint256 value)"
-          ],
-          provider
-        );
-
-        // Get past Transfer events
-        const filterFrom = contract.filters.Transfer(address, null);
-        const filterTo = contract.filters.Transfer(null, address);
-
-        const [sentEvents, receivedEvents] = await Promise.all([
-          contract.queryFilter(filterFrom, -10000),
-          contract.queryFilter(filterTo, -10000)
-        ]);
-
-        // console.log({receivedEvents})
-        // console.log({sentEvents})
-
-        // Process transactions
-        const transactions = [
-          ...sentEvents.map(event => ({
-          tokenSymbol: token.name,
-          transactionType: 'Sent',
-          value: event.args[2].toString(),
-          tokenDecimal: token.decimals.toString(),
-          timestamp: Date.now()
-          })),
-          ...receivedEvents.map(event => ({
-          tokenSymbol: token.name,
-          transactionType: 'Received',
-          value: event.args[2].toString(),
-          tokenDecimal: token.decimals.toString(),
-          timestamp: Date.now(),
-          hash: event.transactionHash
-          }))
-        ];
-
-        allTransactions.push(...transactions)
-
-        
+      // console.log(data);
+      if (data.status !== "1") {
+        console.error("Failed to fetch transactions:", data.message);
+        return;
       }
 
-      const sortedTransactions = allTransactions.sort((a, b) => b.timestamp - a.timestamp);
-      setTokenTransactions(sortedTransactions);
+      const transactions = data.result.map((tx) => ({
+        hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        value: tx.value,
+        timestamp: parseInt(tx.timeStamp) * 1000,
+        tokenSymbol: tx.tokenSymbol || "CELO",
+        transactionType:
+          tx.from.toLowerCase() === address.toLowerCase() ? "Sent" : "Received",
+      }));
+
+      // console.log(transactions)
+
+      const tokenSymbols = tokens.map((token) => token.symbol);
+
+      // console.log(tokenSymbols);
+
+      const filteredTransactions = transactions.filter((tx) =>
+        tokenSymbols.some((symbol) => symbol.toLowerCase() === tx.tokenSymbol.toLowerCase())
+      );
+      
+
+      console.log(filteredTransactions);
+      setTokenTransactions(filteredTransactions);
     } catch (error) {
-      console.error('Error fetching transaction history:', error);
+      console.error("Error fetching transaction history:", error);
     }
   };
 
-
   const updateTokenTransactions = (newTx) => {
-    setTokenTransactions((prev) => {
-      const currentTransactions = prev[newTx.token] || [];
-      return {
-        ...prev,
-        [newTx.token]: [
-          {
-            hash: newTx.hash,
-            from: newTx.from,
-            to: newTx.to,
-            value: newTx.value,
-            timestamp: Date.now(),
-            token: newTx.token,
-            type: newTx.type,
-          },
-          ...currentTransactions,
-        ],
-      };
-    });
+    setTokenTransactions((prev) => [
+      {
+        hash: newTx.hash,
+        from: newTx.from.toLowerCase(),
+        to: newTx.to.toLowerCase(),
+        value: newTx.value,
+        timestamp: newTx.timestamp || Date.now(),
+        tokenSymbol: newTx.tokenSymbol,
+        transactionType: newTx.transactionType,
+      },
+      ...prev,
+    ]);
   };
 
   //ends
@@ -440,6 +417,7 @@ const HomePage = () => {
                 isVisible={showTnxHistory}
                 mockData={mockData}
                 tokenTransactions={tokenTransactions}
+                tokens={tokens}
               />
             ) : (
               <table className="w-full text-center border-collapse table-fixed">
