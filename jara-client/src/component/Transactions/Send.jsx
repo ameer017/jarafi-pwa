@@ -4,14 +4,7 @@ import { Loader2 } from "lucide-react";
 import TokenModal from "../Homepage/TokenModal";
 import { useAccount, useConfig, useWalletClient } from "wagmi";
 import { switchChain } from "wagmi/actions";
-import {
-  cEUR,
-  cUsd,
-  cREAL,
-  celoToken,
-  commons,
-  usdt,
-} from "../../constant/otherChains";
+import { cEUR, cUsd, cREAL, celoToken, usdt } from "../../constant/otherChains";
 import para from "../../constant/paraClient";
 import {
   createParaAccount,
@@ -27,9 +20,13 @@ import {
 } from "viem";
 import { getStorageAt } from "@wagmi/core";
 import { celo } from "viem/chains";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { IoIosArrowBack } from "react-icons/io";
+import Confetti from "react-confetti";
+import { useWindowSize } from "react-use";
+import { getPIN } from "../../constant/usePinStore";
+import PinModal from "./PinModal";
 
 const Send = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -40,20 +37,21 @@ const Send = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [estimatedGas, setEstimatedGas] = useState(null);
+  const [amountToReceive, setAmountToReceive] = useState(null);
   const [gasPrice, setGasPrice] = useState(null);
   const [isTransactionPending, setIsTransactionPending] = useState(false);
   const [currentChainId, setCurrentChainId] = useState(null);
   const [isEstimatingGas, setIsEstimatingGas] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { width, height } = useWindowSize();
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [pendingTransaction, setPendingTransaction] = useState(false);
 
   const navigate = useNavigate();
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
-  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt];
-
-  const selectedChain = selectedToken
-    ? tokens[selectedToken.name] || celo
-    : celo;
+  const tokens = [cEUR, cUsd, cREAL, celoToken, usdt];
 
   useEffect(() => {
     if (walletClient) {
@@ -109,10 +107,7 @@ const Send = () => {
       setError("Please enter a recipient address");
       return false;
     }
-    if (!ethers.isAddress(recipientAddress)) {
-      setError("Invalid recipient address");
-      return false;
-    }
+
     return true;
   };
 
@@ -192,18 +187,16 @@ const Send = () => {
     return updatedTokens;
   }
 
-  fetchAllData().then((updatedTokens) => {
-    // console.log(
-    //   "Final Token List with Implementation Addresses & ABIs:",
-    //   updatedTokens
-    // );
-  });
+  useEffect(() => {
+    fetchAllData();
+  }, [selectedToken]);
 
   useEffect(() => {
     const estimateGasFee = async () => {
       setIsEstimatingGas(true);
       setEstimatedGas(null);
       setGasPrice(null);
+      setAmountToReceive(null);
       if (!selectedToken || !amount || !recipientAddress || !address) {
         setIsEstimatingGas(false);
         return;
@@ -264,6 +257,18 @@ const Send = () => {
           gasPrice: gasPriceWithBuffer,
         });
         setEstimatedGas(gasEstimate);
+
+        // 🧮 Calculate amountToReceive
+        const estimatedFee = gasEstimate * gasPriceWithBuffer;
+        const amountBigInt = parseUnits(amount, selectedToken.decimals);
+        const amountToReceiveBigInt = amountBigInt - estimatedFee;
+
+        // Convert back to a readable format
+        const amountToReceiveFormatted = formatUnits(
+          amountToReceiveBigInt,
+          selectedToken.decimals
+        );
+        setAmountToReceive(amountToReceiveFormatted);
       } catch (error) {
         console.error("Gas estimation error:", error);
       } finally {
@@ -274,7 +279,152 @@ const Send = () => {
     return () => clearTimeout(debounceTimer);
   }, [amount, recipientAddress, selectedToken, address]);
 
-  const handleSend = async () => {
+  // const handleSend = async () => {
+
+  //   if (!validateTransaction()) return;
+  //   if (!walletClient) {
+  //     setError("Wallet not connected");
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   setError("");
+  //   setIsTransactionPending(true);
+
+  //   try {
+  //     if (currentChainId !== selectedToken.id) {
+  //       await switchChain(config, { chainId: selectedToken.id });
+  //     }
+
+  //     const viemParaAccount = await createParaAccount(para);
+  //     const paraViemSigner = createParaViemClient(para, {
+  //       account: viemParaAccount,
+  //       chain: celo,
+  //       transport: http("https://forno.celo.org"),
+  //     });
+
+  //     const isCelo =
+  //       selectedToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
+
+  //     const amountInWei = parseUnits(amount, selectedToken.decimals);
+  //     const getAdapterAddress = (token) => {
+  //       if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
+  //         return USDC_ADAPTER_MAINNET;
+  //       if (token.address.toLowerCase() === USDT_MAINNET.toLowerCase())
+  //         return USDT_ADAPTER_MAINNET;
+  //       return token.address;
+  //     };
+
+  //     let feeCurrency;
+  //     if (isCelo) {
+  //       feeCurrency = undefined;
+  //     } else if (isStablecoin(selectedToken)) {
+  //       feeCurrency = getAdapterAddress(selectedToken);
+  //     } else {
+  //       feeCurrency = selectedToken.address;
+  //     }
+
+  //     const gasPriceParams = feeCurrency ? [feeCurrency] : [];
+  //     const minGasPrice = await publicClient
+  //       .request({
+  //         method: "eth_gasPrice",
+  //         params: gasPriceParams,
+  //       })
+  //       .then(hexToBigInt);
+
+  //     const gasPrice = (minGasPrice * BigInt(125)) / BigInt(100);
+
+  //     const transferAbi = {
+  //       constant: false,
+  //       inputs: [
+  //         { name: "to", type: "address" },
+  //         { name: "value", type: "uint256" },
+  //       ],
+  //       name: "transfer",
+  //       outputs: [{ name: "", type: "bool" }],
+  //       payable: false,
+  //       stateMutability: "nonpayable",
+  //       type: "function",
+  //     };
+
+  //     const unsignedTx = {
+  //       account: viemParaAccount,
+  //       to: selectedToken.address,
+  //       data: encodeFunctionData({
+  //         abi: [transferAbi],
+  //         args: [recipientAddress, amountInWei],
+  //       }),
+  //       gasPrice,
+  //       ...(feeCurrency && { feeCurrency }),
+  //     };
+
+  //     const estimatedGas = await publicClient.estimateGas({
+  //       ...unsignedTx,
+  //       chain: celo,
+  //     });
+
+  //     const transactionFee = gasPrice * estimatedGas;
+
+  //     const adjustedAmount = isUSDC
+  //       ? amountInWei - transactionFee / BigInt(1e12)
+  //       : amountInWei - transactionFee;
+
+  //     if (adjustedAmount <= BigInt(0)) {
+  //       throw new Error("Insufficient balance after fee deduction");
+  //     }
+
+  //     const txParams = {
+  //       ...unsignedTx,
+  //       chain: celo,
+  //       data: encodeFunctionData({
+  //         abi: [transferAbi],
+  //         args: [recipientAddress, adjustedAmount],
+  //       }),
+  //       gas: estimatedGas,
+  //       nonce: await publicClient.getTransactionCount({
+  //         address: viemParaAccount.address,
+  //         blockTag: "pending",
+  //       }),
+  //       type: "cip42",
+  //       gatewayFee: BigInt(0),
+  //       gatewayFeeRecipient: "0x0000000000000000000000000000000000000000",
+  //     };
+
+  //     const signedTx = await paraViemSigner.signTransaction(txParams);
+  //     const txHash = await paraViemSigner.sendRawTransaction({
+  //       serializedTransaction: signedTx,
+  //     });
+
+  //     setAmount("");
+  //     setRecipientAddress("");
+  //     setSelectedToken(null);
+  //     toast.success(
+  //       `${Number(formatUnits(adjustedAmount, selectedToken.decimals)).toFixed(
+  //         2
+  //       )} ${selectedToken.symbol} sent successfully!`
+  //     );
+
+  //     setShowConfetti(true);
+  //     const confettiTimeout = setTimeout(() => {
+  //       setShowConfetti(false);
+  //       navigate("/dashboard");
+  //     }, 5000);
+
+  //     return () => clearTimeout(confettiTimeout);
+  //   } catch (error) {
+  //     console.error("Transaction failed:", error);
+  //     setError(
+  //       error.message.includes("gas price")
+  //         ? "Transaction failed: Network fee issue. Please try again."
+  //         : error.shortMessage || error.message || "Transaction failed"
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //     setIsTransactionPending(false);
+  //   }
+  // };
+
+  const validateAndSend = async () => {
     if (!validateTransaction()) return;
     if (!walletClient) {
       setError("Wallet not connected");
@@ -393,11 +543,18 @@ const Send = () => {
       setRecipientAddress("");
       setSelectedToken(null);
       toast.success(
-        `${formatUnits(adjustedAmount, selectedToken.decimals)} ${
-          selectedToken.symbol
-        } sent successfully!`
+        `${Number(formatUnits(adjustedAmount, selectedToken.decimals)).toFixed(
+          2
+        )} ${selectedToken.symbol} sent successfully!`
       );
-      navigate("/dashboard");
+
+      setShowConfetti(true);
+      const confettiTimeout = setTimeout(() => {
+        setShowConfetti(false);
+        navigate("/dashboard");
+      }, 5000);
+
+      return () => clearTimeout(confettiTimeout);
     } catch (error) {
       console.error("Transaction failed:", error);
       setError(
@@ -410,6 +567,35 @@ const Send = () => {
       setIsTransactionPending(false);
     }
   };
+
+  const handleSend = async () => {
+    if (!address) {
+      setError("No wallet connected");
+      return;
+    }
+
+    const storedPIN = await getPIN(address);
+    if (!storedPIN) {
+      setError("No PIN found. Please set up your PIN first.");
+      return;
+    }
+
+    setIsPinModalOpen(true);
+  };
+
+  const handleConfirmTransaction = async (enteredPin) => {
+    const storedPIN = await getPIN(address);
+    // console.log(storedPIN)
+
+    if (enteredPin !== storedPIN) {
+      setError("Incorrect PIN. Try again.");
+      return;
+    }
+
+    setIsPinModalOpen(false);
+    await validateAndSend();
+  };
+
   const handleQuickAmount = (percentage) => {
     if (!balance) return;
 
@@ -462,6 +648,8 @@ const Send = () => {
         <IoIosArrowBack size={25} color="#F6F5F6" />
       </button>
       <div className="max-w-xl w-full">
+        {showConfetti && <Confetti width={width} height={height} />}
+
         <div className="space-y-6">
           <div>
             <label className="text-white text-sm mb-2 block">Network</label>
@@ -543,6 +731,14 @@ const Send = () => {
                     {estimatedCost.gas} {selectedToken.symbol}
                   </span>
                 </div>
+
+                <div className="flex justify-between">
+                  <span>Amount to Receive:</span>
+                  <span className="text-white font-medium">
+                    {amountToReceive ?? "--"} {selectedToken.symbol}
+                  </span>
+                </div>
+
                 {[USDC_MAINNET, USDT_MAINNET].includes(
                   selectedToken?.address.toLowerCase()
                 ) && (
@@ -579,6 +775,18 @@ const Send = () => {
               "Send"
             )}
           </button>
+
+          <p className="text-sm text-gray-400 text-center">
+            Notice!! <br/> You need to set a transaction Pin before sending a
+            transaction, if you dont have one before - click{" "}
+            <Link to="/settings/create-pin" className="text-white underline">here to set one</Link>
+          </p>
+          {isPinModalOpen && (
+            <PinModal
+              onConfirm={handleConfirmTransaction}
+              onClose={() => setIsPinModalOpen(false)}
+            />
+          )}
         </div>
       </div>
 

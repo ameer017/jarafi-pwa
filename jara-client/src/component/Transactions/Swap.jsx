@@ -4,7 +4,6 @@ import {
   cUsd,
   cREAL,
   celoToken,
-  commons,
   usdt,
   USDC,
 } from "../../constant/otherChains";
@@ -33,7 +32,7 @@ const formatToken = (token) => ({
   logoURI: token.icon,
 });
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC].map(
+const tokens = [cEUR, cUsd, cREAL, celoToken, usdt, USDC].map(
   formatToken
 );
 

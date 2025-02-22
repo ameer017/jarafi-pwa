@@ -53,7 +53,7 @@ export default defineConfig({
 
   optimizeDeps: {
     exclude: ["chunk-OTONJH47.js"],
-    include: ["bs58"]
+    include: ["bs58", "idb"]
   },
   server: {
     proxy: {

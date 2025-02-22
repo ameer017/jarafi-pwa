@@ -48,17 +48,17 @@ export const celoToken = {
   address: "0x471EcE3750Da237f93B8E339c536989b8978a438",
 };
 
-export const commons = {
-  ...celo,
-  id: 5,
-  name: "Commons",
-  decimals: 18,
-  nativeCurrency: { symbol: "$COMMONS" },
-  network: { name: "Celo" },
-  symbol: "Commons",
-  icon: "https://www.commonsprotocol.xyz/_next/image?url=%2Fcommons-logo.jpg&w=128&q=75",
-  address: "0x7b97031b6297bc8e030B07Bd84Ce92FEa1B00c3e",
-};
+// export const commons = {
+//   ...celo,
+//   id: 5,
+//   name: "Commons",
+//   decimals: 18,
+//   nativeCurrency: { symbol: "$COMMONS" },
+//   network: { name: "Celo" },
+//   symbol: "Commons",
+//   icon: "https://www.commonsprotocol.xyz/_next/image?url=%2Fcommons-logo.jpg&w=128&q=75",
+//   address: "0x7b97031b6297bc8e030B07Bd84Ce92FEa1B00c3e",
+// };
 
 export const usdt = {
   ...celo,
