@@ -17,6 +17,7 @@ const Settings = () => {
     { id: 5, name: "Recovery", link: "#" },
     { id: 6, name: "Backup/Exports", link: "#" },
     { id: 7, name: "Language", link: "#" },
+    { id: 8, name: "Create Transaction Pin", link: "create-pin" },
   ];
 
   return (

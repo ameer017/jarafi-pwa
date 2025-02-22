@@ -31,13 +31,13 @@ import {
   cUsd,
   cREAL,
   celoToken,
-  commons,
   usdt,
   USDC,
 } from "./constant/otherChains";
 import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
+import PinSetup from "./pages/PinManagement/PinSetup";
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
+const tokens = [cEUR, cUsd, cREAL, celoToken, usdt, USDC];
 
 function App() {
   return (
@@ -83,6 +83,7 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/create-pin" element={<PinSetup />} />
 
         <Route
           path="/request-card"

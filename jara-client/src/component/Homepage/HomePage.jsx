@@ -16,7 +16,6 @@ import {
   cUsd,
   cREAL,
   celoToken,
-  commons,
   usdt,
   USDC,
 } from "../../constant/otherChains";
@@ -39,7 +38,7 @@ const HomePage = () => {
   const [showTnxHistory, setShowTnxHistory] = useState(false);
   const [tokenTransactions, setTokenTransactions] = useState([]);
 
-  const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
+  const tokens = [cEUR, cUsd, cREAL, celoToken, usdt, USDC];
 
   const location = useLocation();
 
@@ -106,11 +105,12 @@ const HomePage = () => {
       // console.log(tokenSymbols);
 
       const filteredTransactions = transactions.filter((tx) =>
-        tokenSymbols.some((symbol) => symbol.toLowerCase() === tx.tokenSymbol.toLowerCase())
+        tokenSymbols.some(
+          (symbol) => symbol.toLowerCase() === tx.tokenSymbol.toLowerCase()
+        )
       );
-      
 
-      console.log(filteredTransactions);
+      // console.log(filteredTransactions);
       setTokenTransactions(filteredTransactions);
     } catch (error) {
       console.error("Error fetching transaction history:", error);

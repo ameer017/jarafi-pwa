@@ -90,7 +90,7 @@ const TnxHistory = ({ mockData, tokenTransactions, isVisible, tokens }) => {
                       }`}
                     >
                       {tx.transactionType.includes("Sent") ? "-" : "+"}
-                      {formatValue(tx.value, tx.tokenSymbol)}
+                      {Number(formatValue(tx.value, tx.tokenSymbol)).toFixed(1)}
                     </div>
                     <div className="text-gray-500 text-xs">
                       {tx.tokenSymbol}
