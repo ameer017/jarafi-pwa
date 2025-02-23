@@ -217,7 +217,7 @@ const TokenDetails = ({ tokens }) => {
                     <p className="text-[14px] text-[#464446]">
                       {tokenData.name === "Celo"
                         ? tokenData.name
-                        : tokenData.network.name}{" "}
+                        : tokenData.network}{" "}
                       Network
                     </p>
                   </div>

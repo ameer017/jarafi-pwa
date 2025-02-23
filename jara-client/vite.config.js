@@ -39,6 +39,7 @@ export default defineConfig({
         ],
       },
     }),
+
     nodePolyfills({
       protocolImports: true,
     }),
@@ -53,19 +54,6 @@ export default defineConfig({
 
   optimizeDeps: {
     exclude: ["chunk-OTONJH47.js"],
-    include: ["bs58", "idb"]
+    include: ["bs58", "idb"],
   },
-  server: {
-    proxy: {
-      '/squid-api': {
-        target: 'https://api.squidrouter.com/',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/squid-api/, ''),
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS'
-        }
-      }
-    }
-  }
 });

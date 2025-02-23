@@ -38,6 +38,8 @@ const TnxHistory = ({ mockData, tokenTransactions, isVisible, tokens }) => {
 
   const groupedTransactions = groupTransactionsByDate();
 
+  // console.log(selectedTransaction)
+
   return (
     <div className="w-full flex flex-col">
       <div className="overflow-y-auto">
@@ -151,12 +153,21 @@ const TnxHistory = ({ mockData, tokenTransactions, isVisible, tokens }) => {
             </div>
 
             <a
-              href={`https://explorer.celo.org/tx/${selectedTransaction.hash}`}
+              href={
+                selectedTransaction.chainId === 1
+                  ? `https://etherscan.io/tx/${selectedTransaction.hash}`
+                  : `https://explorer.celo.org/tx/${selectedTransaction.hash}`
+              }
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 inline-block w-full text-center bg-[#F2E205] hover:bg-[#F7E353] text-[#4F4E50] py-2 rounded-lg font-medium transition"
+              className={
+                selectedTransaction.chainId === 1
+                  ? "mt-4 inline-block w-full text-center bg-[#000] hover:bg-[#333] text-[#fff] py-2 rounded-lg font-medium transition"
+                  : "mt-4 inline-block w-full text-center bg-[#F2E205] hover:bg-[#F7E353] text-[#4F4E50] py-2 rounded-lg font-medium transition"
+              }
             >
-              Open in Celo Explorer
+              Open in {selectedTransaction.chainId === 1 ? "Etherscan" : "Celo"}{" "}
+              Explorer
             </a>
           </div>
         </div>
