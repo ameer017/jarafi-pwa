@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Contract, ethers, JsonRpcProvider } from "ethers";
+import { Contract, ethers, isAddress, JsonRpcProvider } from "ethers";
 import { Loader2 } from "lucide-react";
 import TokenModal from "../Homepage/TokenModal";
 import { useAccount, useConfig, useWalletClient } from "wagmi";
 import { switchChain } from "wagmi/actions";
-import { cEUR, cUsd, cREAL, celoToken, usdt } from "../../constant/otherChains";
+import {
+  TOKENS,
+  CELO_CHAIN,
+  STARKNET_CHAIN,
+  ETHEREUM_CHAIN,
+  RPC_URLS,
+} from "../../constant/otherChains";
 import para from "../../constant/paraClient";
 import {
   createParaAccount,
@@ -19,7 +25,7 @@ import {
   formatUnits,
 } from "viem";
 import { getStorageAt } from "@wagmi/core";
-import { celo } from "viem/chains";
+import { celo, mainnet } from "viem/chains";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { IoIosArrowBack } from "react-icons/io";
@@ -27,8 +33,23 @@ import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import { getPIN } from "../../constant/usePinStore";
 import PinModal from "./PinModal";
+import {
+  CELO_MAINNET,
+  USDC_ADAPTER_MAINNET,
+  USDC_MAINNET,
+  USDT_ADAPTER_MAINNET,
+  USDT_MAINNET,
+} from "../../constant/constant";
 
 const Send = () => {
+  const navigate = useNavigate();
+  const { address } = useAccount();
+  const config = useConfig();
+  const { data: walletClient } = useWalletClient();
+  const tokens = TOKENS;
+  const CHAINS = [CELO_CHAIN, ETHEREUM_CHAIN];
+
+  // State management
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [selectedToken, setSelectedToken] = useState(null);
   const [amount, setAmount] = useState("");
@@ -45,54 +66,21 @@ const Send = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const { width, height } = useWindowSize();
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
-  const [pendingTransaction, setPendingTransaction] = useState(false);
+  const [selectedNetwork, setSelectedNetwork] = useState(CHAINS[0].id);
 
-  const navigate = useNavigate();
-  const { address } = useAccount();
-  const config = useConfig();
-  const { data: walletClient } = useWalletClient();
-  const tokens = [cEUR, cUsd, cREAL, celoToken, usdt];
+  const isStablecoin = (token) =>
+    [USDC_MAINNET, USDT_MAINNET].includes(token?.address?.toLowerCase());
+  const isUSDC = (token) =>
+    token?.address?.toLowerCase() === USDC_MAINNET.toLowerCase();
 
-  useEffect(() => {
-    if (walletClient) {
-      setCurrentChainId(walletClient.chain.id);
-    }
-  }, [walletClient]);
+  const hexToBigInt = (hexValue) => BigInt(hexValue);
 
-  useEffect(() => {
-    const fetchBalanceAndGas = async () => {
-      if (!selectedToken || !address) return;
+  const publicClient = createPublicClient({
+    chain: celo,
+    transport: http("https://forno.celo.org"),
+  });
 
-      // console.log(selectedToken.address);
-      const provider = new JsonRpcProvider("https://forno.celo.org");
-      try {
-        const contract = new Contract(
-          selectedToken.address,
-          [
-            "function balanceOf(address) view returns (uint256)",
-            "function decimals() view returns (uint8)",
-            "function symbol() view returns (string)",
-          ],
-          provider
-        );
-
-        const tokenBalance = await contract.balanceOf(address);
-        const formattedBalance = ethers.formatUnits(
-          tokenBalance,
-          selectedToken.decimals
-        );
-        setBalance(formattedBalance);
-
-        const currentGasPrice = await provider.getFeeData();
-        setGasPrice(currentGasPrice.gasPrice);
-      } catch (error) {
-        console.error("Error fetching balance and gas:", error);
-        setError("Failed to fetch balance and gas price");
-      }
-    };
-
-    fetchBalanceAndGas();
-  }, [selectedToken, address]);
+  // Functions
 
   const validateTransaction = () => {
     if (!selectedToken) {
@@ -111,35 +99,24 @@ const Send = () => {
     return true;
   };
 
-  const publicClient = createPublicClient({
-    chain: celo,
-    transport: http("https://forno.celo.org"),
-  });
-
-  const IMPLEMENTATION_SLOT =
-    "0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC";
-  const USDC_ADAPTER_MAINNET = "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B";
-  const USDC_MAINNET = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
-
-  const USDT_ADAPTER_MAINNET = "0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72";
-  const USDT_MAINNET = "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e";
-  const CELO_MAINNET = "0x471EcE3750Da237f93B8E339c536989b8978a438";
-
-  const isStablecoin = (token) =>
-    [USDC_MAINNET, USDT_MAINNET].includes(token?.address?.toLowerCase());
-  const isUSDC = (token) =>
-    token?.address?.toLowerCase() === USDC_MAINNET.toLowerCase();
-
-  const hexToBigInt = (hexValue) => BigInt(hexValue);
-
   async function getImplementationAddress(proxyAddress) {
     try {
+      // Fetch the raw implementation address from storage
       const rawImplAddress = await getStorageAt(config, {
         address: proxyAddress,
         slot: IMPLEMENTATION_SLOT,
       });
 
-      return `0x${rawImplAddress.slice(-40)}`;
+      // Extract the last 40 characters (20 bytes) and prepend "0x"
+      const implementationAddress = `0x${rawImplAddress.slice(-40)}`;
+
+      // Validate the extracted address
+      if (!ethers.isAddress(implementationAddress)) {
+        console.error("Invalid implementation address:", implementationAddress);
+        return null;
+      }
+
+      return implementationAddress;
     } catch (error) {
       console.error(
         `Failed to fetch implementation for ${proxyAddress}:`,
@@ -150,7 +127,13 @@ const Send = () => {
   }
 
   async function getAbi(implementationAddress) {
+    if (!implementationAddress || !ethers.isAddress(implementationAddress)) {
+      console.error("Invalid implementation address:", implementationAddress);
+      return null;
+    }
+
     try {
+      // Initialize the contract with a minimal ABI
       const contract = getContract({
         address: implementationAddress,
         abi: [
@@ -160,6 +143,7 @@ const Send = () => {
         config,
       });
 
+      // Return the contract's ABI
       return contract.abi;
     } catch (error) {
       console.error(`Failed to fetch ABI for ${implementationAddress}:`, error);
@@ -167,262 +151,83 @@ const Send = () => {
     }
   }
 
-  async function fetchAllData() {
-    const updatedTokens = await Promise.all(
-      tokens.map(async (token) => {
-        const implementationAddress = await getImplementationAddress(
-          token.address
-        );
-        const abi = implementationAddress
-          ? await getAbi(implementationAddress)
-          : null;
-        return {
-          ...token,
-          implementationAddress,
-          abi,
-        };
-      })
-    );
+  async function fetchAllData(selectedNetwork) {
+    try {
+      const updatedTokens = await Promise.all(
+        tokens.map(async (token) => {
+          const tokenAddress = getTokenAddress(token, selectedNetwork);
 
-    return updatedTokens;
+          const isSingleChainToken =
+            !token.networks && token.chainId === selectedNetwork;
+
+          if (!tokenAddress && !isSingleChainToken) {
+            // console.warn(
+            //   `Token ${token.symbol} is not listed on network ${selectedNetwork}. Skipping.`
+            // );
+            return null;
+          }
+
+          if (tokenAddress === null) {
+            return {
+              ...token,
+              implementationAddress: null,
+              abi: null,
+              isNative: true,
+            };
+          }
+
+          const addressToUse = tokenAddress || token.address;
+
+          if (!addressToUse || !isAddress(addressToUse)) {
+            console.error(
+              `Invalid address for token ${token.symbol}:`,
+              addressToUse
+            );
+            return null;
+          }
+
+          try {
+            const implementationAddress = await getImplementationAddress(
+              tokenAddress
+            );
+
+            const abi = implementationAddress
+              ? await getAbi(implementationAddress)
+              : null;
+
+            return {
+              ...token,
+              implementationAddress,
+              abi,
+            };
+          } catch (error) {
+            console.error(`Error processing token ${token.symbol}:`, error);
+            return {
+              ...token,
+              implementationAddress: null,
+              abi: null,
+            };
+          }
+        })
+      );
+
+      return updatedTokens.filter((token) => token !== null);
+    } catch (error) {
+      console.error("Error fetching all data:", error);
+      throw error;
+    }
   }
 
-  useEffect(() => {
-    fetchAllData();
-  }, [selectedToken]);
+  const getTokenAddress = (token, selectedNetwork) => {
+    if (token.networks && token.networks[selectedNetwork]) {
+      return token.networks[selectedNetwork].address;
+    }
 
-  useEffect(() => {
-    const estimateGasFee = async () => {
-      setIsEstimatingGas(true);
-      setEstimatedGas(null);
-      setGasPrice(null);
-      setAmountToReceive(null);
-      if (!selectedToken || !amount || !recipientAddress || !address) {
-        setIsEstimatingGas(false);
-        return;
-      }
-      try {
-        const isStable = [USDC_MAINNET, USDT_MAINNET].includes(
-          selectedToken.address.toLowerCase()
-        );
-        const isCelo =
-          selectedToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
-
-        let feeCurrency;
-        if (isCelo) {
-          feeCurrency = undefined;
-        } else if (isStable) {
-          feeCurrency =
-            selectedToken.address === USDC_MAINNET.toLowerCase()
-              ? USDC_ADAPTER_MAINNET
-              : USDT_ADAPTER_MAINNET;
-        } else {
-          feeCurrency = selectedToken.address;
-        }
-
-        const gasPriceParams = feeCurrency ? [feeCurrency] : [];
-
-        const minGasPrice = await publicClient
-          .request({
-            method: "eth_gasPrice",
-            params: gasPriceParams,
-          })
-          .then((hexValue) => BigInt(hexValue));
-
-        const gasPriceWithBuffer = (minGasPrice * BigInt(125)) / BigInt(100);
-        setGasPrice(gasPriceWithBuffer);
-
-        const amountInWei = parseUnits(amount, selectedToken.decimals);
-        const transferAbi = {
-          constant: false,
-          inputs: [
-            { name: "to", type: "address" },
-            { name: "value", type: "uint256" },
-          ],
-          name: "transfer",
-          outputs: [{ name: "", type: "bool" }],
-          payable: false,
-          stateMutability: "nonpayable",
-          type: "function",
-        };
-        const data = encodeFunctionData({
-          abi: [transferAbi],
-          args: [recipientAddress, amountInWei],
-        });
-        const gasEstimate = await publicClient.estimateGas({
-          account: address,
-          to: selectedToken.address,
-          data,
-          feeCurrency,
-          gasPrice: gasPriceWithBuffer,
-        });
-        setEstimatedGas(gasEstimate);
-
-        // 🧮 Calculate amountToReceive
-        const estimatedFee = gasEstimate * gasPriceWithBuffer;
-        const amountBigInt = parseUnits(amount, selectedToken.decimals);
-        const amountToReceiveBigInt = amountBigInt - estimatedFee;
-
-        // Convert back to a readable format
-        const amountToReceiveFormatted = formatUnits(
-          amountToReceiveBigInt,
-          selectedToken.decimals
-        );
-        setAmountToReceive(amountToReceiveFormatted);
-      } catch (error) {
-        console.error("Gas estimation error:", error);
-      } finally {
-        setIsEstimatingGas(false);
-      }
-    };
-    const debounceTimer = setTimeout(estimateGasFee, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [amount, recipientAddress, selectedToken, address]);
-
-  // const handleSend = async () => {
-
-  //   if (!validateTransaction()) return;
-  //   if (!walletClient) {
-  //     setError("Wallet not connected");
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-  //   setError("");
-  //   setIsTransactionPending(true);
-
-  //   try {
-  //     if (currentChainId !== selectedToken.id) {
-  //       await switchChain(config, { chainId: selectedToken.id });
-  //     }
-
-  //     const viemParaAccount = await createParaAccount(para);
-  //     const paraViemSigner = createParaViemClient(para, {
-  //       account: viemParaAccount,
-  //       chain: celo,
-  //       transport: http("https://forno.celo.org"),
-  //     });
-
-  //     const isCelo =
-  //       selectedToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
-
-  //     const amountInWei = parseUnits(amount, selectedToken.decimals);
-  //     const getAdapterAddress = (token) => {
-  //       if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
-  //         return USDC_ADAPTER_MAINNET;
-  //       if (token.address.toLowerCase() === USDT_MAINNET.toLowerCase())
-  //         return USDT_ADAPTER_MAINNET;
-  //       return token.address;
-  //     };
-
-  //     let feeCurrency;
-  //     if (isCelo) {
-  //       feeCurrency = undefined;
-  //     } else if (isStablecoin(selectedToken)) {
-  //       feeCurrency = getAdapterAddress(selectedToken);
-  //     } else {
-  //       feeCurrency = selectedToken.address;
-  //     }
-
-  //     const gasPriceParams = feeCurrency ? [feeCurrency] : [];
-  //     const minGasPrice = await publicClient
-  //       .request({
-  //         method: "eth_gasPrice",
-  //         params: gasPriceParams,
-  //       })
-  //       .then(hexToBigInt);
-
-  //     const gasPrice = (minGasPrice * BigInt(125)) / BigInt(100);
-
-  //     const transferAbi = {
-  //       constant: false,
-  //       inputs: [
-  //         { name: "to", type: "address" },
-  //         { name: "value", type: "uint256" },
-  //       ],
-  //       name: "transfer",
-  //       outputs: [{ name: "", type: "bool" }],
-  //       payable: false,
-  //       stateMutability: "nonpayable",
-  //       type: "function",
-  //     };
-
-  //     const unsignedTx = {
-  //       account: viemParaAccount,
-  //       to: selectedToken.address,
-  //       data: encodeFunctionData({
-  //         abi: [transferAbi],
-  //         args: [recipientAddress, amountInWei],
-  //       }),
-  //       gasPrice,
-  //       ...(feeCurrency && { feeCurrency }),
-  //     };
-
-  //     const estimatedGas = await publicClient.estimateGas({
-  //       ...unsignedTx,
-  //       chain: celo,
-  //     });
-
-  //     const transactionFee = gasPrice * estimatedGas;
-
-  //     const adjustedAmount = isUSDC
-  //       ? amountInWei - transactionFee / BigInt(1e12)
-  //       : amountInWei - transactionFee;
-
-  //     if (adjustedAmount <= BigInt(0)) {
-  //       throw new Error("Insufficient balance after fee deduction");
-  //     }
-
-  //     const txParams = {
-  //       ...unsignedTx,
-  //       chain: celo,
-  //       data: encodeFunctionData({
-  //         abi: [transferAbi],
-  //         args: [recipientAddress, adjustedAmount],
-  //       }),
-  //       gas: estimatedGas,
-  //       nonce: await publicClient.getTransactionCount({
-  //         address: viemParaAccount.address,
-  //         blockTag: "pending",
-  //       }),
-  //       type: "cip42",
-  //       gatewayFee: BigInt(0),
-  //       gatewayFeeRecipient: "0x0000000000000000000000000000000000000000",
-  //     };
-
-  //     const signedTx = await paraViemSigner.signTransaction(txParams);
-  //     const txHash = await paraViemSigner.sendRawTransaction({
-  //       serializedTransaction: signedTx,
-  //     });
-
-  //     setAmount("");
-  //     setRecipientAddress("");
-  //     setSelectedToken(null);
-  //     toast.success(
-  //       `${Number(formatUnits(adjustedAmount, selectedToken.decimals)).toFixed(
-  //         2
-  //       )} ${selectedToken.symbol} sent successfully!`
-  //     );
-
-  //     setShowConfetti(true);
-  //     const confettiTimeout = setTimeout(() => {
-  //       setShowConfetti(false);
-  //       navigate("/dashboard");
-  //     }, 5000);
-
-  //     return () => clearTimeout(confettiTimeout);
-  //   } catch (error) {
-  //     console.error("Transaction failed:", error);
-  //     setError(
-  //       error.message.includes("gas price")
-  //         ? "Transaction failed: Network fee issue. Please try again."
-  //         : error.shortMessage || error.message || "Transaction failed"
-  //     );
-  //   } finally {
-  //     setIsLoading(false);
-  //     setIsTransactionPending(false);
-  //   }
-  // };
+    if (!token.networks && token.chainId === selectedNetwork) {
+      return token.address;
+    }
+    return token.address;
+  };
 
   const validateAndSend = async () => {
     if (!validateTransaction()) return;
@@ -436,21 +241,38 @@ const Send = () => {
     setIsTransactionPending(true);
 
     try {
-      if (currentChainId !== selectedToken.id) {
-        await switchChain(config, { chainId: selectedToken.id });
+      const RPC_URLS = {
+        [CELO_CHAIN.id]: "https://forno.celo.org",
+        [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
+        [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
+      };
+
+      const rpcUrl = RPC_URLS[selectedToken.chainId];
+      if (!rpcUrl) {
+        throw new Error(
+          `Unsupported network for token: ${selectedToken.symbol}`
+        );
       }
 
+      // Switch chain if necessary
+      if (currentChainId !== selectedToken.chainId) {
+        await switchChain(config, { chainId: selectedToken.chainId });
+      }
+
+      // Create ParaAccount and Viem signer with the correct RPC URL
       const viemParaAccount = await createParaAccount(para);
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
-        chain: celo,
-        transport: http("https://forno.celo.org"),
+        chain: selectedToken.chainId === CELO_CHAIN.id ? celo : mainnet,
+        transport: http(rpcUrl),
       });
 
       const isCelo =
         selectedToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
 
       const amountInWei = parseUnits(amount, selectedToken.decimals);
+
+      // Get adapter address for stablecoins
       const getAdapterAddress = (token) => {
         if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
           return USDC_ADAPTER_MAINNET;
@@ -459,6 +281,7 @@ const Send = () => {
         return token.address;
       };
 
+      // Determine fee currency
       let feeCurrency;
       if (isCelo) {
         feeCurrency = undefined;
@@ -468,6 +291,7 @@ const Send = () => {
         feeCurrency = selectedToken.address;
       }
 
+      // Fetch gas price
       const gasPriceParams = feeCurrency ? [feeCurrency] : [];
       const minGasPrice = await publicClient
         .request({
@@ -478,6 +302,7 @@ const Send = () => {
 
       const gasPrice = (minGasPrice * BigInt(125)) / BigInt(100);
 
+      // Define transfer ABI
       const transferAbi = {
         constant: false,
         inputs: [
@@ -491,6 +316,7 @@ const Send = () => {
         type: "function",
       };
 
+      // Prepare unsigned transaction
       const unsignedTx = {
         account: viemParaAccount,
         to: selectedToken.address,
@@ -502,13 +328,16 @@ const Send = () => {
         ...(feeCurrency && { feeCurrency }),
       };
 
+      // Estimate gas
       const estimatedGas = await publicClient.estimateGas({
         ...unsignedTx,
-        chain: celo,
+        chain: selectedToken.chainId === CELO_CHAIN.id ? celo : mainnet,
       });
 
+      // Calculate transaction fee
       const transactionFee = gasPrice * estimatedGas;
 
+      // Adjust amount for fees (if applicable)
       const adjustedAmount = isUSDC
         ? amountInWei - transactionFee / BigInt(1e12)
         : amountInWei - transactionFee;
@@ -517,9 +346,10 @@ const Send = () => {
         throw new Error("Insufficient balance after fee deduction");
       }
 
+      // Prepare transaction parameters
       const txParams = {
         ...unsignedTx,
-        chain: celo,
+        chain: selectedToken.chainId === CELO_CHAIN.id ? celo : mainnet,
         data: encodeFunctionData({
           abi: [transferAbi],
           args: [recipientAddress, adjustedAmount],
@@ -529,16 +359,18 @@ const Send = () => {
           address: viemParaAccount.address,
           blockTag: "pending",
         }),
-        type: "cip42",
+        type: "cip42", // Celo-specific transaction type
         gatewayFee: BigInt(0),
         gatewayFeeRecipient: "0x0000000000000000000000000000000000000000",
       };
 
+      // Sign and send the transaction
       const signedTx = await paraViemSigner.signTransaction(txParams);
       const txHash = await paraViemSigner.sendRawTransaction({
         serializedTransaction: signedTx,
       });
 
+      // Reset form and show success message
       setAmount("");
       setRecipientAddress("");
       setSelectedToken(null);
@@ -548,6 +380,7 @@ const Send = () => {
         )} ${selectedToken.symbol} sent successfully!`
       );
 
+      // Show confetti and navigate to dashboard
       setShowConfetti(true);
       const confettiTimeout = setTimeout(() => {
         setShowConfetti(false);
@@ -642,6 +475,211 @@ const Send = () => {
 
   const estimatedCost = getEstimatedTotalCost();
 
+  const handleNetworkChange = (event) => {
+    setSelectedNetwork(Number(event.target.value));
+  };
+
+  const filterTokensByNetwork = (tokens, selectedNetwork) => {
+    return tokens.filter((token) => {
+      const tokenAddress = token.networks?.[selectedNetwork]?.address;
+
+      const isSingleChainToken =
+        !token.networks && token.chainId === selectedNetwork;
+
+      return tokenAddress || isSingleChainToken;
+    });
+  };
+
+  // Side actions === useEffects.
+
+  useEffect(() => {
+    if (walletClient) {
+      setCurrentChainId(walletClient.chain.id);
+    }
+  }, [walletClient]);
+
+  useEffect(() => {
+    const fetchBalanceAndGas = async () => {
+      if (!selectedToken || !address) return;
+
+      const chainId =
+        selectedToken.chainId ||
+        (selectedToken.networks && Object.keys(selectedToken.networks)[0]);
+      if (!chainId) {
+        console.error("No chain ID found for the selected token");
+        setError("Invalid token configuration");
+        return;
+      }
+
+      const RPC_ENDPOINTS = {
+        [CELO_CHAIN.id]: "https://forno.celo.org",
+        [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
+        [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
+      };
+
+      const rpcUrl = RPC_ENDPOINTS[chainId];
+      if (!rpcUrl) {
+        console.error(`No RPC endpoint configured for chain ID ${chainId}`);
+        setError("Unsupported network");
+        return;
+      }
+
+      const provider = new JsonRpcProvider(rpcUrl);
+
+      try {
+        const tokenAddress =
+          selectedToken.networks?.[chainId]?.address || selectedToken.address;
+
+        const contract = new Contract(
+          tokenAddress,
+          [
+            "function balanceOf(address) view returns (uint256)",
+            "function decimals() view returns (uint8)",
+            "function symbol() view returns (string)",
+          ],
+          provider
+        );
+
+        const tokenBalance = await contract.balanceOf(address);
+        const formattedBalance = ethers.formatUnits(
+          tokenBalance,
+          selectedToken.decimals
+        );
+        setBalance(formattedBalance);
+
+        if (chainId === ETHEREUM_CHAIN.id || chainId === CELO_CHAIN.id) {
+          const currentGasPrice = await provider.getFeeData();
+          setGasPrice(currentGasPrice.gasPrice);
+        } else {
+          setGasPrice(null);
+        }
+      } catch (error) {
+        console.error("Error fetching balance and gas:", error);
+        setError("Failed to fetch balance and gas price");
+      }
+    };
+
+    fetchBalanceAndGas();
+  }, [selectedToken, address]);
+
+  useEffect(() => {
+    const estimateGasFee = async () => {
+      setIsEstimatingGas(true);
+      setEstimatedGas(null);
+      setGasPrice(null);
+      setAmountToReceive(null);
+
+      if (!selectedToken || !amount || !recipientAddress || !address) {
+        setIsEstimatingGas(false);
+        return;
+      }
+
+      // console.log(selectedToken)
+
+      try {
+        const tokenAddress = getTokenAddress(selectedToken, selectedNetwork);
+        if (!tokenAddress || typeof tokenAddress !== "string") {
+          throw new Error("Invalid token address");
+        }
+
+        const tokenAddressLower = tokenAddress.toLowerCase();
+
+        const isStable = [USDC_MAINNET, USDT_MAINNET].includes(
+          tokenAddressLower
+        );
+        const isCelo = tokenAddressLower === CELO_MAINNET.toLowerCase();
+
+        let feeCurrency;
+        if (isCelo) {
+          feeCurrency = undefined;
+        } else if (isStable) {
+          feeCurrency =
+            tokenAddressLower === USDC_MAINNET.toLowerCase()
+              ? USDC_ADAPTER_MAINNET
+              : USDT_ADAPTER_MAINNET;
+        } else {
+          feeCurrency = tokenAddress;
+        }
+
+        const publicClient = createPublicClient({
+          chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
+          transport: http(RPC_URLS[selectedNetwork]),
+        });
+
+        const gasPriceParams = feeCurrency ? [feeCurrency] : [];
+        const minGasPrice = await publicClient
+          .request({
+            method: "eth_gasPrice",
+            params: gasPriceParams,
+          })
+          .then((hexValue) => BigInt(hexValue));
+
+        const gasPriceWithBuffer = (minGasPrice * BigInt(125)) / BigInt(100);
+        setGasPrice(gasPriceWithBuffer);
+
+        const amountInWei = parseUnits(amount, selectedToken.decimals);
+        const transferAbi = {
+          constant: false,
+          inputs: [
+            { name: "to", type: "address" },
+            { name: "value", type: "uint256" },
+          ],
+          name: "transfer",
+          outputs: [{ name: "", type: "bool" }],
+          payable: false,
+          stateMutability: "nonpayable",
+          type: "function",
+        };
+        const data = encodeFunctionData({
+          abi: [transferAbi],
+          args: [recipientAddress, amountInWei],
+        });
+
+        const gasEstimate = await publicClient.estimateGas({
+          account: address,
+          to: tokenAddress,
+          data,
+          value: 0,
+          gasPrice: gasPriceWithBuffer,
+        });
+        setEstimatedGas(gasEstimate);
+        // console.log(estimatedGas);
+
+        const estimatedFee = gasEstimate * gasPriceWithBuffer;
+        const amountBigInt = parseUnits(amount, selectedToken.decimals);
+        const amountToReceiveBigInt = amountBigInt - estimatedFee;
+
+        const amountToReceiveFormatted = formatUnits(
+          amountToReceiveBigInt,
+          selectedToken.decimals
+        );
+        setAmountToReceive(amountToReceiveFormatted);
+      } catch (error) {
+        console.error("Gas estimation error:", error);
+      } finally {
+        setIsEstimatingGas(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(estimateGasFee, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [amount, recipientAddress, selectedToken, address, selectedNetwork]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const updatedTokens = await fetchAllData(selectedNetwork);
+        // console.log("Updated Tokens:", updatedTokens);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
+    };
+
+    fetchData();
+  }, [selectedToken]);
+
+  // ================ END ================
+  
   return (
     <div className="min-h-screen bg-[#0F0140] flex items-center justify-center p-4 relative">
       <button onClick={() => navigate(-1)} className="absolute top-4 left-4">
@@ -653,9 +691,17 @@ const Send = () => {
         <div className="space-y-6">
           <div>
             <label className="text-white text-sm mb-2 block">Network</label>
-            <button className="w-full text-left text-white bg-[#1A1831] border border-[#2D2B54] rounded-xl p-4">
-              Celo
-            </button>
+            <select
+              className="w-full text-center text-white bg-[#1A1831] border border-[#2D2B54] rounded-xl p-4 appearance-none focus:outline-none"
+              value={selectedNetwork}
+              onChange={handleNetworkChange}
+            >
+              {CHAINS.map((chain) => (
+                <option key={chain.id} value={chain.id} className="">
+                  {chain.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -681,10 +727,10 @@ const Send = () => {
                 <div className="flex items-center">
                   <img
                     src={selectedToken.icon}
-                    alt={selectedToken.nativeCurrency.symbol}
+                    alt={selectedToken.symbol}
                     className="w-6 h-6 mr-2 rounded-full"
                   />
-                  <span>{selectedToken.nativeCurrency.symbol}</span>
+                  <span>{selectedToken.symbol}</span>
                 </div>
               ) : (
                 "Select Token"
@@ -777,9 +823,11 @@ const Send = () => {
           </button>
 
           <p className="text-sm text-gray-400 text-center">
-            Notice!! <br/> You need to set a transaction Pin before sending a
+            Notice!! <br /> You need to set a transaction Pin before sending a
             transaction, if you dont have one before - click{" "}
-            <Link to="/settings/create-pin" className="text-white underline">here to set one</Link>
+            <Link to="/settings/create-pin" className="text-white underline">
+              here to set one
+            </Link>
           </p>
           {isPinModalOpen && (
             <PinModal
@@ -797,7 +845,7 @@ const Send = () => {
           setSelectedToken(token);
           setIsTokenModalOpen(false);
         }}
-        tokens={tokens}
+        tokens={filterTokensByNetwork(tokens, selectedNetwork)}
       />
     </div>
   );

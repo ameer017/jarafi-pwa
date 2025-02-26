@@ -26,18 +26,12 @@ import {
   SelectResidence,
   SelectId,
 } from "./index";
-import {
-  cEUR,
-  cUsd,
-  cREAL,
-  celoToken,
-  usdt,
-  USDC,
-} from "./constant/otherChains";
+
 import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
 import PinSetup from "./pages/PinManagement/PinSetup";
+import { TOKENS } from "./constant/otherChains";
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, usdt, USDC];
+const tokens = TOKENS;
 
 function App() {
   return (
