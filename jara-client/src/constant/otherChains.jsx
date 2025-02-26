@@ -131,6 +131,7 @@ export const USDT = {
 
 // ================= EXPORT ALL CONFIGS =================
 export const TOKENS = [cUsd, cEUR, celoToken, USDC, STRK, USDT, ETH];
+
 export const RPC_URLS = {
   [CELO_CHAIN.id]: "https://forno.celo.org",
   [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",

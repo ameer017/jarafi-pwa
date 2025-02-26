@@ -32,6 +32,9 @@ import {
 const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
+
   const tokens = TOKENS;
   const CHAINS = [CELO_CHAIN, STARKNET_CHAIN, ETHEREUM_CHAIN];
 
@@ -43,18 +46,7 @@ const HomePage = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [showTnxHistory, setShowTnxHistory] = useState(false);
   const [tokenTransactions, setTokenTransactions] = useState([]);
-
   const [selectedChain, setSelectedChain] = useState(CHAINS[0]);
-
-  const location = useLocation();
-
-  const isActive = (path) => location.pathname === path;
-
-  useEffect(() => {
-    if (!address || address === "N/A") {
-      window.location.reload();
-    }
-  }, [address]);
 
   const handleScan = (data) => {
     if (data) {
@@ -105,58 +97,60 @@ const HomePage = () => {
     };
 
     try {
-      // Fetch transactions for each network
-      const allTransactions = [];
-      for (const [chainId, tokens] of Object.entries(tokensByChain)) {
-        const { url, apiKey } = EXPLORER_APIS[chainId];
-        if (!url || !apiKey) {
-          console.error(`No API configured for chain ID ${chainId}`);
-          continue;
-        }
+      // Fetch transactions for all networks concurrently
+      const allTransactions = await Promise.all(
+        Object.entries(tokensByChain).map(async ([chainId, tokens]) => {
+          const { url, apiKey } = EXPLORER_APIS[chainId];
+          if (!url || !apiKey) {
+            console.error(`No API configured for chain ID ${chainId}`);
+            return [];
+          }
 
-        const tokenAddresses = tokens.map((token) =>
-          token.networks ? token.networks[chainId].address : token.address
-        );
-
-        const apiUrl = `${url}?module=account&action=tokentx&address=${address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=${apiKey}`;
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data.status !== "1") {
-          console.error(
-            `Failed to fetch transactions for chain ID ${chainId}:`,
-            data.message
+          const tokenAddresses = tokens.map((token) =>
+            token.networks ? token.networks[chainId]?.address : token.address
           );
-          continue;
-        }
 
-        const transactions = data.result
-          .filter((tx) =>
-            tokenAddresses.includes(tx.contractAddress.toLowerCase())
-          )
-          .map((tx) => ({
-            hash: tx.hash,
-            from: tx.from,
-            to: tx.to,
-            value: tx.value,
-            timestamp: parseInt(tx.timeStamp) * 1000,
-            tokenSymbol: tx.tokenSymbol,
-            transactionType:
-              tx.from.toLowerCase() === address.toLowerCase()
-                ? "Sent"
-                : "Received",
-            chainId: parseInt(chainId),
-          }));
+          const tokenAddressesLower = tokenAddresses.map((addr) =>
+            addr?.toLowerCase()
+          );
 
-        allTransactions.push(...transactions);
-      }
+          const apiUrl = `${url}?module=account&action=tokentx&address=${address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=${apiKey}`;
+          const response = await fetch(apiUrl);
+          const data = await response.json();
 
-      // Sort transactions by timestamp (most recent first)
-      allTransactions.sort((a, b) => b.timestamp - a.timestamp);
+          if (data.status !== "1") {
+            console.error(
+              `Failed to fetch transactions for chain ID ${chainId}:`,
+              data.message
+            );
+            return [];
+          }
 
-      // console.log(allTransactions);
-      // Update state with filtered transactions
-      setTokenTransactions(allTransactions);
+          return data.result
+            .filter((tx) =>
+              tokenAddressesLower.includes(tx.contractAddress.toLowerCase())
+            )
+            .map((tx) => ({
+              hash: tx.hash,
+              from: tx.from,
+              to: tx.to,
+              value: tx.value,
+              timestamp: parseInt(tx.timeStamp) * 1000,
+              tokenSymbol: tx.tokenSymbol,
+              transactionType:
+                tx.from.toLowerCase() === address.toLowerCase()
+                  ? "Sent"
+                  : "Received",
+              chainId: parseInt(chainId),
+            }));
+        })
+      );
+
+      const flattenedTransactions = allTransactions.flat();
+
+      flattenedTransactions.sort((a, b) => b.timestamp - a.timestamp);
+
+      setTokenTransactions(flattenedTransactions);
     } catch (error) {
       console.error("Error fetching transaction history:", error);
     }
@@ -247,13 +241,13 @@ const HomePage = () => {
     ) => {
       try {
         const provider = new JsonRpcProvider(providerUrl);
-    
+
         // Handle native tokens (e.g., ETH on Ethereum, CELO on Celo)
         if (!contractAddress) {
           const balance = await provider.getBalance(userAddress);
           return Number(ethers.formatUnits(balance, decimals));
         }
-    
+
         // Handle ERC-20 tokens
         const contract = new Contract(
           contractAddress,
@@ -372,8 +366,6 @@ const HomePage = () => {
     }
   };
 
-  //update
-
   const handleTransaction = (type, route) => {
     navigate(route);
 
@@ -388,6 +380,14 @@ const HomePage = () => {
     };
     updateTokenTransactions(mockTx);
   };
+
+  // Side Action == useEffect
+
+  useEffect(() => {
+    if (!address || address === "N/A") {
+      window.location.reload();
+    }
+  }, [address]);
 
   useEffect(() => {
     if (mockData.length > 0 && !Object.keys(tokenTransactions).length) {
@@ -438,6 +438,7 @@ const HomePage = () => {
     filterTokens();
   }, [selectedChain]);
 
+  // ========= END ============
   // console.log(mockData)
   if (loading) {
     return (

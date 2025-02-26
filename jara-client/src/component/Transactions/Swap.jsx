@@ -1,5 +1,10 @@
 import { http, useAccount } from "wagmi";
-import { CELO_CHAIN, ETHEREUM_CHAIN, TOKENS } from "../../constant/otherChains";
+import {
+  CELO_CHAIN,
+  ETHEREUM_CHAIN,
+  RPC_URLS,
+  TOKENS,
+} from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -14,8 +19,16 @@ import {
 } from "@getpara/viem-v2-integration";
 import para from "../../constant/paraClient";
 import { createPublicClient } from "viem";
+import Confetti from "react-confetti";
+import { useWindowSize } from "react-use";
+import {
+  CELO_MAINNET,
+  USDC_ADAPTER_MAINNET,
+  USDC_MAINNET,
+  USDT_ADAPTER_MAINNET,
+  USDT_MAINNET,
+} from "../../constant/constant";
 
-// Utility: format token data for use in the widget
 const formatToken = (token) => ({
   chainId: celo.id,
   address: token.address,
@@ -30,8 +43,11 @@ const CHAINS = [CELO_CHAIN, ETHEREUM_CHAIN];
 
 const Swap = () => {
   const { address } = useAccount();
-  const provider = new JsonRpcProvider("https://forno.celo.org");
   const navigate = useNavigate();
+
+  const provider = new JsonRpcProvider("https://forno.celo.org");
+
+  // state management.
   const [isLoading, setIsLoading] = useState(true);
   const [isSwapping, setIsSwapping] = useState(false);
   const [tokenBalance, setTokenBalance] = useState({});
@@ -46,15 +62,10 @@ const Swap = () => {
   const [filteredTokens, setFilteredTokens] = useState(tokens);
   const [fromToken, setFromToken] = useState(filteredTokens[0]);
   const [toToken, setToToken] = useState(filteredTokens[1]);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { width, height } = useWindowSize();
 
   const hexToBigInt = (hexValue) => BigInt(hexValue);
-
-  const USDC_ADAPTER_MAINNET = "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B";
-  const USDC_MAINNET = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
-
-  const USDT_ADAPTER_MAINNET = "0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72";
-  const USDT_MAINNET = "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e";
-  const CELO_MAINNET = "0x471EcE3750Da237f93B8E339c536989b8978a438";
 
   const isStablecoin = (token) =>
     [USDC_MAINNET, USDT_MAINNET].includes(token?.address?.toLowerCase());
@@ -64,10 +75,11 @@ const Swap = () => {
   };
 
   const publicClient = createPublicClient({
-    chain: celo,
-    transport: http("https://forno.celo.org"),
+    chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
+    transport: http(RPC_URLS[selectedNetwork]),
   });
-  // Fetch token balances from the blockchain
+
+  // Fetch token balances from the blockchain ==== functions.
   const fetchTokenBalance = async () => {
     if (!address) {
       setError("Wallet address not available");
@@ -110,10 +122,6 @@ const Swap = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchTokenBalance();
-  }, [address]);
 
   const getTokenAddress = (token, selectedNetwork) => {
     // If the token has a networks object, use the address for the selected network
@@ -221,7 +229,7 @@ const Swap = () => {
     } while (!completedStatuses.includes(status.squidTransactionStatus));
   };
 
-  // Approve the SquidRouter contract to spend your token.
+  // Approve the SquidRouter contract to spend token.
 
   const erc20Abi = [
     {
@@ -255,8 +263,8 @@ const Swap = () => {
 
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
-        chain: celo,
-        transport: http("https://forno.celo.org"),
+        chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
+        transport: http(RPC_URLS[selectedNetwork]),
       });
 
       // Use existing publicClient instead of creating new provider
@@ -267,14 +275,14 @@ const Swap = () => {
         args: [viemParaAccount.address, spender],
       });
 
-      console.log("Current Allowance:", allowance.toString());
+      // console.log("Current Allowance:", allowance.toString());
 
       if (allowance >= BigInt(amount)) {
         console.log("Sufficient allowance already granted.");
         return;
       }
 
-      console.log("Initiating approval transaction...");
+      toast.info("Initiating approval transaction...");
 
       const txHash = await paraViemSigner.writeContract({
         address: tokenAddress,
@@ -291,7 +299,7 @@ const Swap = () => {
       });
 
       if (receipt.status === "success") {
-        console.log("Approval successful:", receipt);
+        // console.log("Approval successful:", receipt);
         toast.success("Token approval successful ✅");
         return receipt;
       } else {
@@ -478,7 +486,7 @@ const Swap = () => {
 
       // 1. Get the optimal swap route from SquidRouter.
       const { route, requestId } = await getRoute(params);
-      console.log("Route response:", route, "Request ID:", requestId);
+      // console.log("Route response:", route, "Request ID:", requestId);
 
       if (!route || !route.transactionRequest) {
         throw new Error("Invalid route received from SquidRouter");
@@ -549,16 +557,16 @@ const Swap = () => {
         })
         .then(hexToBigInt);
 
-      const gasPrice = (minGasPrice * BigInt(125)) / BigInt(100);
+      const gasPrice = (minGasPrice * BigInt(130)) / BigInt(100);
 
       // 4. Estimate Gas
       const estimatedGas = await publicClient.estimateGas({
         to: transactionRequest.target,
         data: transactionRequest.data,
         value: BigInt(transactionRequest.value || 0),
-        chain: celo,
+        chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
         ...(feeCurrency && { feeCurrency }),
-        account: viemParaAccount, // Add this line
+        account: viemParaAccount,
       });
 
       // console.log("Estimated Gas:", estimatedGas.toString());
@@ -593,7 +601,7 @@ const Swap = () => {
         gasPrice,
         gas: estimatedGas,
         nonce,
-        chain: celo,
+        chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
         ...(feeCurrency && { feeCurrency }),
         type: "cip42",
         gatewayFee: BigInt(0),
@@ -607,6 +615,11 @@ const Swap = () => {
         account: viemParaAccount,
       });
 
+      console.log("Adjusted Amount after Fees:", adjustedAmount.toString());
+      if (adjustedAmount <= BigInt(0)) {
+        throw new Error("Insufficient balance after fee deduction");
+      }
+
       // 6. Sign the transaction
       const signedTx = await paraViemSigner.signTransaction(tx);
       // console.log("Signed Transaction:", signedTx);
@@ -618,13 +631,20 @@ const Swap = () => {
       // console.log("Transaction Hash:", txHash);
 
       const explorerLink = `https://explorer.celo.org/tx/${txHash}`;
-      console.log("Explorer Link:", explorerLink);
+      // console.log("Explorer Link:", explorerLink);
       toast.info(`Transaction sent! Check: ${explorerLink}`);
 
       // 8. Poll for transaction status until completion
       await updateTransactionStatus(txHash, requestId);
       toast.success("Swap successful! 🎉");
-      navigate("/dashboard");
+      // Show confetti and navigate to dashboard
+      setShowConfetti(true);
+      const confettiTimeout = setTimeout(() => {
+        setShowConfetti(false);
+        navigate("/dashboard");
+      }, 5000);
+
+      return () => clearTimeout(confettiTimeout);
     } catch (error) {
       console.error("Swap failed:", {
         message: error.message,
@@ -651,6 +671,7 @@ const Swap = () => {
     });
   };
 
+  // Side actions --> useEffects
   useEffect(() => {
     const filtered = filterTokensByNetwork(tokens, selectedNetwork);
     setFilteredTokens(filtered);
@@ -660,9 +681,14 @@ const Swap = () => {
       setToToken(filtered[1] || filtered[0]); // Fallback to the first token if only one is available
     }
   }, [selectedNetwork]);
-  // console.log(tokens)
+
+  useEffect(() => {
+    fetchTokenBalance();
+  }, [address]);
+
   return (
     <section className="bg-[#0F0140] h-screen w-full flex justify-center">
+      {showConfetti && <Confetti width={width} height={height} />}
       <div className="flex gap-2 flex-col items-center justify-center relative">
         <button
           onClick={() => navigate(-1)}
