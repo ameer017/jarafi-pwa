@@ -27,3 +27,6 @@ export {default as Verify} from "./component/kyc/Verify";
 export {default as GetVerified} from "./component/kyc/LetGetYouVerified";
 export {default as SelectResidence} from "./component/kyc/SelectResidence";
 export {default as SelectId} from "./component/kyc/SelectId";
+
+
+export { default as PinSetup} from "./pages/PinManagement/PinSetup";

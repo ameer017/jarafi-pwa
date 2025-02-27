@@ -1,10 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { CreditCard, Scan } from "lucide-react";
+import { MdArrowBackIosNew } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
+import { LuScanFace } from "react-icons/lu";
 
 const Verify = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = () => {
+    setLoading(true);
+    setTimeout(() => {
+      navigate("/select-residence");
+    }, 1500);
+  };
   return (
-    <div className="bg-[#F6F5F6] min-h-screen flex flex-col">
+    <section className="bg-[#F6F5F6] min-h-screen flex flex-col items-center relative">
+      <button className="absolute top-4 left-4" onClick={() => navigate(-1)}>
+        <MdArrowBackIosNew size={20} color="#0f0140" />
+      </button>
       <div>
         <div className="flex flex-col items-center justify-center">
           <div className="flex flex-col justify-center items-center gap-[15px] w-[242px] sm:w-[300px] mx-auto mt-[143px]">
@@ -33,7 +48,7 @@ const Verify = () => {
 
               <div className="flex flex-row items-center gap-[15px] w-full">
                 <div className="w-[35px] h-[35px] flex items-center justify-center">
-                  <Scan className="w-5 h-5 text-black" strokeWidth={2} />
+                  <LuScanFace className="w-5 h-5 text-black" strokeWidth={2} />
                 </div>
                 <div className="flex flex-col items-start gap-[8px] w-[247px]">
                   <p className="w-full h-[14px]  font-normal text-[12px] sm:text-[14px] leading-[120%] text-[#6F6B6F]">
@@ -46,15 +61,17 @@ const Verify = () => {
               </div>
             </div>
 
-        <a href="/selectResidence">
-        <button className=" w-[350px] h-[55px] flex flex-row justify-center items-center p-[10px] gap-[10px] bg-[#F2E205] rounded-[10px]  font-semibold text-base leading-[120%] text-[#4F4E50] mt-6">
-              Continue
+            <button
+              onClick={handleClick}
+              className="w-full md:w-[350px] flex justify-center items-center px-4 py-3 bg-[#F2E205] rounded-lg font-['Montserrat'] font-semibold text-base text-[#4F4E50] mt-6"
+              disabled={loading}
+            >
+              {loading ? "Loading... Please wait!" : "Continue"}
             </button>
-        </a>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
