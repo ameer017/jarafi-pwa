@@ -35,6 +35,7 @@ import { getPIN } from "../../constant/usePinStore";
 import PinModal from "./PinModal";
 import {
   CELO_MAINNET,
+  IMPLEMENTATION_SLOT,
   USDC_ADAPTER_MAINNET,
   USDC_MAINNET,
   USDT_ADAPTER_MAINNET,

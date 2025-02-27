@@ -38,7 +38,9 @@ const HomePage = () => {
   const tokens = TOKENS;
   const CHAINS = [CELO_CHAIN, STARKNET_CHAIN, ETHEREUM_CHAIN];
 
+  // State Managament.
   const [totalBalance, setTotalBalance] = useState(0);
+  const [totalUSDTBalance, setTotalUSDTBalance] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
   const [scannedAddress, setScannedAddress] = useState("");
   const [mockData, setMockData] = useState([]);
@@ -171,14 +173,28 @@ const HomePage = () => {
     ]);
   };
 
+  const fetchTokenPriceInUSDT = async (tokenSymbol) => {
+    const apiUrl = `https://min-api.cryptocompare.com/data/price?fsym=${tokenSymbol}&tsyms=USDT`;
+
+    try {
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      // console.log(data)
+      return data.USDT || 0;
+    } catch (error) {
+      console.error("Error fetching token price:", error);
+      return 0;
+    }
+  };
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
       console.error("Address is not provided!");
-      return { fetchedData: [], totalBalance: 0 };
+      return { fetchedData: [], totalBalance: 0, totalUSDTBalance: 0 };
     }
 
     const fetchedData = [];
     let totalBalance = 0;
+    let totalUSDTBalance = 0;
 
     // Helper function for StarkNet balances
     const fetchStarkNetBalance = async (
@@ -295,16 +311,21 @@ const HomePage = () => {
                     token.decimals
                   ));
 
+              const priceInUSDT = await fetchTokenPriceInUSDT(token.symbol);
+              const balanceInUSDT = balance * priceInUSDT;
+
               fetchedData.push({
                 id: `${token.id}-${chain.id}-${config.address}`,
                 token_name: token.name,
                 symbol: token.symbol,
                 network: chain.name,
                 balance: balance,
+                balance_in_usdt: balanceInUSDT,
                 icon: token.icon,
                 address: config.address,
               });
               totalBalance += balance;
+              totalUSDTBalance += balanceInUSDT;
             }
           } else {
             // Handle single-network tokens (like cUSD, cEUR, CELO)
@@ -333,16 +354,22 @@ const HomePage = () => {
                   token.decimals
                 ));
 
+            const priceInUSDT = await fetchTokenPriceInUSDT(token.symbol);
+            const balanceInUSDT = balance * priceInUSDT;
+
             fetchedData.push({
               id: `${token.id}`,
               token_name: token.name,
               symbol: token.symbol,
               network: chain.name,
               balance: balance,
+              balance_in_usdt: balanceInUSDT,
+
               icon: token.icon,
               address: token.address,
             });
             totalBalance += balance;
+            totalUSDTBalance += balanceInUSDT;
           }
         } catch (tokenError) {
           console.error(`Error processing ${token.name}:`, tokenError);
@@ -352,6 +379,8 @@ const HomePage = () => {
             symbol: token.symbol,
             network: "Unknown",
             balance: 0,
+            balance_in_usdt: 0,
+
             icon: token.icon,
             address: token.address,
             error: true,
@@ -359,10 +388,10 @@ const HomePage = () => {
         }
       }
 
-      return { fetchedData, totalBalance };
+      return { fetchedData, totalBalance, totalUSDTBalance };
     } catch (error) {
       console.error("Global fetch error:", error);
-      return { fetchedData: [], totalBalance: 0 };
+      return { fetchedData: [], totalBalance: 0, totalUSDTBalance: 0 };
     }
   };
 
@@ -414,9 +443,10 @@ const HomePage = () => {
       setLoading(true);
       Promise.all([
         fetchTokenBalances(address, tokens).then(
-          ({ fetchedData, totalBalance }) => {
+          ({ fetchedData, totalBalance, totalUSDTBalance }) => {
             setMockData(fetchedData);
             setTotalBalance(totalBalance);
+            setTotalUSDTBalance(totalUSDTBalance);
           }
         ),
         fetchTransactionHistory(address, tokens),
@@ -526,7 +556,7 @@ const HomePage = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
-              {isVisible ? `$ ${totalBalance.toFixed(1)}` : "****"}
+              {isVisible ? `$ ${totalUSDTBalance.toFixed(1)}` : "****"}
             </motion.p>
 
             <div
@@ -638,6 +668,7 @@ const HomePage = () => {
                               tokenData: {
                                 ...item,
                                 network: item.network,
+                                balance_in_usdt: item.balance_in_usdt,
                               },
                             }}
                             className="w-full flex justify-between"
@@ -657,11 +688,21 @@ const HomePage = () => {
                             </div>
 
                             <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                              {isVisible
-                                ? `${parseFloat(item.balance).toFixed(2)}`
-                                : "**"}
-                              &nbsp;
-                              {item.symbol}
+                              <div className="flex gap-2 justify-end">
+                                {isVisible
+                                  ? `${parseFloat(item.balance).toFixed(2)}`
+                                  : "**"}
+                                <span>{item.symbol}</span>
+                              </div>
+
+                              <div>
+                                {isVisible
+                                  ? `$${parseFloat(
+                                      item.balance_in_usdt
+                                    ).toFixed(2)}`
+                                  : "**"}{" "}
+                                USDT
+                              </div>
                             </div>
                           </Link>
                         </td>

@@ -10,7 +10,7 @@ import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAccount } from "wagmi";
 import { FaPlus } from "react-icons/fa";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
-import Activities from "./Activities"; // Make sure you have this component
+import Activities from "./Activities";
 
 const TokenDetails = ({ tokens }) => {
   const navigate = useNavigate();
@@ -43,6 +43,7 @@ const TokenDetails = ({ tokens }) => {
         balance: t.balance ? t.balance : "0",
       }));
 
+      // console.log(formattedMockData)
       setMockData(formattedMockData);
     }
   }, [tokens, id]);
@@ -61,8 +62,13 @@ const TokenDetails = ({ tokens }) => {
       return;
     }
 
+    // console.log(tokenData)
+
     try {
-      const provider = new JsonRpcProvider("https://forno.celo.org");
+      const provider =
+        tokenData.chainId === 1
+          ? new JsonRpcProvider("https://eth.llamarpc.com")
+          : new JsonRpcProvider("https://forno.celo.org");
       const contract = new Contract(
         tokenData.address,
         ["function balanceOf(address) view returns (uint256)"],
@@ -85,6 +91,7 @@ const TokenDetails = ({ tokens }) => {
 
   useEffect(() => {
     if (tokenData) {
+      // console.log(tokenData)
       fetchTokenBalance();
     }
   }, [address, tokenData]);
@@ -138,8 +145,10 @@ const TokenDetails = ({ tokens }) => {
               </div>
               <section className="mt-4">
                 <p className="text-[#F2EDE4] text-[30px]">
-                  $ {parseFloat(tokenBalance).toFixed(2) ||
-                    tokenData?.quote?.USD?.price?.toFixed(2)}
+                  {" "}
+                  {parseFloat(tokenBalance).toFixed(2) ||
+                    tokenData?.quote?.USD?.price?.toFixed(2)}{" "}
+                  {tokenData.symbol}
                 </p>
               </section>
             </section>
@@ -213,7 +222,9 @@ const TokenDetails = ({ tokens }) => {
                     alt={tokenData.name}
                   />
                   <div className="flex flex-col justify-center">
-                    <p className="text-[16px] text-[#464446]">{tokenData.name}</p>
+                    <p className="text-[16px] text-[#464446]">
+                      {tokenData.name}
+                    </p>
                     <p className="text-[14px] text-[#464446]">
                       {tokenData.name === "Celo"
                         ? tokenData.name

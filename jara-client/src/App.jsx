@@ -25,10 +25,10 @@ import {
   GetVerified,
   SelectResidence,
   SelectId,
+  PinSetup,
 } from "./index";
 
 import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
-import PinSetup from "./pages/PinManagement/PinSetup";
 import { TOKENS } from "./constant/otherChains";
 
 const tokens = TOKENS;
@@ -39,46 +39,23 @@ function App() {
       <IdleTimeout />
 
       <Routes>
-        {/* <Route path="*" element={<IdleTimeout />} /> */}
-
+        {/* Home page */}
         <Route path="/" element={<Home />} />
-        <Route path="/p2p" element={<MainPage />} />
-        <Route path="/Cards" element={<MainPage />} />
-        <Route path="/main-screen" element={<MainScreen />} />
-        <Route path="/trade-with-ease" element={<TWE />} />
-        <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
         <Route path="/dashboard" element={<HomePage />} />
         <Route
           path="/token-details/:id"
           element={<TokenDetails tokens={tokens} />}
         />
-        <Route path="/sign-up-user" element={<Register />} />
 
-        <Route path="/confirm-email" element={<ConfirmEmail />} />
-        <Route path="/create-wallet" element={<CreateWallet />} />
-        <Route path="/wallet-showcase" element={<WalletShowcase />} />
-        <Route path="/send" element={<AuthRoute element={<Send />} />} />
+        {/* Peer - to - Peer space */}
+        <Route path="/p2p" element={<MainPage />} />
+
+        {/* Cards management */}
         <Route
           path="/card-display"
           element={<AuthRoute element={<CardPage />} />}
         />
-
         <Route path="/final-funding" element={<FinalFundingExt />} />
-        <Route path="/congrats" element={<Congratulation />} />
-
-        <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
-        <Route path="/recieve" element={<ReceiveAssets />} />
-
-        <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
-        <Route
-          path="/recieve"
-          element={<AuthRoute element={<ReceiveAssets />} />}
-        />
-
-        <Route path="/login" element={<Login />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/settings/create-pin" element={<PinSetup />} />
-
         <Route
           path="/request-card"
           element={<AuthRoute element={<RequestCard />} />}
@@ -86,7 +63,32 @@ function App() {
         <Route path="/verify" element={<Verify />} />
         <Route path="/get-verified" element={<GetVerified />} />
         <Route path="/select-residence" element={<SelectResidence />} />
-        <Route path="/selectId" element={<SelectId />} />
+        <Route path="/select-id" element={<SelectId />} />
+
+        {/* Onboarding */}
+        <Route path="/main-screen" element={<MainScreen />} />
+        <Route path="/trade-with-ease" element={<TWE />} />
+        <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
+        <Route path="/create-wallet" element={<CreateWallet />} />
+        <Route path="/wallet-showcase" element={<WalletShowcase />} />
+        <Route path="/congrats" element={<Congratulation />} />
+
+        {/* Transaction management */}
+        <Route path="/send" element={<AuthRoute element={<Send />} />} />
+        <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
+        <Route
+          path="/recieve"
+          element={<AuthRoute element={<ReceiveAssets />} />}
+        />
+
+        {/* Authentication */}
+        <Route path="/confirm-email" element={<ConfirmEmail />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/sign-up-user" element={<Register />} />
+
+        {/* Settings */}
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/create-pin" element={<PinSetup />} />
       </Routes>
     </>
   );
