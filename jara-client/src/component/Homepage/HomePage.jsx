@@ -27,11 +27,20 @@ import {
   Provider as StarkProvider,
   Contract as StarkContract,
   RpcProvider,
+  hash,
+  stark,
 } from "starknet";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
+
+  // console.log(address)
+
+  // const starknetAddress = starknetAddressFromEVM(address);
+
+  // console.log(starknetAddress)
+
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
 
@@ -49,6 +58,11 @@ const HomePage = () => {
   const [showTnxHistory, setShowTnxHistory] = useState(false);
   const [tokenTransactions, setTokenTransactions] = useState([]);
   const [selectedChain, setSelectedChain] = useState(CHAINS[0]);
+
+  // function starknetAddressFromEVM(address) {
+  //   const evmAddressBN = BigInt(address);
+  //   return `0x${evmAddressBN.toString(16).padStart(64, "0")}`;
+  // }
 
   const handleScan = (data) => {
     if (data) {
