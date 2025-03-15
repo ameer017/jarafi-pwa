@@ -576,8 +576,18 @@ const Swap = () => {
     }
   }, [fromToken, toToken, selectedNetwork, toChainId]);
 
+  useEffect(() => {
+    // Prevent scrolling when component mounts
+    document.body.classList.add("overflow-hidden");
+
+    // Cleanup function to remove the class when component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
+
   return (
-    <section className="bg-[#0F0140] h-screen w-full flex justify-center relative">
+    <section className="bg-[#0F0140] min-h-screen w-full flex justify-center p-4 sm:p-8 relative">
       {showConfetti && <Confetti width={width} height={height} />}
       <button
         onClick={() => navigate(-1)}
@@ -585,12 +595,12 @@ const Swap = () => {
       >
         <FaArrowLeftLong size={25} />
       </button>
-      <div className="flex gap-2 flex-col items-center justify-center relative ">
-        <p className="text-[22px] text-[#F6F5F6] font-[700] my-6">
+      <div className="flex flex-col items-center w-full max-w-2xl gap-6">
+        <p className="text-2xl text-[#F6F5F6] font-bold my-6 text-center">
           Swap Assets
         </p>
 
-        <div className="grid grid-cols-2 gap-4 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
           <div className="text-center">
             <label className="text-white text-sm mb-2 block">
               From Network
@@ -602,7 +612,7 @@ const Swap = () => {
             >
               <option value="" disabled>
                 Select a network
-              </option>{" "}
+              </option>
               {CHAINS.map((chain) => (
                 <option key={chain.id} value={chain.id}>
                   {chain.name}
@@ -620,7 +630,7 @@ const Swap = () => {
             >
               <option value="" disabled>
                 Select a network
-              </option>{" "}
+              </option>
               {CHAINS.map((chain) => (
                 <option key={chain.id} value={chain.id}>
                   {chain.name}
@@ -630,7 +640,7 @@ const Swap = () => {
           </div>
         </div>
 
-        <div className="w-[450px] space-y-4">
+        <div className="w-full space-y-4">
           {/* From Token Input */}
           <div className="bg-[#1D143E] rounded-lg border border-[#FFFFFF80] p-4 flex flex-col">
             <div className="flex justify-between">
@@ -649,7 +659,7 @@ const Swap = () => {
               >
                 <option value="" disabled>
                   Select a token
-                </option>{" "}
+                </option>
                 {filteredFromTokens.map((token) => (
                   <option key={token.id} value={token.id}>
                     {token.symbol}
@@ -658,14 +668,14 @@ const Swap = () => {
               </select>
             </div>
             <div className="flex items-center justify-end mt-4 gap-4">
-              <p className="text-[12px] text-[#F6F5F6]">
+              <p className="text-xs text-[#F6F5F6]">
                 Avail Bal:{" "}
                 {fromToken
                   ? parseFloat(tokenBalance[fromToken.symbol] || 0).toFixed(2)
                   : "0.00"}
               </p>
               <p
-                className="text-[10px] text-[#F2E205] cursor-pointer"
+                className="text-xs text-[#F2E205] cursor-pointer"
                 onClick={handleMaxClick}
               >
                 MAX
@@ -673,6 +683,7 @@ const Swap = () => {
             </div>
           </div>
 
+          {/* To Token Input */}
           <div className="bg-[#1D143E] rounded-lg border border-[#FFFFFF80] p-4">
             <div className="flex justify-between">
               <input
@@ -690,7 +701,7 @@ const Swap = () => {
               >
                 <option value="" disabled>
                   Select a token
-                </option>{" "}
+                </option>
                 {filteredToTokens.map((token) => (
                   <option key={token.id} value={token.id}>
                     {token.symbol}
@@ -702,49 +713,38 @@ const Swap = () => {
         </div>
 
         {/* Exchange Details */}
-        {selectedNetwork && toChainId && fromToken && toToken && (
-          <>
-            {isExchanging ? (
-              <p className="text-white">Fetching exchange details...</p>
-            ) : (
-              <div className="w-[450px] bg-[#1D143E] rounded-lg border border-[#FFFFFF80] flex flex-col p-4 my-6">
-                <div className="flex justify-between text-[#FFFFFF80] text-[14px]">
-                  <div className="flex gap-2 items-center">
-                    <p>Exchange Rate:</p>
-                    <TbInfoHexagon size={15} />
-                  </div>
-                  <p>
-                    1 {fromToken.symbol} ≈ {exchangeRate || "0.00"}{" "}
-                    {toToken.symbol}
-                  </p>
-                </div>
-                <div className="flex justify-between text-[#FFFFFF80] text-[14px] mt-2">
-                  <div className="flex gap-2 items-center">
-                    <p>Fees:</p>
-                    <TbInfoHexagon size={15} />
-                  </div>
-                  <p>
-                    {fees || "0.00"} {fromToken.symbol}
-                  </p>
-                </div>
-                <div className="flex justify-between text-[#FFFFFF80] text-[14px] mt-2">
-                  <div className="flex gap-2 items-center">
-                    <p>Slippage Tolerance:</p>
-                    <TbInfoHexagon size={15} />
-                  </div>
-                  <p>{parseFloat(slippageTolerance).toFixed(2)}%</p>
-                </div>
+        {selectedNetwork &&
+          toChainId &&
+          fromToken &&
+          toToken &&
+          (isExchanging ? (
+            <p className="text-white">Fetching exchange details...</p>
+          ) : (
+            <div className="w-full bg-[#1D143E] rounded-lg border border-[#FFFFFF80] p-4 space-y-2 md:my-6 my-2">
+              <div className="flex justify-between text-[#FFFFFF80] text-sm">
+                <p>Exchange Rate:</p>
+                <p>
+                  1 {fromToken.symbol} ≈ {exchangeRate || "0.00"}{" "}
+                  {toToken.symbol}
+                </p>
               </div>
-            )}
-          </>
-        )}
+              <div className="flex justify-between text-[#FFFFFF80] text-sm">
+                <p>Fees:</p>
+                <p>
+                  {fees || "0.00"} {fromToken.symbol}
+                </p>
+              </div>
+              <div className="flex justify-between text-[#FFFFFF80] text-sm">
+                <p>Slippage Tolerance:</p>
+                <p>{parseFloat(slippageTolerance).toFixed(2)}%</p>
+              </div>
+            </div>
+          ))}
 
         <button
-          className={
-            isSwapping
-              ? "bg-[#4F4E50] text-[#F2E205] p-[10px] rounded-[10px] w-full absolute bottom-6 text-[16px] cursor-not-allowed "
-              : "bg-[#F2E205] p-[10px] rounded-[10px] w-full absolute bottom-6 text-[16px] text-[#4F4E50]"
-          }
+          className={`$ {
+            isSwapping ? "bg-[#4F4E50] text-[#F2E205]" : "bg-[#F2E205] text-[#4F4E50]"
+          } p-3 rounded-xl w-full text-lg bg-[#F2E205] p-[10px] rounded-[10px] text-[16px] font-[Montserrat] font-[600] text-[#4F4E50] w-full text-center`}
           onClick={handleSwap}
           disabled={
             isSwapping ||

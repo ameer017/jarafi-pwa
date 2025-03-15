@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --host"
   },
   "dependencies": {
     "@0xsquid/sdk": "^2.3.0",
@@ -38,6 +38,7 @@
     "jotai": "^2.11.1",
     "jsbi": "^4.3.0",
     "jsonfile": "^6.1.0",
+    "lodash": "^4.17.21",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.473.0",
     "mathjs": "^14.2.0",
