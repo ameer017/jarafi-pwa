@@ -41,6 +41,7 @@ import {
   USDT_ADAPTER_MAINNET,
   USDT_MAINNET,
 } from "../../constant/constant";
+import { FaArrowLeftLong } from "react-icons/fa6";
 
 const Send = () => {
   const navigate = useNavigate();
@@ -684,7 +685,7 @@ const Send = () => {
   return (
     <div className="min-h-screen bg-[#0F0140] flex items-center justify-center p-4 relative">
       <button onClick={() => navigate(-1)} className="absolute top-4 left-4">
-        <IoIosArrowBack size={25} color="#F6F5F6" />
+        <FaArrowLeftLong size={25} color="#F6F5F6" />
       </button>
       <div className="max-w-xl w-full">
         {showConfetti && <Confetti width={width} height={height} />}

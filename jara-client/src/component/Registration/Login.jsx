@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ParaModal } from "@getpara/react-sdk";
 import para from "../../constant/paraClient";
@@ -54,6 +54,16 @@ const Login = () => {
       navigate("/dashboard");
     }
   };
+
+    useEffect(() => {
+      // Prevent scrolling when component mounts
+      document.body.classList.add("overflow-hidden");
+  
+      // Cleanup function to remove the class when component unmounts
+      return () => {
+        document.body.classList.remove("overflow-hidden");
+      };
+    }, []);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();

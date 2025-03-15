@@ -14,6 +14,16 @@ const GetStarted = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    // Prevent scrolling when component mounts
+    document.body.classList.add("overflow-hidden");
+
+    // Cleanup function to remove the class when component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
+
   const handleNavigate = () => {
     setTimeout(() => {
       navigate("/main-screen");

@@ -482,6 +482,16 @@ const HomePage = () => {
     filterTokens();
   }, [selectedChain]);
 
+    useEffect(() => {
+      // Prevent scrolling when component mounts
+      document.body.classList.add("overflow-hidden");
+  
+      // Cleanup function to remove the class when component unmounts
+      return () => {
+        document.body.classList.remove("overflow-hidden");
+      };
+    }, []);
+
   // ========= END ============
   // console.log(mockData)
   if (loading) {
@@ -494,12 +504,12 @@ const HomePage = () => {
 
   return (
     <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
-      <p className="text-[12px] text-[#8A868A] text-center px-6 py-2">
+      <p className="text-[12px] text-[#8A868A] text-center px-6 py-2 mt-4">
         Finish setting up your account for maximum security!
       </p>
 
       <div className="flex items-center justify-end  gap-2">
-        <p className="text-[20px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
+        <p className="text-[15px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
           {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "N/A"}
         </p>
 
@@ -565,7 +575,7 @@ const HomePage = () => {
 
           <section className="mt-4 flex gap-4 items-center justify-start  ">
             <motion.p
-              className="text-[#F2EDE4] text-[32px] w-[110px] "
+              className="text-[#F2EDE4] text-[25px] md:text-[32px] md:w-[110px] w-[70px] "
               initial={{ opacity: 0.5, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -620,7 +630,7 @@ const HomePage = () => {
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
-                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${
+                  className={`bg-[#F2E205] rounded-lg md:h-[60px] h-[40px] w-[40px] md:w-[60px]  flex items-center justify-center cursor-pointer ${
                     rotate ? "rotate-180" : ""
                   }`}
                   onClick={() => navigate(routes)}
@@ -730,25 +740,25 @@ const HomePage = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
+      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-between border-t-[1px] border-[#B0AFB1]">
         <Link to="/dashboard">
           <LuWalletMinimal
             size={25}
             color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
           />
         </Link>
-        <Link to="/p2p">
+        {/* <Link to="/p2p">
           <RiTokenSwapLine
             size={25}
             color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link>
-        <Link to="/card-display">
+        </Link> */}
+        {/* <Link to="/card-display">
           <LuCreditCard
             size={25}
             color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link>
+        </Link> */}
         <Link to="/settings">
           <LuSettings2
             size={25}
