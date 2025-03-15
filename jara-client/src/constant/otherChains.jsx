@@ -1,3 +1,4 @@
+import { JsonRpcProvider } from "ethers";
 import { celo, mainnet } from "viem/chains";
 
 // ================= CHAIN CONFIGURATIONS =================
@@ -130,10 +131,16 @@ export const USDT = {
 };
 
 // ================= EXPORT ALL CONFIGS =================
-export const TOKENS = [cUsd, cEUR, celoToken, USDC, STRK, USDT, ETH];
+export const TOKENS = [cUsd, cEUR, celoToken, USDC, STRK, USDT];
 
 export const RPC_URLS = {
   [CELO_CHAIN.id]: "https://forno.celo.org",
   [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
   [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
+};
+
+export const PROVIDERS = {
+  [CELO_CHAIN.id]: new JsonRpcProvider("https://forno.celo.org"),
+  [ETHEREUM_CHAIN.id]: new JsonRpcProvider("https://eth.llamarpc.com"), // Replace with your Infura project ID
+  [STARKNET_CHAIN.id]: new JsonRpcProvider("https://free-rpc.nethermind.io/mainnet-juno/"), // Replace with your Infura project ID
 };
