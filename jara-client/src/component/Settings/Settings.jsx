@@ -20,15 +20,13 @@ const Settings = () => {
     { id: 8, name: "Create Transaction Pin", link: "create-pin" },
   ];
 
-   useEffect(() => {
-      // Prevent scrolling when component mounts
-      document.body.classList.add("overflow-hidden");
-  
-      // Cleanup function to remove the class when component unmounts
-      return () => {
-        document.body.classList.remove("overflow-hidden");
-      };
-    }, []);
+  useEffect(() => {
+    document.body.classList.add("overflow-hidden");
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
+
   return (
     <section className="bg-[#0F0140] h-screen w-full flex justify-center px-4">
       <div className="flex flex-col w-full max-w-[400px] pt-6">
@@ -37,47 +35,45 @@ const Settings = () => {
         </h1>
 
         <div className="flex flex-col mt-8 space-y-5 w-full">
-          {settings.map((setting) => (
-            <Link
-              key={setting.id}
-              to={setting.link}
-              className="flex justify-between items-center py-3 px-4 border-b-[1px] border-[#B0AFB1] hover:bg-[#2B1070] transition"
-            >
-              <p className="text-white text-[16px] sm:text-[18px]">
-                {setting.name}
-              </p>
-              <IoIosArrowForward size={20} color="#FFF" />
-            </Link>
-          ))}
+          {settings.map((setting) => {
+            const isValidLink = setting.link !== "#";
+            return (
+              <Link
+                key={setting.id}
+                to={isValidLink ? setting.link : "#"}
+                className={`flex justify-between items-center py-3 px-4 border-b-[1px] border-[#B0AFB1] transition ${
+                  isValidLink ? "hover:bg-[#2B1070]" : "cursor-not-allowed"
+                }`}
+                style={{
+                  pointerEvents: isValidLink ? "auto" : "none",
+                  color: isValidLink ? "#FFF" : "#B0AFB1",
+                }}
+              >
+                <p className="text-[16px] sm:text-[18px]">{setting.name}</p>
+                <IoIosArrowForward
+                  size={20}
+                  color={isValidLink ? "#FFF" : "#B0AFB1"}
+                />
+              </Link>
+            );
+          })}
         </div>
       </div>
 
-      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-between border-t-[1px] border-[#B0AFB1]">
-             <Link to="/dashboard">
-               <LuWalletMinimal
-                 size={25}
-                 color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
-               />
-             </Link>
-             {/* <Link to="/p2p">
-               <RiTokenSwapLine
-                 size={25}
-                 color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
-               />
-             </Link> */}
-             {/* <Link to="/card-display">
-               <LuCreditCard
-                 size={25}
-                 color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
-               />
-             </Link> */}
-             <Link to="/settings">
-               <LuSettings2
-                 size={25}
-                 color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
-               />
-             </Link>
-           </footer>
+      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-between px-[120px] border-t-[1px] border-[#B0AFB1]">
+        <Link to="/dashboard">
+          <LuWalletMinimal
+            size={25}
+            color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
+          />
+        </Link>
+        <Link to="/settings">
+          <LuSettings2
+            size={25}
+            color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
+          />
+        </Link>
+      </footer>
     </section>
   );
 };

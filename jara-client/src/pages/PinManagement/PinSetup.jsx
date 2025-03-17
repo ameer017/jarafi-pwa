@@ -2,6 +2,7 @@ import { useState } from "react";
 import { setPIN } from "../../constant/usePinStore";
 import { useAccount } from "wagmi";
 import { useNavigate } from "react-router-dom";
+import { FaArrowLeftLong } from "react-icons/fa6";
 
 const PinSetup = () => {
   const [pin, setPin] = useState("");
@@ -33,7 +34,13 @@ const PinSetup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0140] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0F0140] flex items-center justify-center p-4 relative" >
+    <button
+            onClick={() => navigate(-1)}
+            className="absolute left-4 top-4 text-white"
+          >
+            <FaArrowLeftLong size={25} />
+          </button>
       <div className=" p-6 rounded-lg shadow-md text-white">
         <h2 className="text-lg font-bold mb-4 text-center">
           Set Your Transaction PIN

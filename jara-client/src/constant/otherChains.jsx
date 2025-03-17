@@ -73,10 +73,10 @@ export const USDC = {
     [CELO_CHAIN.id]: {
       address: "0xcebA9300f2b948710d2653dD7B07f33A8B32118C",
     },
-    [STARKNET_CHAIN.id]: {
-      address:
-        "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
-    },
+    // [STARKNET_CHAIN.id]: {
+    //   address:
+    //     "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
+    // },
   },
 };
 
@@ -90,10 +90,10 @@ export const ETH = {
     [ETHEREUM_CHAIN.id]: {
       address: null,
     },
-    [STARKNET_CHAIN.id]: {
-      address:
-        "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-    },
+    // [STARKNET_CHAIN.id]: {
+    //   address:
+    //     "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+    // },
   },
 };
 
@@ -107,10 +107,10 @@ export const STRK = {
     [ETHEREUM_CHAIN.id]: {
       address: "0xca14007eff0db1f8135f4c25b34de49ab0d42766",
     },
-    [STARKNET_CHAIN.id]: {
-      address:
-        "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-    },
+    // [STARKNET_CHAIN.id]: {
+    //   address:
+    //     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
+    // },
   },
 };
 
@@ -131,7 +131,7 @@ export const USDT = {
 };
 
 // ================= EXPORT ALL CONFIGS =================
-export const TOKENS = [cUsd, cEUR, celoToken, USDC, STRK, USDT];
+export const TOKENS = [cUsd, cEUR, celoToken, USDC, USDT];
 
 export const RPC_URLS = {
   [CELO_CHAIN.id]: "https://forno.celo.org",
@@ -141,6 +141,8 @@ export const RPC_URLS = {
 
 export const PROVIDERS = {
   [CELO_CHAIN.id]: new JsonRpcProvider("https://forno.celo.org"),
-  [ETHEREUM_CHAIN.id]: new JsonRpcProvider("https://eth.llamarpc.com"), // Replace with your Infura project ID
-  [STARKNET_CHAIN.id]: new JsonRpcProvider("https://free-rpc.nethermind.io/mainnet-juno/"), // Replace with your Infura project ID
+  [ETHEREUM_CHAIN.id]: new JsonRpcProvider("https://eth.llamarpc.com"),
+  [STARKNET_CHAIN.id]: new JsonRpcProvider(
+    "https://free-rpc.nethermind.io/mainnet-juno/"
+  ),
 };
