@@ -14,7 +14,7 @@ import { useAccount } from "wagmi";
 import {
   CELO_CHAIN,
   ETHEREUM_CHAIN,
-  STARKNET_CHAIN,
+  // STARKNET_CHAIN,
   TOKENS,
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
@@ -45,7 +45,11 @@ const HomePage = () => {
   const isActive = (path) => location.pathname === path;
 
   const tokens = TOKENS;
-  const CHAINS = [CELO_CHAIN, STARKNET_CHAIN, ETHEREUM_CHAIN];
+  const CHAINS = [
+    CELO_CHAIN,
+    // STARKNET_CHAIN,
+    ETHEREUM_CHAIN,
+  ];
 
   // State Managament.
   const [totalBalance, setTotalBalance] = useState(0);
@@ -211,56 +215,56 @@ const HomePage = () => {
     let totalUSDTBalance = 0;
 
     // Helper function for StarkNet balances
-    const fetchStarkNetBalance = async (
-      contractAddress,
-      providerUrl,
-      userAddress,
-      decimals
-    ) => {
-      try {
-        const starkProvider = new RpcProvider({ nodeUrl: providerUrl });
+    // const fetchStarkNetBalance = async (
+    //   contractAddress,
+    //   providerUrl,
+    //   userAddress,
+    //   decimals
+    // ) => {
+    //   try {
+    //     const starkProvider = new RpcProvider({ nodeUrl: providerUrl });
 
-        // Cairo 1.0-compatible ABI
-        const contractAbi = [
-          {
-            name: "balance_of",
-            type: "function",
-            inputs: [{ name: "account", type: "core::felt252" }],
-            outputs: [{ type: "core::integer::u256" }],
-            state_mutability: "view",
-          },
-        ];
+    //     // Cairo 1.0-compatible ABI
+    //     const contractAbi = [
+    //       {
+    //         name: "balance_of",
+    //         type: "function",
+    //         inputs: [{ name: "account", type: "core::felt252" }],
+    //         outputs: [{ type: "core::integer::u256" }],
+    //         state_mutability: "view",
+    //       },
+    //     ];
 
-        // ✅ Correct StarkNet contract initialization
-        const starkContract = new StarkContract(
-          contractAbi,
-          contractAddress,
-          starkProvider
-        );
+    //     // ✅ Correct StarkNet contract initialization
+    //     const starkContract = new StarkContract(
+    //       contractAbi,
+    //       contractAddress,
+    //       starkProvider
+    //     );
 
-        const numericAddress = BigInt(userAddress);
-        const starkAddress = `0x${numericAddress
-          .toString(16)
-          .padStart(64, "0")}`;
+    //     const numericAddress = BigInt(userAddress);
+    //     const starkAddress = `0x${numericAddress
+    //       .toString(16)
+    //       .padStart(64, "0")}`;
 
-        // ✅ Call StarkNet contract
-        const balance = await starkContract.balance_of(starkAddress);
+    //     // ✅ Call StarkNet contract
+    //     const balance = await starkContract.balance_of(starkAddress);
 
-        // Handle Uint256 conversion safely
-        if (!balance?.low || !balance?.high) {
-          return 0;
-        }
+    //     // Handle Uint256 conversion safely
+    //     if (!balance?.low || !balance?.high) {
+    //       return 0;
+    //     }
 
-        const low = BigInt(balance.low);
-        const high = BigInt(balance.high);
-        const total = (high << 128n) + low;
+    //     const low = BigInt(balance.low);
+    //     const high = BigInt(balance.high);
+    //     const total = (high << 128n) + low;
 
-        return Number(total / 10n ** BigInt(decimals));
-      } catch (error) {
-        console.error("StarkNet balance error:", error);
-        return 0;
-      }
-    };
+    //     return Number(total / 10n ** BigInt(decimals));
+    //   } catch (error) {
+    //     console.error("StarkNet balance error:", error);
+    //     return 0;
+    //   }
+    // };
 
     // Helper function for EVM-compatible chains
     const fetchERC20Balance = async (
@@ -308,22 +312,29 @@ const HomePage = () => {
                 continue;
               }
 
-              const isStarknet = chain.id === STARKNET_CHAIN.id;
+              // const isStarknet = chain.id === STARKNET_CHAIN.id;
               const providerUrl = chain.rpcUrls.default.http[0];
 
-              const balance = await (isStarknet
-                ? fetchStarkNetBalance(
-                    config.address,
-                    providerUrl,
-                    address,
-                    token.decimals
-                  )
-                : fetchERC20Balance(
-                    providerUrl,
-                    config.address,
-                    address,
-                    token.decimals
-                  ));
+              const balance = await fetchERC20Balance(
+                providerUrl,
+                config.address,
+                address,
+                token.decimals
+              );
+
+              // const balance = await (isStarknet
+              //   ? fetchStarkNetBalance(
+              //       config.address,
+              //       providerUrl,
+              //       address,
+              //       token.decimals
+              //     )
+              //   : fetchERC20Balance(
+              //       providerUrl,
+              //       config.address,
+              //       address,
+              //       token.decimals
+              //     ));
 
               const priceInUSDT = await fetchTokenPriceInUSDT(token.symbol);
               const balanceInUSDT = balance * priceInUSDT;
@@ -351,22 +362,28 @@ const HomePage = () => {
               continue;
             }
 
-            const isStarknet = chain.id === STARKNET_CHAIN.id;
+            // const isStarknet = chain.id === STARKNET_CHAIN.id;
             const providerUrl = chain.rpcUrls.default.http[0];
 
-            const balance = await (isStarknet
-              ? fetchStarkNetBalance(
-                  token.address,
-                  providerUrl,
-                  address,
-                  token.decimals
-                )
-              : fetchERC20Balance(
-                  providerUrl,
-                  token.address,
-                  address,
-                  token.decimals
-                ));
+            const balance = await fetchERC20Balance(
+              providerUrl,
+              token.address,
+              address,
+              token.decimals
+            );
+            // const balance = await (isStarknet
+            //   ? fetchStarkNetBalance(
+            //       token.address,
+            //       providerUrl,
+            //       address,
+            //       token.decimals
+            //     )
+            //   : fetchERC20Balance(
+            //       providerUrl,
+            //       token.address,
+            //       address,
+            //       token.decimals
+            //     ));
 
             const priceInUSDT = await fetchTokenPriceInUSDT(token.symbol);
             const balanceInUSDT = balance * priceInUSDT;
@@ -427,8 +444,15 @@ const HomePage = () => {
   // Side Action == useEffect
 
   useEffect(() => {
+    const hasReloaded = localStorage.getItem("hasReloaded");
+
     if (!address || address === "N/A") {
-      window.location.reload();
+      if (!hasReloaded) {
+        localStorage.setItem("hasReloaded", "true");
+        window.location.reload();
+      }
+    } else {
+      localStorage.removeItem("hasReloaded");
     }
   }, [address]);
 
@@ -482,15 +506,15 @@ const HomePage = () => {
     filterTokens();
   }, [selectedChain]);
 
-    useEffect(() => {
-      // Prevent scrolling when component mounts
-      document.body.classList.add("overflow-hidden");
-  
-      // Cleanup function to remove the class when component unmounts
-      return () => {
-        document.body.classList.remove("overflow-hidden");
-      };
-    }, []);
+  useEffect(() => {
+    // Prevent scrolling when component mounts
+    document.body.classList.add("overflow-hidden");
+
+    // Cleanup function to remove the class when component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
 
   // ========= END ============
   // console.log(mockData)
@@ -502,6 +526,7 @@ const HomePage = () => {
     );
   }
 
+  // console.log(mockData)
   return (
     <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
       <p className="text-[12px] text-[#8A868A] text-center px-6 py-2 mt-4">
@@ -679,68 +704,70 @@ const HomePage = () => {
                 tokens={tokens}
               />
             ) : (
-              <div className="w-full overflow-y-auto max-h-80">
-                {" "}
-                <table className="w-full text-center border-collapse table-fixed">
-                  <tbody>
-                    {mockData.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-100">
-                        <td colSpan={2} className="p-0">
-                          <Link
-                            to={`/token-details/${item.id}`}
-                            state={{
-                              tokenData: {
-                                ...item,
-                                network: item.network,
-                                balance_in_usdt: item.balance_in_usdt,
-                              },
-                            }}
-                            className="w-full flex justify-between"
-                          >
-                            <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex flex-col gap-1 w-full">
-                              <div className="flex gap-2 items-center">
-                                <img
-                                  src={item.icon}
-                                  className="w-[20px] h-[20px] rounded-full"
-                                  alt="icon"
-                                />
-                                <span>{item.token_name}</span>
-                              </div>
-                              <span className="text-xs text-gray-500">
-                                {item.network} network
-                              </span>
-                            </div>
-
-                            <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                              <div className="flex gap-2 justify-end">
-                                {isVisible
-                                  ? `${parseFloat(item.balance).toFixed(2)}`
-                                  : "**"}
-                                <span>{item.symbol}</span>
+              <div className="w-full h-[90vh] border-2 flex flex-col">
+                {/* This ensures the table section takes all available space */}
+                <div className="flex-1 overflow-y-auto">
+                  <table className="w-full text-center border-collapse table-fixed">
+                    <tbody>
+                      {mockData.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-100">
+                          <td colSpan={2} className="p-2">
+                            <Link
+                              to={`/token-details/${item.id}`}
+                              state={{
+                                tokenData: {
+                                  ...item,
+                                  network: item.network,
+                                  balance_in_usdt: item.balance_in_usdt,
+                                },
+                              }}
+                              className="w-full flex justify-between"
+                            >
+                              <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex flex-col gap-1 w-full">
+                                <div className="flex gap-2 items-center">
+                                  <img
+                                    src={item.icon}
+                                    className="w-[20px] h-[20px] rounded-full"
+                                    alt="icon"
+                                  />
+                                  <span>{item.token_name}</span>
+                                </div>
+                                <span className="text-xs text-gray-500">
+                                  {item.network} network
+                                </span>
                               </div>
 
-                              <div>
-                                {isVisible
-                                  ? `$${parseFloat(
-                                      item.balance_in_usdt
-                                    ).toFixed(2)}`
-                                  : "**"}{" "}
-                                USDT
+                              <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                                <div className="flex gap-2 justify-end">
+                                  {isVisible
+                                    ? `${parseFloat(item.balance).toFixed(2)}`
+                                    : "**"}
+                                  <span>{item.symbol}</span>
+                                </div>
+
+                                <div className="text-[13px]">
+                                  {isVisible
+                                    ? `$${parseFloat(
+                                        item.balance_in_usdt
+                                      ).toFixed(2)}`
+                                    : "**"}{" "}
+                                  USDT
+                                </div>
                               </div>
-                            </div>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
         </div>
       </main>
 
-      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-between border-t-[1px] border-[#B0AFB1]">
+      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
         <Link to="/dashboard">
           <LuWalletMinimal
             size={25}

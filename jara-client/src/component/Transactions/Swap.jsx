@@ -4,7 +4,7 @@ import {
   ETHEREUM_CHAIN,
   PROVIDERS,
   RPC_URLS,
-  STARKNET_CHAIN,
+  // STARKNET_CHAIN,
   TOKENS,
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
@@ -24,13 +24,7 @@ import para from "../../constant/paraClient";
 import { createPublicClient } from "viem";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
-import {
-  CELO_MAINNET,
-  USDC_ADAPTER_MAINNET,
-  USDC_MAINNET,
-  USDT_ADAPTER_MAINNET,
-  USDT_MAINNET,
-} from "../../constant/constant";
+import { USDC_MAINNET, USDT_MAINNET } from "../../constant/constant";
 
 const formatToken = (token) => ({
   chainId: celo.id,
@@ -42,7 +36,11 @@ const formatToken = (token) => ({
 });
 
 const tokens = TOKENS.map(formatToken);
-const CHAINS = [CELO_CHAIN, ETHEREUM_CHAIN, STARKNET_CHAIN];
+const CHAINS = [
+  CELO_CHAIN,
+  ETHEREUM_CHAIN,
+  // STARKNET_CHAIN
+];
 // console.log(tokens)
 
 const Swap = () => {
@@ -587,7 +585,7 @@ const Swap = () => {
   }, []);
 
   return (
-    <section className="bg-[#0F0140] min-h-screen w-full flex justify-center p-4 sm:p-8 relative">
+    <section className="bg-[#0F0140] min-h-screen w-full flex justify-center items-center p-4 sm:p-8 relative">
       {showConfetti && <Confetti width={width} height={height} />}
       <button
         onClick={() => navigate(-1)}
