@@ -585,7 +585,7 @@ const Swap = () => {
   }, []);
 
   return (
-    <section className="bg-[#0F0140] min-h-screen w-full flex justify-center items-center p-4 sm:p-8 relative">
+    <section className="bg-[#0F0140] min-h-screen w-full flex justify-center md:items-center p-4 sm:p-8 relative">
       {showConfetti && <Confetti width={width} height={height} />}
       <button
         onClick={() => navigate(-1)}
