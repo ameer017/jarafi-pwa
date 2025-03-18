@@ -445,18 +445,18 @@ const HomePage = () => {
 
   // Side Action == useEffect
 
-  // useEffect(() => {
-  //   const hasReloaded = localStorage.getItem("hasReloaded");
+  useEffect(() => {
+    const hasReloaded = localStorage.getItem("hasReloaded");
 
-  //   if (!address || address === "N/A") {
-  //     if (!hasReloaded) {
-  //       localStorage.setItem("hasReloaded", "true");
-  //       window.location.reload();
-  //     }
-  //   } else {
-  //     localStorage.removeItem("hasReloaded");
-  //   }
-  // }, [address]);
+    if (!address || address === "N/A") {
+      if (!hasReloaded) {
+        localStorage.setItem("hasReloaded", "true");
+        window.location.reload();
+      }
+    } else {
+      localStorage.removeItem("hasReloaded");
+    }
+  }, [address]);
 
   useEffect(() => {
     if (mockData.length > 0 && !Object.keys(tokenTransactions).length) {
