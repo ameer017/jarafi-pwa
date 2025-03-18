@@ -34,13 +34,13 @@ const PinSetup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0140] flex items-center justify-center p-4 relative" >
-    <button
-            onClick={() => navigate(-1)}
-            className="absolute left-4 top-4 text-white"
-          >
-            <FaArrowLeftLong size={25} />
-          </button>
+    <div className="min-h-screen bg-[#0F0140] flex items-center justify-center p-4 relative">
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute left-4 top-4 text-white"
+      >
+        <FaArrowLeftLong size={25} />
+      </button>
       <div className=" p-6 rounded-lg shadow-md text-white">
         <h2 className="text-lg font-bold mb-4 text-center">
           Set Your Transaction PIN
@@ -75,7 +75,7 @@ const PinSetup = () => {
         )}
 
         <button
-          className="w-full bg-blue-500 text-white py-2 mt-3 rounded"
+          className="w-full bg-[#F2E205] text-[#0F0140] py-2 mt-3 rounded"
           onClick={handleConfirm}
         >
           Set PIN

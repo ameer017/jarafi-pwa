@@ -30,12 +30,11 @@ import {
   hash,
   stark,
 } from "starknet";
+import HomeLoader from "./Loader/HomeLoader";
 
 const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
-
-  // console.log(address)
 
   // const starknetAddress = starknetAddressFromEVM(address);
 
@@ -69,10 +68,13 @@ const HomePage = () => {
   // }
 
   const handleScan = (data) => {
-    if (data) {
-      setScannedAddress(data);
+    if (data?.text) {
+      setScannedAddress(data.text);
       setShowScanner(false);
-      console.log("Scanned Wallet Address:", data);
+      navigate("/send", { state: { address: data.text } });
+      // console.log("Scanned Wallet Address:", data.text);
+    } else {
+      // console.warn("Invalid scan result:", data);
     }
   };
 
@@ -443,18 +445,18 @@ const HomePage = () => {
 
   // Side Action == useEffect
 
-  useEffect(() => {
-    const hasReloaded = localStorage.getItem("hasReloaded");
+  // useEffect(() => {
+  //   const hasReloaded = localStorage.getItem("hasReloaded");
 
-    if (!address || address === "N/A") {
-      if (!hasReloaded) {
-        localStorage.setItem("hasReloaded", "true");
-        window.location.reload();
-      }
-    } else {
-      localStorage.removeItem("hasReloaded");
-    }
-  }, [address]);
+  //   if (!address || address === "N/A") {
+  //     if (!hasReloaded) {
+  //       localStorage.setItem("hasReloaded", "true");
+  //       window.location.reload();
+  //     }
+  //   } else {
+  //     localStorage.removeItem("hasReloaded");
+  //   }
+  // }, [address]);
 
   useEffect(() => {
     if (mockData.length > 0 && !Object.keys(tokenTransactions).length) {
@@ -521,7 +523,7 @@ const HomePage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#0F0140]">
-        <p className="text-white text-[20px]">Loading ...</p>
+        <HomeLoader />
       </div>
     );
   }
@@ -580,11 +582,11 @@ const HomePage = () => {
                   </div>
                 )}
 
-                {scannedAddress && (
+                {/* {scannedAddress && (
                   <p className="text-green-500 text-center mt-2">
                     Scanned Address: {scannedAddress}
                   </p>
-                )}
+                )} */}
               </div>
 
               <div>
@@ -669,7 +671,7 @@ const HomePage = () => {
         </section>
       </header>
 
-      <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
+      <main className="h-[650px] md:h-[562px] bg-white overflow-hidden">
         <div className="h-full border">
           <table className="w-full text-center border-collapse ">
             <thead>

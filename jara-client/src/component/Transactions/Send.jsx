@@ -26,7 +26,7 @@ import {
 } from "viem";
 import { getStorageAt } from "@wagmi/core";
 import { celo, mainnet } from "viem/chains";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { IoIosArrowBack } from "react-icons/io";
 import Confetti from "react-confetti";
@@ -45,6 +45,7 @@ import { FaArrowLeftLong } from "react-icons/fa6";
 
 const Send = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
@@ -680,8 +681,15 @@ const Send = () => {
     fetchData();
   }, [selectedToken]);
 
+  useEffect(() => {
+    // Check if state exists and contains an address, then set it in the input field
+    if (location.state?.address) {
+      setRecipientAddress(location.state.address);
+    }
+  }, [location.state]);
+
   // ================ END ================
-  
+
   return (
     <div className="min-h-screen bg-[#0F0140] flex items-center justify-center p-4 relative">
       <button onClick={() => navigate(-1)} className="absolute top-4 left-4">
