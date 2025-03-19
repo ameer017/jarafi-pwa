@@ -28,6 +28,32 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+if ("Notification" in window && "serviceWorker" in navigator) {
+  Notification.requestPermission().then((permission) => {
+    if (permission === "granted") {
+      console.log("Notification permission granted.");
+      subscribeToPush();
+    }
+  });
+}
+
+function subscribeToPush() {
+  navigator.serviceWorker.ready.then((registration) => {
+    registration.pushManager
+      .subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: import.meta.env.VITE_APP_WEB_PUSH_PUBLIC_KEY,
+      })
+      .then((subscription) => {
+        console.log("Subscribed to push notifications:", subscription);
+        
+      })
+      .catch((error) => {
+        console.error("Failed to subscribe to push notifications:", error);
+      });
+  });
+}
+
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <WagmiProvider config={config}>
