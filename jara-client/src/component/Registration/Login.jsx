@@ -141,14 +141,14 @@ const Login = () => {
               Email
             </button>
             <button
-              disabled="true"
+              disabled={true}
               type="button"
               onClick={() => setLoginType("seedPhrase")}
               className={`p-[7px] rounded-lg text-[12px] ${
                 loginType === "seedPhrase"
                   ? "bg-[#0F0140] text-white"
                   : "text-[#0F0140]"
-              }`}
+              } ${true ? "opacity-50 cursor-not-allowed" : ""}`} 
             >
               Seed Phrase
             </button>

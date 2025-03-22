@@ -131,7 +131,7 @@ const TokenDetails = ({ tokens }) => {
 
   return (
     <div className="overflow-y-auto h-full">
-      <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
+      <section className="bg-[#fff] h-screen w-full overflow-x-hidden">
         <div className="flex items-center justify-between px-4 py-2">
           <Link to="/dashboard">
             <button
@@ -197,8 +197,8 @@ const TokenDetails = ({ tokens }) => {
           </section>
         </header>
 
-        <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
-          <div className="h-full border flex flex-col">
+        <main className="overflow-hidden">
+          <div className="h-full  flex flex-col">
             <div className="flex border-b">
               <button
                 onClick={() => handleTabChange("balance")}
