@@ -131,7 +131,7 @@ const TokenDetails = ({ tokens }) => {
 
   return (
     <div className="overflow-y-auto h-full">
-      <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
+      <section className="bg-[#fff] h-screen w-full overflow-x-hidden">
         <div className="flex items-center justify-between px-4 py-2">
           <Link to="/dashboard">
             <button
@@ -197,8 +197,8 @@ const TokenDetails = ({ tokens }) => {
           </section>
         </header>
 
-        <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
-          <div className="h-full border flex flex-col">
+        <main className="overflow-hidden">
+          <div className="h-full  flex flex-col">
             <div className="flex border-b">
               <button
                 onClick={() => handleTabChange("balance")}
@@ -257,32 +257,32 @@ const TokenDetails = ({ tokens }) => {
           </div>
         </main>
 
-        <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
-          <Link to="/dashboard">
-            <LuWalletMinimal
-              size={25}
-              color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
-            />
-          </Link>
-          {/* <Link to="/p2p">
+        <footer className="fixed bottom-0 bg-white py-4 w-full  flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
+                <Link to="/dashboard">
+                  <LuWalletMinimal
+                    size={25}
+                    color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
+                  />
+                </Link>
+                {/* <Link to="/p2p">
                   <RiTokenSwapLine
                     size={25}
                     color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
                   />
                 </Link> */}
-          {/* <Link to="/card-display">
+                {/* <Link to="/card-display">
                   <LuCreditCard
                     size={25}
                     color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
                   />
                 </Link> */}
-          <Link to="/settings">
-            <LuSettings2
-              size={25}
-              color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
-            />
-          </Link>
-        </footer>
+                <Link to="/settings">
+                  <LuSettings2
+                    size={25}
+                    color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
+                  />
+                </Link>
+              </footer>
       </section>
     </div>
   );

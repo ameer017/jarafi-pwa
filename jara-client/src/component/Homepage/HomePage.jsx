@@ -324,6 +324,8 @@ const HomePage = () => {
                 token.decimals
               );
 
+              // console.log(token, balance)
+
               // const balance = await (isStarknet
               //   ? fetchStarkNetBalance(
               //       config.address,
@@ -672,9 +674,10 @@ const HomePage = () => {
       </header>
 
       <main className="h-[650px] md:h-[562px] bg-white overflow-hidden">
-        <div className="h-full border">
-          <table className="w-full text-center border-collapse ">
-            <thead>
+        <div className="h-full border flex flex-col">
+          {/* Fixed Table Header */}
+          <table className="w-full text-center border-collapse">
+            <thead className="bg-white sticky top-0 z-10">
               <tr>
                 {showTnxHistory ? (
                   <th
@@ -697,7 +700,7 @@ const HomePage = () => {
             </thead>
           </table>
 
-          <div className="overflow-y-auto h-full">
+          <div className="overflow-y-auto flex-1 pb-20">
             {showTnxHistory ? (
               <TnxHistory
                 isVisible={showTnxHistory}
@@ -706,8 +709,7 @@ const HomePage = () => {
                 tokens={tokens}
               />
             ) : (
-              <div className="w-full h-[90vh] border-2 flex flex-col">
-                {/* This ensures the table section takes all available space */}
+              <div className="w-full flex flex-col">
                 <div className="flex-1 overflow-y-auto">
                   <table className="w-full text-center border-collapse table-fixed">
                     <tbody>
@@ -768,8 +770,7 @@ const HomePage = () => {
           </div>
         </div>
       </main>
-
-      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
+      <footer className="fixed bottom-0 bg-white py-4 w-full  flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
         <Link to="/dashboard">
           <LuWalletMinimal
             size={25}
