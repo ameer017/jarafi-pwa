@@ -14,7 +14,6 @@ import { debounce } from "lodash";
 import { celo, mainnet } from "viem/chains";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { TbInfoHexagon } from "react-icons/tb";
 import { toast } from "react-toastify";
 import {
   createParaAccount,
@@ -92,7 +91,7 @@ const Swap = () => {
   const handleFromTokenChange = (e) => {
     const tokenId = Number(e.target.value);
     const token = filteredFromTokens.find((t) => t.id === tokenId);
-    // console.log(token)
+    console.log(token)
     if (token) {
       setFromToken(token);
       setTokenBalance((prev) => ({ ...prev, [token.symbol]: "0.00" })); // Reset balance for the new token
