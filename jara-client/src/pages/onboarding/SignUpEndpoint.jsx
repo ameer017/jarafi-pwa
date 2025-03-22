@@ -18,6 +18,11 @@ const SignUpEndpoint = () => {
 
   const isActive = (path) => location.pathname === path;
 
+  const buttonVariants = {
+    hidden: { opacity: 0, scale: 0.8 },
+    visible: { opacity: 1, scale: 1, transition: { duration: 0.8 } },
+  };
+
   return (
     <motion.div
       className="bg-[#F2E205] h-screen w-full p-6 flex flex-col items-center justify-center gap-[80px] text-center text-[#0F0140] relative"
@@ -61,6 +66,7 @@ const SignUpEndpoint = () => {
         alt="Background Bottom Right Rotated"
         className="absolute md:-bottom-9 md:right-10 -bottom-6 right-6 w-36 md:w-48 lg:w-64 rotate-90 hidden md:block"
       />
+
       <div className="flex flex-col items-center space-y-6 md:mt-12">
         <img
           src="/WIS.png"
@@ -68,7 +74,7 @@ const SignUpEndpoint = () => {
           className="max-w-md h-auto object-contain"
         />
 
-        <h1 className="md:text-3xl text-2xl font-bold md:p-2 w-2/3">
+        <h1 className="md:text-3xl text-xl font-bold md:p-2 w-2/3">
           Wallet Address = Phone Number
         </h1>
 
@@ -78,20 +84,25 @@ const SignUpEndpoint = () => {
         </p>
       </div>
 
-      <div className="flex flex-col items-center space-y-4 mb-10">
-        <button
-          className="bg-[#0F0140] py-3 px-8 text-[#F6F5F6] text-[16px] rounded-lg text-lg font-medium shadow-lg w-[280px] md:w-[350px] hover:bg-[#0f0140b8] transition-transform transform"
+      <motion.div
+        className="flex flex-col items-center space-y-2 mb-[3.5rem] "
+        variants={buttonVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.button
+          className="bg-[#0F0140] py-3 px-8 text-[#F6F5F6] text-[16px] rounded-lg text-lg font-medium shadow-lg w-full md:w-[350px] hover:bg-[#0f0140b8] transition-transform transform"
           onClick={() => navigate("/sign-up-user")}
         >
           Sign Up
-        </button>
-        <button
-          className="bg-[#FCFEE8] py-3 px-8 text-[#4F4E50] text-[16px] border-[1px] border-[#F2E205] rounded-lg text-lg font-medium shadow-lg w-[280px] md:w-[350px] hover:bg-[#0F0140] hover:text-[#fff] transition-colors duration-300 delay-300 transform"
+        </motion.button>
+        <motion.button
+          className="bg-[#FCFEE8] py-3 px-8 text-[#4F4E50] text-[16px] border-[1px] border-[#F2E205] rounded-lg text-lg font-medium shadow-lg w-full md:w-[350px] hover:bg-[#0F0140] hover:text-[#fff] transition-colors duration-300 delay-300 transform"
           onClick={() => navigate("/login")}
         >
           Already have one? Log in
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
     </motion.div>
   );
 };

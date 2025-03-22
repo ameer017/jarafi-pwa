@@ -118,7 +118,7 @@ const TWE = () => {
         </div>
 
         <button
-          className="bg-[#F2E205] py-3 px-8 text-[#4F4E50] rounded-lg text-lg font-medium shadow-lg w-[280px] md:w-[350px] hover:bg-[#e4d704] transition-transform transform"
+          className="bg-[#F2E205] duration-300 py-3 px-8 text-[#4F4E50] max-w-sm rounded-lg text-lg font-medium shadow-lg w-[350px] text-center hover:bg-[#e4d704] transition-transform transform "
           onClick={() => navigate("/sign-up-endpoint")}
         >
           Next

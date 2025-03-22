@@ -6,15 +6,15 @@ const MainScreen = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-    useEffect(() => {
-      // Prevent scrolling when component mounts
-      document.body.classList.add("overflow-hidden");
-  
-      // Cleanup function to remove the class when component unmounts
-      return () => {
-        document.body.classList.remove("overflow-hidden");
-      };
-    }, []);
+  useEffect(() => {
+    // Prevent scrolling when component mounts
+    document.body.classList.add("overflow-hidden");
+
+    // Cleanup function to remove the class when component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
 
   const isActive = (path) => location.pathname === path;
 

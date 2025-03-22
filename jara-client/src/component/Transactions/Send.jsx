@@ -50,6 +50,9 @@ const Send = () => {
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
   const tokens = TOKENS;
+  const CELO_CHAIN = { id: 42220, name: "Celo" };
+  const ETHEREUM_CHAIN = { id: 1, name: "Ethereum" };
+
   const CHAINS = [CELO_CHAIN, ETHEREUM_CHAIN];
 
   // State management
@@ -479,7 +482,9 @@ const Send = () => {
   const estimatedCost = getEstimatedTotalCost();
 
   const handleNetworkChange = (event) => {
-    setSelectedNetwork(Number(event.target.value));
+    const newNetworkId = Number(event.target.value);
+    setSelectedNetwork(newNetworkId);
+    // console.log("Selected Network:", newNetworkId);
   };
 
   const filterTokensByNetwork = (tokens, selectedNetwork) => {
@@ -503,21 +508,13 @@ const Send = () => {
 
   useEffect(() => {
     const fetchBalanceAndGas = async () => {
-      if (!selectedToken || !address) return;
+      if (!selectedToken || !address || !selectedNetwork) return;
 
-      const chainId =
-        selectedToken.chainId ||
-        (selectedToken.networks && Object.keys(selectedToken.networks)[0]);
-      if (!chainId) {
-        console.error("No chain ID found for the selected token");
-        setError("Invalid token configuration");
-        return;
-      }
+      const chainId = selectedNetwork;
 
       const RPC_ENDPOINTS = {
-        [CELO_CHAIN.id]: "https://forno.celo.org",
-        [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
-        [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
+        42220: "https://forno.celo.org",
+        1: "https://eth.llamarpc.com",
       };
 
       const rpcUrl = RPC_ENDPOINTS[chainId];
@@ -532,6 +529,11 @@ const Send = () => {
       try {
         const tokenAddress =
           selectedToken.networks?.[chainId]?.address || selectedToken.address;
+        if (!tokenAddress) {
+          console.error("No token address found for this network");
+          setError("Token not available on this network");
+          return;
+        }
 
         const contract = new Contract(
           tokenAddress,
@@ -549,8 +551,9 @@ const Send = () => {
           selectedToken.decimals
         );
         setBalance(formattedBalance);
+        // console.log("Fetched balance:", formattedBalance);
 
-        if (chainId === ETHEREUM_CHAIN.id || chainId === CELO_CHAIN.id) {
+        if (chainId === 1 || chainId === 42220) {
           const currentGasPrice = await provider.getFeeData();
           setGasPrice(currentGasPrice.gasPrice);
         } else {
@@ -563,7 +566,7 @@ const Send = () => {
     };
 
     fetchBalanceAndGas();
-  }, [selectedToken, address]);
+  }, [selectedToken, address, selectedNetwork]);
 
   useEffect(() => {
     const estimateGasFee = async () => {
@@ -613,7 +616,7 @@ const Send = () => {
         const minGasPrice = await publicClient
           .request({
             method: "eth_gasPrice",
-            params: gasPriceParams,
+            params: [], // Ensure this is empty
           })
           .then((hexValue) => BigInt(hexValue));
 
@@ -649,13 +652,11 @@ const Send = () => {
         // console.log(estimatedGas);
 
         const estimatedFee = gasEstimate * gasPriceWithBuffer;
-        const amountBigInt = parseUnits(amount, selectedToken.decimals);
-        const amountToReceiveBigInt = amountBigInt - estimatedFee;
+        const estimatedFeeInUSDC = estimatedFee / BigInt(1e12);
 
-        const amountToReceiveFormatted = formatUnits(
-          amountToReceiveBigInt,
-          selectedToken.decimals
-        );
+        const amountBigInt = parseUnits(amount, 6);
+        const amountToReceiveBigInt = amountBigInt - estimatedFeeInUSDC;
+        const amountToReceiveFormatted = formatUnits(amountToReceiveBigInt, 6);
         setAmountToReceive(amountToReceiveFormatted);
       } catch (error) {
         console.error("Gas estimation error:", error);
@@ -707,7 +708,7 @@ const Send = () => {
               onChange={handleNetworkChange}
             >
               {CHAINS.map((chain) => (
-                <option key={chain.id} value={chain.id} className="">
+                <option key={chain.id} value={chain.id}>
                   {chain.name}
                 </option>
               ))}
@@ -796,7 +797,7 @@ const Send = () => {
                 </div>
 
                 {[USDC_MAINNET, USDT_MAINNET].includes(
-                  selectedToken?.address.toLowerCase()
+                  selectedToken?.address
                 ) && (
                   <div className="flex justify-between text-white font-medium">
                     <span>Total Sent:</span>
