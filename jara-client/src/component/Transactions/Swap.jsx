@@ -2,7 +2,7 @@ import { http, useAccount } from "wagmi";
 import {
   CELO_CHAIN,
   ETHEREUM_CHAIN,
-  PROVIDERS,
+  // PROVIDERS,
   RPC_URLS,
   // STARKNET_CHAIN,
   TOKENS,
@@ -41,6 +41,11 @@ const CHAINS = [
   // STARKNET_CHAIN
 ];
 // console.log(tokens)
+
+const PROVIDERS = {
+  1: new ethers.JsonRpcProvider("https://eth.llamarpc.com"),
+  42220: new ethers.JsonRpcProvider("https://forno.celo.org"),
+};
 
 const Swap = () => {
   const { address } = useAccount();
@@ -91,7 +96,7 @@ const Swap = () => {
   const handleFromTokenChange = (e) => {
     const tokenId = Number(e.target.value);
     const token = filteredFromTokens.find((t) => t.id === tokenId);
-    console.log(token)
+    console.log(token);
     if (token) {
       setFromToken(token);
       setTokenBalance((prev) => ({ ...prev, [token.symbol]: "0.00" })); // Reset balance for the new token
@@ -174,71 +179,72 @@ const Swap = () => {
       setIsLoading(false);
       return;
     }
-
+  
     try {
+      // Get the chainId for the token
       const tokenChainId = fromToken.networks
         ? Object.keys(fromToken.networks)[0]
-        : fromToken.chainId; // Get the chainId for the token
-
+        : fromToken.chainId;
+  
       const tokenAddress = getTokenAddress(fromToken, selectedNetwork);
-
-      // Debug log
-      // console.log(
-      //   `Fetching balance for token: ${fromToken.symbol}, Address: ${tokenAddress}`
-      // );
-
-      // Skip if token address is not available
+  
+      console.log(
+        `Fetching balance for token: ${fromToken.symbol}, Address: ${tokenAddress}`
+      );
+  
+      if (fromToken.symbol === "USDC" && tokenChainId === "42220") {
+        console.log("Fetching USDC on Celo...");
+      }
+  
       if (!tokenAddress) {
         setTokenBalance((prev) => ({ ...prev, [fromToken.symbol]: "0.00" }));
         setIsLoading(false);
         return;
       }
-      const erc20Abi = [
-        {
-          constant: true,
-          inputs: [{ name: "_owner", type: "address" }],
-          name: "balanceOf",
-          outputs: [{ name: "balance", type: "uint256" }],
-          payable: false,
-          stateMutability: "view",
-          type: "function",
-        },
-      ];
-
+  
+      // Select provider based on chainId
       const provider = PROVIDERS[tokenChainId];
+      console.log(`Using provider for chainId ${tokenChainId}:`, provider);
+  
       if (!provider) {
         console.error(`Provider not found for chainId: ${tokenChainId}`);
         setTokenBalance((prev) => ({ ...prev, [fromToken.symbol]: "0.00" }));
         setIsLoading(false);
         return;
       }
+  
       let balance;
-      if (tokenAddress === null) {
-        // Handle native tokens (e.g., ETH, CELO)
+      if (!tokenAddress) {
+        // Native token balance (ETH, CELO, etc.)
         balance = await provider.getBalance(address);
       } else {
         const contract = new Contract(
           tokenAddress,
-          erc20Abi, // Use the full ERC-20 ABI
+          [
+            "function balanceOf(address) view returns (uint256)",
+            "function decimals() view returns (uint8)",
+            "function symbol() view returns (string)",
+          ],
           provider
         );
-        // console.log(`Calling balanceOf for address: ${address}`); // Debug log
+  
+        console.log(`Calling balanceOf for address: ${address}`);
         balance = await contract.balanceOf(address);
-        // console.log(`Balance for ${fromToken.symbol}: ${balance.toString()}`);
       }
-
-      // Update token balance
+  
+      // Update token balance in state
       setTokenBalance((prev) => ({
         ...prev,
         [fromToken.symbol]: ethers.formatUnits(balance, fromToken.decimals),
       }));
-      setIsLoading(false);
     } catch (error) {
       console.error("Error fetching token balance:", error);
       setError("Failed to fetch token balance");
+    } finally {
       setIsLoading(false);
     }
   };
+  
 
   // ---------------- SquidRouter Integration Helpers ----------------
 
