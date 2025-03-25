@@ -43,15 +43,13 @@ const CHAINS = [
 // console.log(tokens)
 
 const PROVIDERS = {
-  1: new ethers.JsonRpcProvider("https://eth.llamarpc.com"),
-  42220: new ethers.JsonRpcProvider("https://forno.celo.org"),
+  1: new JsonRpcProvider("https://eth.llamarpc.com"),
+  42220: new JsonRpcProvider("https://forno.celo.org"),
 };
 
 const Swap = () => {
   const { address } = useAccount();
   const navigate = useNavigate();
-
-  const provider = new JsonRpcProvider("https://forno.celo.org");
 
   // ========== State management ==========
   const [isLoading, setIsLoading] = useState(true);
@@ -82,7 +80,7 @@ const Swap = () => {
     [USDC_MAINNET, USDT_MAINNET].includes(token?.address?.toLowerCase());
 
   const handleNetworkChange = (newChainId) => {
-    toast.success(`Network changed to: ${newChainId}`); // Debug log
+    // toast.success(`Network changed to: ${newChainId}`); // Debug log
     setSelectedNetwork(newChainId); // Update selected network
 
     // Filter tokens for the selected network
@@ -96,7 +94,7 @@ const Swap = () => {
   const handleFromTokenChange = (e) => {
     const tokenId = Number(e.target.value);
     const token = filteredFromTokens.find((t) => t.id === tokenId);
-    console.log(token);
+    // console.log(token);
     if (token) {
       setFromToken(token);
       setTokenBalance((prev) => ({ ...prev, [token.symbol]: "0.00" })); // Reset balance for the new token
@@ -179,40 +177,42 @@ const Swap = () => {
       setIsLoading(false);
       return;
     }
-  
+
     try {
       // Get the chainId for the token
-      const tokenChainId = fromToken.networks
-        ? Object.keys(fromToken.networks)[0]
+      const tokenChainId =
+      fromToken.networks && fromToken.networks[selectedNetwork]
+        ? selectedNetwork
         : fromToken.chainId;
-  
+
       const tokenAddress = getTokenAddress(fromToken, selectedNetwork);
-  
-      console.log(
-        `Fetching balance for token: ${fromToken.symbol}, Address: ${tokenAddress}`
-      );
-  
+
+      // console.log(
+      //   `Fetching balance for token: ${fromToken.symbol}, Address: ${tokenAddress}`
+      // );
+
       if (fromToken.symbol === "USDC" && tokenChainId === "42220") {
         console.log("Fetching USDC on Celo...");
       }
-  
+
+      // console.log(tokenChainId)
       if (!tokenAddress) {
         setTokenBalance((prev) => ({ ...prev, [fromToken.symbol]: "0.00" }));
         setIsLoading(false);
         return;
       }
-  
+
       // Select provider based on chainId
       const provider = PROVIDERS[tokenChainId];
-      console.log(`Using provider for chainId ${tokenChainId}:`, provider);
-  
+      // console.log(`Using provider for chainId ${tokenChainId}:`, provider);
+
       if (!provider) {
         console.error(`Provider not found for chainId: ${tokenChainId}`);
         setTokenBalance((prev) => ({ ...prev, [fromToken.symbol]: "0.00" }));
         setIsLoading(false);
         return;
       }
-  
+
       let balance;
       if (!tokenAddress) {
         // Native token balance (ETH, CELO, etc.)
@@ -226,12 +226,14 @@ const Swap = () => {
             "function symbol() view returns (string)",
           ],
           provider
-        );
-  
-        console.log(`Calling balanceOf for address: ${address}`);
+        ).connect(provider);
+
+        // console.log(
+        //   `Calling balanceOf for address: ${address} at ${tokenAddress}`
+        // );
         balance = await contract.balanceOf(address);
       }
-  
+
       // Update token balance in state
       setTokenBalance((prev) => ({
         ...prev,
@@ -244,7 +246,6 @@ const Swap = () => {
       setIsLoading(false);
     }
   };
-  
 
   // ---------------- SquidRouter Integration Helpers ----------------
 
@@ -315,7 +316,7 @@ const Swap = () => {
     do {
       try {
         const status = await getStatus(getStatusParams);
-        console.log(`Route status: ${status.squidTransactionStatus}`);
+        // console.log(`Route status: ${status.squidTransactionStatus}`);
         if (completedStatuses.includes(status.squidTransactionStatus)) break;
       } catch (error) {
         if (error.response?.status === 404 && retryCount < 10) {
@@ -382,7 +383,7 @@ const Swap = () => {
         return;
       }
 
-      toast.info("Initiating approval transaction...");
+      // toast.info("Initiating approval transaction...");
 
       const txHash = await paraViemSigner.writeContract({
         address: tokenAddress,
@@ -391,7 +392,7 @@ const Swap = () => {
         args: [spender, amount],
       });
 
-      console.log("Approval transaction hash:", txHash);
+      // console.log("Approval transaction hash:", txHash);
 
       const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash,
@@ -400,7 +401,7 @@ const Swap = () => {
 
       if (receipt.status === "success") {
         // console.log("Approval successful:", receipt);
-        toast.success("Token approval successful ✅");
+        // toast.success("Token approval successful ✅");
         return receipt;
       } else {
         throw new Error("Transaction reverted");
@@ -471,6 +472,7 @@ const Swap = () => {
         throw new Error(errorMsg);
       }
 
+      // console.log(route)
       setSlippageTolerance(route.estimate.aggregateSlippage);
       const toAmountFormatted = ethers.formatUnits(
         route.estimate.toAmount,
@@ -480,7 +482,7 @@ const Swap = () => {
       setExchangeRate(
         (parseFloat(toAmountFormatted) / parseFloat(amount)).toFixed(4)
       );
-      setFees(parseFloat(route.estimate.feeCosts[0]?.amount) || "0.00");
+      setFees(parseFloat(route.estimate.gasCosts[0]?.amountUsd) || "0.00");
       setToAmount(toAmountFormatted);
       setTransactionRequest(route.transactionRequest);
       setIsExchanging(false);

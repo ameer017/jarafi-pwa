@@ -50,10 +50,21 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setIsModalOpen(true);
 
-    const loggedIn = await para.isFullyLoggedIn();
+    try {
+      // Wait for user login
+      const { needsWallet } = await para.waitForLoginAndSetup();
 
-    if (loggedIn) {
-      navigate("/dashboard");
+      if (needsWallet) {
+        const [wallet, recoverySecret] = await para.createWallet();
+        navigate("/dashboard", { state: { wallet, recoverySecret } });
+      } else {
+        const loggedIn = await para.isFullyLoggedIn();
+        if (loggedIn) {
+          navigate("/dashboard");
+        }
+      }
+    } catch (error) {
+      console.error("Google Sign-In failed:", error);
     }
   };
 
@@ -67,6 +78,17 @@ const Login = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const loggedIn = await para.isFullyLoggedIn();
+      if (loggedIn) {
+        navigate("/dashboard");
+      }
+    };
+
+    checkLoginStatus();
+  }, [isModalOpen]);
+  
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     if (!email) {
@@ -148,7 +170,7 @@ const Login = () => {
                 loginType === "seedPhrase"
                   ? "bg-[#0F0140] text-white"
                   : "text-[#0F0140]"
-              } ${true ? "opacity-50 cursor-not-allowed" : ""}`} 
+              } ${true ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               Seed Phrase
             </button>
