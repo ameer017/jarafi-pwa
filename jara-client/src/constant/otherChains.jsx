@@ -1,5 +1,5 @@
 import { JsonRpcProvider } from "ethers";
-import { celo, mainnet } from "viem/chains";
+import { arbitrum, base, celo, mainnet, optimism } from "viem/chains";
 
 // ================= CHAIN CONFIGURATIONS =================
 export const CELO_CHAIN = {
@@ -18,6 +18,37 @@ export const ETHEREUM_CHAIN = {
   },
 };
 
+export const ARBITRUM_CHAIN = {
+  ...arbitrum,
+  name: "Arbitrum One",
+  network: "arbitrum",
+  rpcUrls: {
+    default: { http: ["https://arb1.arbitrum.io/rpc"] },
+    public: { http: ["https://arb1.arbitrum.io/rpc"] },
+  },
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+};
+
+export const OPTIMISM_CHAIN = {
+  ...optimism,
+  name: "Optimism",
+  network: "optimism",
+  rpcUrls: {
+    default: { http: ["https://mainnet.optimism.io"] },
+    public: { http: ["https://mainnet.optimism.io"] },
+  },
+};
+
+export const BASE_CHAIN = {
+  ...base,
+  name: "Base",
+  network: "base",
+  rpcUrls: {
+    default: { http: ["https://mainnet.base.org"] },
+    public: { http: ["https://mainnet.base.org"] },
+  },
+};
+
 export const STARKNET_CHAIN = {
   id: 5,
   name: "StarkNet",
@@ -28,7 +59,6 @@ export const STARKNET_CHAIN = {
   },
   nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
 };
-
 // ================= TOKEN CONFIGURATIONS =================
 export const cUsd = {
   id: 1,
@@ -70,52 +100,27 @@ export const USDC = {
     [ETHEREUM_CHAIN.id]: {
       address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
     },
-    [CELO_CHAIN.id]: {
-      address: "0xcebA9300f2b948710d2653dD7B07f33A8B32118C",
-    },
-    // [STARKNET_CHAIN.id]: {
-    //   address:
-    //     "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
+    [CELO_CHAIN.id]: { address: "0xcebA9300f2b948710d2653dD7B07f33A8B32118C" },
+    // [ARBITRUM_CHAIN.id]: {
+    //   address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
     // },
+    
   },
 };
 
 export const ETH = {
   id: 6,
-  name: "ETH",
+  name: "Ethereum",
   decimals: 18,
   symbol: "ETH",
   icon: "https://assets.coingecko.com/coins/images/279/standard/ethereum.png",
   networks: {
-    [ETHEREUM_CHAIN.id]: {
-      address: null,
-    },
-    // [STARKNET_CHAIN.id]: {
-    //   address:
-    //     "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-    // },
-  },
-};
-
-export const STRK = {
-  id: 7,
-  name: "Starknet Token",
-  decimals: 18,
-  symbol: "STRK",
-  icon: "https://assets.coingecko.com/coins/images/26433/standard/starknet.png",
-  networks: {
-    [ETHEREUM_CHAIN.id]: {
-      address: "0xca14007eff0db1f8135f4c25b34de49ab0d42766",
-    },
-    // [STARKNET_CHAIN.id]: {
-    //   address:
-    //     "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d",
-    // },
+    [ETHEREUM_CHAIN.id]: { address: null },
   },
 };
 
 export const USDT = {
-  id: 8,
+  id: 7,
   name: "USDT",
   decimals: 6,
   symbol: "USDT",
@@ -124,25 +129,78 @@ export const USDT = {
     [ETHEREUM_CHAIN.id]: {
       address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
     },
-    [CELO_CHAIN.id]: {
-      address: "0x617f3112bf5397D0467D315cC709EF968D9ba546",
+    [CELO_CHAIN.id]: { address: "0x617f3112bf5397D0467D315cC709EF968D9ba546" },
+    // [ARBITRUM_CHAIN.id]: {
+    //   address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+    // },
+    // [OPTIMISM_CHAIN.id]: {
+    //   address: "0x4200000000000000000000000000000000000006",
+    // },
+    // [BASE_CHAIN.id]: { address: "0x2f5c8d74c1779e2a43d4dbe1d3b9bbcf8b0c05b2" },
+  },
+};
+
+export const OP_TOKEN = {
+  id: 8,
+  name: "Optimism Token",
+  decimals: 18,
+  symbol: "OP",
+  icon: "https://s2.coinmarketcap.com/static/img/coins/200x200/11840.png",
+  chainId: OPTIMISM_CHAIN.id,
+  address: "0x4200000000000000000000000000000000000042",
+};
+
+export const BASE_TOKEN = {
+  id: 9,
+  name: "Base ETH",
+  decimals: 18,
+  symbol: "ETH",
+  icon: "https://s2.coinmarketcap.com/static/img/coins/200x200/27144.png",
+  chainId: BASE_CHAIN.id,
+  address: "0x4200000000000000000000000000000000000006",
+};
+
+export const ARB = {
+  id: 10,
+  name: "Arbitrum",
+  decimals: 18,
+  symbol: "ARB",
+  icon: "https://s2.coinmarketcap.com/static/img/coins/200x200/11841.png",
+  networks: {
+    [ETHEREUM_CHAIN.id]: {
+      address: "0xb50721bcf8d664c30412cfbc6cf7a15145234ad1",
     },
+    // [ARBITRUM_CHAIN.id]: {
+    //   address: "0x912CE59144191C1204E64559FE8253a0e49E6548",
+    // },
   },
 };
 
 // ================= EXPORT ALL CONFIGS =================
-export const TOKENS = [cUsd, cEUR, celoToken, USDC, USDT];
+export const TOKENS = [
+  cUsd,
+  cEUR,
+  celoToken,
+  USDC,
+  USDT,
+  // OP_TOKEN,
+  // BASE_TOKEN,
+  // ARB,
+];
 
 export const RPC_URLS = {
   [CELO_CHAIN.id]: "https://forno.celo.org",
   [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
+  [ARBITRUM_CHAIN.id]: "https://arb1.arbitrum.io/rpc",
+  [OPTIMISM_CHAIN.id]: "https://mainnet.optimism.io",
+  [BASE_CHAIN.id]: "https://mainnet.base.org",
   [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
 };
 
-export const PROVIDERS = {
-  [CELO_CHAIN.id]: new JsonRpcProvider("https://forno.celo.org"),
-  [ETHEREUM_CHAIN.id]: new JsonRpcProvider("https://eth.llamarpc.com"),
-  [STARKNET_CHAIN.id]: new JsonRpcProvider(
-    "https://free-rpc.nethermind.io/mainnet-juno/"
-  ),
-};
+// export const PROVIDERS = {
+//   [CELO_CHAIN.id]: new JsonRpcProvider("https://forno.celo.org"),
+//   [ETHEREUM_CHAIN.id]: new JsonRpcProvider("https://eth.llamarpc.com"),
+//   [ARBITRUM_CHAIN.id]: new JsonRpcProvider("https://arb1.arbitrum.io/rpc"),
+//   [OPTIMISM_CHAIN.id]: new JsonRpcProvider("https://mainnet.optimism.io"),
+//   [BASE_CHAIN.id]: new JsonRpcProvider("https://mainnet.base.org"),
+// };

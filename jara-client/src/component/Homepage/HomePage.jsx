@@ -16,6 +16,9 @@ import {
   ETHEREUM_CHAIN,
   // STARKNET_CHAIN,
   TOKENS,
+  ARBITRUM_CHAIN,
+  OPTIMISM_CHAIN,
+  BASE_CHAIN,
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
@@ -50,6 +53,7 @@ const HomePage = () => {
     ETHEREUM_CHAIN,
   ];
 
+  // console.log(tokens)
   // State Managament.
   const [totalBalance, setTotalBalance] = useState(0);
   const [totalUSDTBalance, setTotalUSDTBalance] = useState(0);
@@ -112,6 +116,18 @@ const HomePage = () => {
         url: "https://api.etherscan.io/api",
         apiKey: import.meta.env.VITE_APP_ETHERSCAN_API,
       },
+      [ARBITRUM_CHAIN.id]: {
+        url: "https://arbiscan.io/api",
+        apiKey: import.meta.env.VITE_APP_ARBISCAN_API,
+      },
+      [OPTIMISM_CHAIN.id]: {
+        url: "https://optimistic.etherscan.io/api",
+        apiKey: import.meta.env.VITE_APP_OP_API,
+      },
+      [BASE_CHAIN.id]: {
+        url: "https://basescan.org/api",
+        apiKey: import.meta.env.VITE_APP_BASE_API,
+      },
       // [STARKNET_CHAIN.id]: {
       //   url: "https://api.starkscan.io/api", // Replace with actual StarkNet explorer API
       //   apiKey: import.meta.env.VITE_APP_STARKSCAN_API,
@@ -122,15 +138,17 @@ const HomePage = () => {
       // Fetch transactions for all networks concurrently
       const allTransactions = await Promise.all(
         Object.entries(tokensByChain).map(async ([chainId, tokens]) => {
-          const { url, apiKey } = EXPLORER_APIS[chainId];
-          if (!url || !apiKey) {
-            console.error(`No API configured for chain ID ${chainId}`);
+          const apiConfig = EXPLORER_APIS[chainId];
+          if (!apiConfig) {
+            console.warn(`No API configured for chain ID ${chainId}`);
             return [];
           }
+          const { url, apiKey } = apiConfig;
+          const tokenAddresses = tokens
+            .map((token) => token.networks?.[chainId]?.address || token.address)
+            .filter(Boolean);
 
-          const tokenAddresses = tokens.map((token) =>
-            token.networks ? token.networks[chainId]?.address : token.address
-          );
+          if (!tokenAddresses.length) return [];
 
           const tokenAddressesLower = tokenAddresses.map((addr) =>
             addr?.toLowerCase()
@@ -168,9 +186,9 @@ const HomePage = () => {
         })
       );
 
-      const flattenedTransactions = allTransactions.flat();
-
-      flattenedTransactions.sort((a, b) => b.timestamp - a.timestamp);
+      const flattenedTransactions = allTransactions
+        .flat()
+        .sort((a, b) => b.timestamp - a.timestamp);
 
       setTokenTransactions(flattenedTransactions);
     } catch (error) {
@@ -206,6 +224,7 @@ const HomePage = () => {
       return 0;
     }
   };
+
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
       console.error("Address is not provided!");
@@ -218,57 +237,58 @@ const HomePage = () => {
 
     // Helper function for StarkNet balances
     // const fetchStarkNetBalance = async (
-    //   contractAddress,
-    //   providerUrl,
-    //   userAddress,
-    //   decimals
-    // ) => {
-    //   try {
-    //     const starkProvider = new RpcProvider({ nodeUrl: providerUrl });
+    //     contractAddress,
+    //     providerUrl,
+    //     userAddress,
+    //     decimals
+    //   ) => {
+    //     try {
+    //       const starkProvider = new RpcProvider({ nodeUrl: providerUrl });
 
-    //     // Cairo 1.0-compatible ABI
-    //     const contractAbi = [
-    //       {
-    //         name: "balance_of",
-    //         type: "function",
-    //         inputs: [{ name: "account", type: "core::felt252" }],
-    //         outputs: [{ type: "core::integer::u256" }],
-    //         state_mutability: "view",
-    //       },
-    //     ];
+    //       // Cairo 1.0-compatible ABI
+    //       const contractAbi = [
+    //         {
+    //           name: "balance_of",
+    //           type: "function",
+    //           inputs: [{ name: "account", type: "core::felt252" }],
+    //           outputs: [{ type: "core::integer::u256" }],
+    //           state_mutability: "view",
+    //         },
+    //       ];
 
-    //     // ✅ Correct StarkNet contract initialization
-    //     const starkContract = new StarkContract(
-    //       contractAbi,
-    //       contractAddress,
-    //       starkProvider
-    //     );
+    //       // Correct StarkNet contract initialization
+    //       const starkContract = new StarkContract(
+    //         contractAbi,
+    //         contractAddress,
+    //         starkProvider
+    //       );
 
-    //     const numericAddress = BigInt(userAddress);
-    //     const starkAddress = `0x${numericAddress
-    //       .toString(16)
-    //       .padStart(64, "0")}`;
+    //       const numericAddress = BigInt(userAddress);
+    //       const starkAddress = `0x${numericAddress
+    //         .toString(16)
+    //         .padStart(64, "0")}`;
 
-    //     // ✅ Call StarkNet contract
-    //     const balance = await starkContract.balance_of(starkAddress);
+    //       // Call StarkNet contract
+    //       const balance = await starkContract.balance_of(starkAddress);
 
-    //     // Handle Uint256 conversion safely
-    //     if (!balance?.low || !balance?.high) {
+    //       // Handle Uint256 conversion safely
+    //       if (!balance?.low || !balance?.high) {
+    //         return 0;
+    //       }
+
+    //       const low = BigInt(balance.low);
+    //       const high = BigInt(balance.high);
+    //       const total = (high << 128n) + low;
+
+    //       return Number(total / 10n ** BigInt(decimals));
+    //     } catch (error) {
+    //       console.error("StarkNet balance error:", error);
     //       return 0;
     //     }
-
-    //     const low = BigInt(balance.low);
-    //     const high = BigInt(balance.high);
-    //     const total = (high << 128n) + low;
-
-    //     return Number(total / 10n ** BigInt(decimals));
-    //   } catch (error) {
-    //     console.error("StarkNet balance error:", error);
-    //     return 0;
-    //   }
-    // };
+    //   };
 
     // Helper function for EVM-compatible chains
+    
     const fetchERC20Balance = async (
       providerUrl,
       contractAddress,
@@ -305,8 +325,9 @@ const HomePage = () => {
           if (token.networks) {
             for (const [networkKey, config] of Object.entries(token.networks)) {
               const chainId = parseInt(networkKey);
-              const chain = CHAINS.find((c) => c.id === chainId);
 
+              const chain = CHAINS.find((c) => c.id === chainId);
+              // console.log(chainId, chain)
               if (!chain) {
                 console.error(
                   `Chain ${chainId} not found for token ${token.name}`
@@ -359,6 +380,7 @@ const HomePage = () => {
           } else {
             // Handle single-network tokens (like cUSD, cEUR, CELO)
             const chain = CHAINS.find((c) => c.id === token.chainId);
+            // console.log(chain)
             if (!chain) {
               console.error(
                 `Chain ${token.chainId} not found for token ${token.name}`
