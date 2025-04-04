@@ -181,9 +181,9 @@ const Swap = () => {
     try {
       // Get the chainId for the token
       const tokenChainId =
-      fromToken.networks && fromToken.networks[selectedNetwork]
-        ? selectedNetwork
-        : fromToken.chainId;
+        fromToken.networks && fromToken.networks[selectedNetwork]
+          ? selectedNetwork
+          : fromToken.chainId;
 
       const tokenAddress = getTokenAddress(fromToken, selectedNetwork);
 
@@ -546,11 +546,22 @@ const Swap = () => {
       toast.success("Swap successful! 🎉");
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
+      showNotification("Swap Complete", "Your token swap has been completed.");
+
       navigate("/dashboard");
     } catch (error) {
       toast.error(`Swap failed: ${error.shortMessage || error.message}`);
     } finally {
       setIsSwapping(false);
+    }
+  };
+
+  const showNotification = (title, message) => {
+    if (Notification.permission === "granted") {
+      new Notification(title, {
+        body: message,
+        icon: "/JaraFiLogin.png",
+      });
     }
   };
 

@@ -46,7 +46,8 @@ function subscribeToPush() {
       })
       .then((subscription) => {
         console.log("Subscribed to push notifications:", subscription);
-        
+        localStorage.setItem("push-subscription", JSON.stringify(subscription));
+
       })
       .catch((error) => {
         console.error("Failed to subscribe to push notifications:", error);

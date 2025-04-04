@@ -386,6 +386,13 @@ const Send = () => {
         )} ${selectedToken.symbol} sent successfully!`
       );
 
+      showNotification(
+        "Tokens Sent",
+        `You succesfully sent ${Number(
+          formatUnits(adjustedAmount, selectedToken.decimals)
+        ).toFixed(2)} ${selectedToken.symbol}`
+      );
+
       // Show confetti and navigate to dashboard
       setShowConfetti(true);
       const confettiTimeout = setTimeout(() => {
@@ -420,6 +427,15 @@ const Send = () => {
     }
 
     setIsPinModalOpen(true);
+  };
+
+  const showNotification = (title, message) => {
+    if (Notification.permission === "granted") {
+      new Notification(title, {
+        body: message,
+        icon: "/JaraFiLogin.png",
+      });
+    }
   };
 
   const handleConfirmTransaction = async (enteredPin) => {
