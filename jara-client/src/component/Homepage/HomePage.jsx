@@ -34,6 +34,7 @@ import {
   stark,
 } from "starknet";
 import HomeLoader from "./Loader/HomeLoader";
+import { FaExchangeAlt } from "react-icons/fa";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -799,12 +800,12 @@ const HomePage = () => {
             color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
           />
         </Link>
-        {/* <Link to="/p2p">
-          <RiTokenSwapLine
+        <Link to="/p2p">
+          <FaExchangeAlt
             size={25}
             color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link> */}
+        </Link>
         {/* <Link to="/card-display">
           <LuCreditCard
             size={25}
