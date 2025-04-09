@@ -222,7 +222,7 @@ const MainPage = () => {
   const handleTokenSelect = async (token) => {
     setSelectedToken({
       symbol: token?.symbol,
-      icon: token?.logoURI || selectedToken?.icon,
+      icon: token?.icon,
     });
 
     const { fetchedData } = await fetchTokenBalances(address, [token]);
@@ -260,6 +260,7 @@ const MainPage = () => {
       setIsBank(false);
     }
   }, [bankName, accountNumber]);
+
 
   return (
     <section className="min-h-screen w-full flex justify-center items-center p-4 sm:p-8 relative">
