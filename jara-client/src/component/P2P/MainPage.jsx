@@ -36,6 +36,21 @@ const MainPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSelling, setIsSelling] = useState(true);
+  const [exchangeRate, setExchangeRate] = useState(null);
+  const [loadingRate, setLoadingRate] = useState(false);
+
+  const fetchExchangeRate = async (symbol) => {
+    const apiUrl = `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=NGN`;
+
+    try {
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      return data.NGN || 0;
+    } catch (error) {
+      console.error("Error fetching token price in NGN:", error);
+      return 0;
+    }
+  };
 
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
@@ -209,10 +224,14 @@ const MainPage = () => {
       symbol: token?.symbol,
       icon: token?.logoURI || selectedToken?.icon,
     });
+
     const { fetchedData } = await fetchTokenBalances(address, [token]);
     const selectedTokenBalance = fetchedData[0]?.balance || "0.00";
 
-    // console.log(selectedTokenBalance);
+    setLoadingRate(true);
+    const rate = await fetchExchangeRate(token.symbol);
+    setExchangeRate(rate);
+    setLoadingRate(false);
 
     setSelectedToken((prevState) => ({
       ...prevState,
@@ -429,7 +448,12 @@ const MainPage = () => {
             <div className="md:w-[400px] w-full md:h-[108px] border-[1px] border-[#3718FF] bg-[#E5E9FF] rounded-md flex flex-col gap-2 justify-center p-4">
               <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
                 <p>Exchange Rate:</p>
-                <p>{/* dynamic rate */}</p>
+                {exchangeRate && (
+                  <p className="text-sm text-gray-600">
+                    1 {selectedToken?.symbol} ≈ ₦
+                    {exchangeRate?.toLocaleString()}
+                  </p>
+                )}
               </div>
               <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
                 <p>Fees:</p>
@@ -437,20 +461,22 @@ const MainPage = () => {
               </div>
             </div>
 
-            <div className="md:w-[400px] w-full md:h-[108px] border-dashed border-[1px] border-[#3718FF] rounded-md flex flex-col gap-2 justify-center p-4">
-              <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
-                <p>Bank Name:</p>
-                <p>{bankDetails?.bankName || "N/A"}</p>
+            {bankName && accountNumber && (
+              <div className="md:w-[400px] w-full md:h-[108px] border-dashed border-[1px] border-[#3718FF] rounded-md flex flex-col gap-2 justify-center p-4">
+                <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
+                  <p>Bank Name:</p>
+                  <p>{bankDetails?.bankName || "N/A"}</p>
+                </div>
+                <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
+                  <p>Account Number:</p>
+                  <p>{bankDetails?.accountNumber || "N/A"}</p>
+                </div>
+                <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
+                  <p>Account Name:</p>
+                  <p>{bankDetails?.accountName || "N/A"}</p>
+                </div>
               </div>
-              <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
-                <p>Account Number:</p>
-                <p>{bankDetails?.accountNumber || "N/A"}</p>
-              </div>
-              <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
-                <p>Account Name:</p>
-                <p>{bankDetails?.accountName || "N/A"}</p>
-              </div>
-            </div>
+            )}
 
             <button
               className="bg-[#F2E205] w-full p-[10px] rounded-[10px] text-[#4F4E50] text-[16px] hover:bg-[#f2e20486] cursor-pointer"
