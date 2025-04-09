@@ -6,7 +6,12 @@ import { TbExchange } from "react-icons/tb";
 import { FaNairaSign } from "react-icons/fa6";
 import { IoIosArrowForward } from "react-icons/io";
 import { useAccount } from "wagmi";
-import { CELO_CHAIN, ETHEREUM_CHAIN, TOKENS } from "../../constant/otherChains";
+import {
+  CELO_CHAIN,
+  ETHEREUM_CHAIN,
+  TOKENS,
+  DEFAULT_ADDRESS,
+} from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import NBOverlay from "./NBOverlay";
 
@@ -260,7 +265,6 @@ const MainPage = () => {
       setIsBank(false);
     }
   }, [bankName, accountNumber]);
-
 
   return (
     <section className="min-h-screen w-full flex justify-center items-center p-4 sm:p-8 relative">

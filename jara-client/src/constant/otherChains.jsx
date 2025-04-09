@@ -204,3 +204,6 @@ export const RPC_URLS = {
 //   [OPTIMISM_CHAIN.id]: new JsonRpcProvider("https://mainnet.optimism.io"),
 //   [BASE_CHAIN.id]: new JsonRpcProvider("https://mainnet.base.org"),
 // };
+
+
+export const DEFAULT_ADDRESS = "0x6f8f27b80E28D7D85C4970f97763A3dda4a1a497"
