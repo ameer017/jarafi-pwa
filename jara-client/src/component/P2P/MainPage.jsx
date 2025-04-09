@@ -43,6 +43,7 @@ const MainPage = () => {
   const [isSelling, setIsSelling] = useState(true);
   const [exchangeRate, setExchangeRate] = useState(null);
   const [loadingRate, setLoadingRate] = useState(false);
+  const [tokenAmount, setTokenAmount] = useState("");
 
   const fetchExchangeRate = async (symbol) => {
     const apiUrl = `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=NGN`;
@@ -266,6 +267,8 @@ const MainPage = () => {
     }
   }, [bankName, accountNumber]);
 
+  const sendToken = async () => {};
+
   return (
     <section className="min-h-screen w-full flex justify-center items-center p-4 sm:p-8 relative">
       <header className="bg-[#0F0140] w-full p-4 flex items-center justify-center absolute top-0">
@@ -364,15 +367,11 @@ const MainPage = () => {
                     <input
                       className="w-1/6 bg-transparent border-2 outline-none text-[32px] text-[#141414] placeholder:text-[#141414] placeholder:italic placeholder:text-2xl placeholder:text-right transition duration-300 ease-in-out"
                       placeholder="0"
+                      onChange={(e) => setTokenAmount(e.target.value)}
                     />
                   </div>
 
-                  {/* <div className="flex justify-between items-center gap-[15px]"> */}
                   <div className="w-full h-[2px] bg-[#CAC4D0] rounded-sm"></div>
-                  {/* <div className="bg-[#F2E205] p-2 rounded-full">
-                      <TbExchange size={30} />
-                    </div> */}
-                  {/* </div> */}
 
                   <div className="flex justify-between items-center">
                     <div>
@@ -387,7 +386,9 @@ const MainPage = () => {
                       </div>
                     </div>
 
-                    <p className="text-[32px] text-[#141414]">0</p>
+                    <p className="text-[32px] text-[#141414]">
+                      {tokenAmount * exchangeRate}
+                    </p>
                   </div>
                 </>
               ) : (
