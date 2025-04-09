@@ -8,7 +8,7 @@ import {
 } from "react-icons/lu";
 import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { FaPlus } from "react-icons/fa";
+import { FaExchangeAlt, FaPlus } from "react-icons/fa";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import Activities from "./Activities";
 import { FaArrowLeftLong } from "react-icons/fa6";
@@ -264,12 +264,12 @@ const TokenDetails = ({ tokens }) => {
                     color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
                   />
                 </Link>
-                {/* <Link to="/p2p">
-                  <RiTokenSwapLine
+                <Link to="/p2p">
+                  <FaExchangeAlt
                     size={25}
                     color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
                   />
-                </Link> */}
+                </Link>
                 {/* <Link to="/card-display">
                   <LuCreditCard
                     size={25}

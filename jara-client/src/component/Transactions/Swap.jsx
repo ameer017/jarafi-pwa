@@ -611,6 +611,7 @@ const Swap = () => {
       >
         <FaArrowLeftLong size={25} />
       </button>
+      
       <div className="flex flex-col items-center w-full max-w-2xl gap-6">
         <p className="text-2xl text-[#F6F5F6] font-bold my-6 text-center">
           Swap Assets

@@ -6,6 +6,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import FundCard from "./FundCard";
 import { CiBarcode } from "react-icons/ci";
 import { FiCreditCard } from "react-icons/fi";
+import { FaExchangeAlt } from "react-icons/fa";
 
 export default function CardPage() {
   const location = useLocation();
@@ -149,12 +150,12 @@ export default function CardPage() {
               color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
             />
           </Link>
-          {/* <Link to="/p2p">
-                  <RiTokenSwapLine
+          <Link to="/p2p">
+                  <FaExchangeAlt
                     size={25}
                     color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
                   />
-                </Link> */}
+                </Link>
           {/* <Link to="/card-display">
                   <LuCreditCard
                     size={25}

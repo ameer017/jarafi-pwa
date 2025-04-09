@@ -26,6 +26,7 @@ import {
   SelectResidence,
   SelectId,
   PinSetup,
+  BankDetails,
 } from "./index";
 
 import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
@@ -39,7 +40,14 @@ function App() {
     <>
       <IdleTimeout />
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route
+          path="/"
+          element={
+            <AuthWrapper>
+              <Home />
+            </AuthWrapper>
+          }
+        />
         <Route path="/dashboard" element={<HomePage />} />
         <Route
           path="/token-details/:id"
@@ -111,6 +119,11 @@ function App() {
         <Route
           path="/recieve"
           element={<AuthRoute element={<ReceiveAssets />} />}
+        />
+
+        <Route
+          path="/add-bank"
+          element={<AuthRoute element={<BankDetails />} />}
         />
 
         {/* Auth-only pages wrapped with AuthWrapper */}
