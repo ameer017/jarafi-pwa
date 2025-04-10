@@ -265,7 +265,7 @@ const Send = () => {
         await switchChain(config, { chainId: selectedToken.chainId });
       }
 
-      // Create ParaAccount and Viem signer with the correct RPC URL
+      // Create ParaAccount and Viem signer
       const viemParaAccount = await createParaAccount(para);
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
@@ -699,7 +699,6 @@ const Send = () => {
   }, [selectedToken]);
 
   useEffect(() => {
-    // Check if state exists and contains an address, then set it in the input field
     if (location.state?.address) {
       setRecipientAddress(location.state.address);
     }
