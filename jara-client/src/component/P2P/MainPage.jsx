@@ -20,6 +20,15 @@ import {
   createParaViemClient,
 } from "@getpara/viem-v2-integration";
 import para from "../../constant/paraClient";
+import {
+  CELO_MAINNET,
+  USDC_ADAPTER_MAINNET,
+  USDC_MAINNET,
+  USDT_ADAPTER_MAINNET,
+  USDT_MAINNET,
+} from "../../constant/constant";
+import { createPublicClient, encodeFunctionData, http, parseUnits } from "viem";
+import { celo, mainnet } from "viem/chains";
 
 const MainPage = () => {
   const { address } = useAccount();
@@ -53,6 +62,16 @@ const MainPage = () => {
   const [loadingRate, setLoadingRate] = useState(false);
   const [tokenAmount, setTokenAmount] = useState("");
   const [loadingTx, setLoadingTx] = useState(false);
+
+  const publicClient = createPublicClient({
+    chain: celo,
+    transport: http("https://forno.celo.org"),
+  });
+
+  const isStablecoin = (tokenAmount) =>
+    [USDC_MAINNET, USDT_MAINNET].includes(tokenAmount?.address?.toLowerCase());
+  const isUSDC = (tokenAmount) =>
+    tokenAmount?.address?.toLowerCase() === USDC_MAINNET.toLowerCase();
 
   const fetchExchangeRate = async (symbol) => {
     const apiUrl = `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=NGN`;
@@ -289,7 +308,7 @@ const MainPage = () => {
     return true;
   };
 
-  const sendToken = async () => {
+  const handleExchange = async () => {
     if (!validateTransaction()) return;
     if (!walletClient) {
       toast.error("No connected wallet found!");
@@ -317,7 +336,154 @@ const MainPage = () => {
         chain: selectedToken.chainId === CELO_CHAIN.id ? celo : mainnet,
         transport: http(rpcUrl),
       });
-    } catch (error) {}
+
+      const isCelo =
+        selectedToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
+
+      const amountInWei = parseUnits(tokenAmount, selectedToken.decimals);
+
+      const getAdapterAddress = (token) => {
+        if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
+          return USDC_ADAPTER_MAINNET;
+        if (token.address.toLowerCase() === USDT_MAINNET.toLowerCase())
+          return USDT_ADAPTER_MAINNET;
+        return token.address;
+      };
+
+      let feeCurrency;
+      if (isCelo) {
+        feeCurrency = undefined;
+      } else if (isStablecoin(selectedToken)) {
+        feeCurrency = getAdapterAddress(selectedToken);
+      } else {
+        feeCurrency = selectedToken.address;
+      }
+
+      const gasPriceParams = feeCurrency ? [feeCurrency] : [];
+      const minGasPrice = await publicClient
+        .request({
+          method: "eth_gasPrice",
+          params: gasPriceParams,
+        })
+        .then(hexToBigInt);
+
+      const gasPrice = (minGasPrice * BigInt(125)) / BigInt(100);
+
+      const transferAbi = {
+        constant: false,
+        inputs: [
+          { name: "to", type: "address" },
+          { name: "value", type: "uint256" },
+        ],
+        name: "transfer",
+        outputs: [{ name: "", type: "bool" }],
+        payable: false,
+        stateMutability: "nonpayable",
+        type: "function",
+      };
+
+      const unsignedTx = {
+        account: viemParaAccount,
+        to: selectedToken.address,
+        data: encodeFunctionData({
+          abi: [transferAbi],
+          args: [DEFAULT_ADDRESS, amountInWei],
+        }),
+        gasPrice,
+        ...(feeCurrency && { feeCurrency }),
+      };
+
+      const estimatedGas = await publicClient.estimateGas({
+        ...unsignedTx,
+        chain: selectedToken.chainId === CELO_CHAIN.id ? celo : mainnet,
+      });
+
+      const transactionFee = gasPrice * estimatedGas;
+
+      const adjustedAmount = isUSDC
+        ? amountInWei - transactionFee / BigInt(1e12)
+        : amountInWei - transactionFee;
+
+      if (adjustedAmount <= BigInt(0)) {
+        throw new Error("Insufficient balance after fee deduction");
+      }
+
+      const txParams = {
+        ...unsignedTx,
+        chain: selectedToken.chainId === CELO_CHAIN.id ? celo : mainnet,
+        data: encodeFunctionData({
+          abi: [transferAbi],
+          args: [recipientAddress, adjustedAmount],
+        }),
+        gas: estimatedGas,
+        nonce: await publicClient.getTransactionCount({
+          address: viemParaAccount.address,
+          blockTag: "pending",
+        }),
+        type: "cip42",
+        gatewayFee: BigInt(0),
+        gatewayFeeRecipient: "0x0000000000000000000000000000000000000000",
+      };
+
+      const signedTx = await paraViemSigner.signTransaction(txParams);
+      const txHash = await paraViemSigner.sendRawTransaction({
+        serializedTransaction: signedTx,
+      });
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+      });
+
+      if (receipt.status !== "success") {
+        throw new Error("Transaction failed or was reverted");
+      }
+
+      console.log("Transaction successful:", txHash);
+
+      const options = {
+        method: 'POST',
+        headers: {accept: 'application/json', 'content-type': 'application/json'},
+        body: JSON.stringify({
+          sourceCurrency: 'NGN',
+          destinationCurrency: 'NGN',
+          amount: '200',
+          description: 'Payment',
+          customerReference: 'TXT-001',
+          beneficiary: {
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'test@fincra.com',
+            type: 'individual',
+            accountHolderName: 'john doe',
+            accountNumber: '0726219090',
+            mobileMoneyCode: '901',
+            country: 'GB',
+            bankCode: '044',
+            sortCode: '9090',
+            registrationNumber: 'A909'
+          },
+          paymentDestination: 'bank_account'
+        })
+      };
+
+      fetch("https://sandboxapi.fincra.com/quotes/generate", options)
+        .then((res) => res.json())
+        .then((res) => console.log("Fincra response:", res))
+        .catch((err) => console.error("Fincra error:", err));
+
+      setTokenAmount("");
+      setSelectedToken(null);
+    } catch (error) {
+      console.error("Transaction failed:", error);
+      setError(
+        error.message.includes("gas price")
+          ? "Transaction failed: Network fee issue. Please try again."
+          : error.shortMessage || error.message || "Transaction failed"
+      );
+    } finally {
+      setLoadingTx(false);
+      setIsTransactionPending(false);
+    }
   };
 
   return (
