@@ -5,7 +5,7 @@ import { LuSettings2, LuWalletMinimal } from "react-icons/lu";
 import { TbExchange } from "react-icons/tb";
 import { FaNairaSign } from "react-icons/fa6";
 import { IoIosArrowForward } from "react-icons/io";
-import { useAccount } from "wagmi";
+import { useAccount, useConfig, useWalletClient } from "wagmi";
 import {
   CELO_CHAIN,
   ETHEREUM_CHAIN,
@@ -14,6 +14,12 @@ import {
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import NBOverlay from "./NBOverlay";
+import { toast } from "react-toastify";
+import {
+  createParaAccount,
+  createParaViemClient,
+} from "@getpara/viem-v2-integration";
+import para from "../../constant/paraClient";
 
 const MainPage = () => {
   const { address } = useAccount();
@@ -35,6 +41,8 @@ const MainPage = () => {
   const isActive = (path) => location.pathname === path;
   const [isBank, setIsBank] = useState(false);
   const [bankDetails, setBankDetails] = useState(null);
+  const { data: walletClient } = useWalletClient();
+  const config = useConfig();
 
   const [selectedChain, setSelectedChain] = useState(null);
   const [selectedToken, setSelectedToken] = useState(null);
@@ -44,6 +52,7 @@ const MainPage = () => {
   const [exchangeRate, setExchangeRate] = useState(null);
   const [loadingRate, setLoadingRate] = useState(false);
   const [tokenAmount, setTokenAmount] = useState("");
+  const [loadingTx, setLoadingTx] = useState(false);
 
   const fetchExchangeRate = async (symbol) => {
     const apiUrl = `https://min-api.cryptocompare.com/data/price?fsym=${symbol}&tsyms=NGN`;
@@ -267,7 +276,49 @@ const MainPage = () => {
     }
   }, [bankName, accountNumber]);
 
-  const sendToken = async () => {};
+  const validateTransaction = () => {
+    if (!selectedToken) {
+      setError("Please select a token");
+      return false;
+    }
+    if (!tokenAmount || parseFloat(tokenAmount) <= 0) {
+      setError("Please enter a valid amount");
+      return false;
+    }
+
+    return true;
+  };
+
+  const sendToken = async () => {
+    if (!validateTransaction()) return;
+    if (!walletClient) {
+      toast.error("No connected wallet found!");
+    }
+
+    setLoadingTx(true);
+
+    try {
+      const RPC_URLS = {
+        [CELO_CHAIN.id]: "https://forno.celo.org",
+        [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
+        [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
+      };
+
+      const rpcUrl = RPC_URLS[selectedToken.chainId];
+      if (!rpcUrl) {
+        throw new Error(
+          `Unsupported network for token: ${selectedToken.symbol}`
+        );
+      }
+
+      const viemParaAccount = await createParaAccount(para);
+      const paraViemSigner = createParaViemClient(para, {
+        account: viemParaAccount,
+        chain: selectedToken.chainId === CELO_CHAIN.id ? celo : mainnet,
+        transport: http(rpcUrl),
+      });
+    } catch (error) {}
+  };
 
   return (
     <section className="min-h-screen w-full flex justify-center items-center p-4 sm:p-8 relative">

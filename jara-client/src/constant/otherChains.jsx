@@ -87,7 +87,7 @@ export const celoToken = {
   symbol: "CELO",
   chainId: CELO_CHAIN.id,
   address: "0x471EcE3750Da237f93B8E339c536989b8978a438",
-  icon: "https://cryptologos.cc/logos/celo-celo-logo.png?v=040",
+  icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAM1BMVEX8/1L//1VISRgsLA4vMA8AAAC1tzva3UdKSxj//1QnJw15eyhlZiF2eCeKjC1/gSlGRhfsqGQoAAAAbklEQVR4Ac2RtQHAIBAAg0N8/2kT3K3jmpfD2RYFJEQOIhyAIAglIhEokli2IGWMcpnhTFIgfgAtSWoa0u6J5MAVx3mJWFJfCxA6KVnUaMv6siJdFvoD3c8tWleZegRCXvl8kEjZfvjmlzU/e00+eGQEGEMMUVIAAAAASUVORK5CYII=",
 };
 
 export const USDC = {
