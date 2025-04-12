@@ -42,7 +42,7 @@ const HomePage = () => {
 
   // const starknetAddress = starknetAddressFromEVM(address);
 
-  // console.log(starknetAddress)
+  // console.log(address)
 
   const location = useLocation();
   const isActive = (path) => location.pathname === path;

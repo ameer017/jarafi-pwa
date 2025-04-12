@@ -441,32 +441,35 @@ const MainPage = () => {
       console.log("Transaction successful:", txHash);
 
       const options = {
-        method: 'POST',
-        headers: {accept: 'application/json', 'content-type': 'application/json'},
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+        },
         body: JSON.stringify({
-          sourceCurrency: 'NGN',
-          destinationCurrency: 'NGN',
-          amount: '200',
-          description: 'Payment',
-          customerReference: 'TXT-001',
+          sourceCurrency: "NGN",
+          destinationCurrency: "NGN",
+          amount: "200",
+          description: "Payment",
+          customerReference: "TXT-001",
           beneficiary: {
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'test@fincra.com',
-            type: 'individual',
-            accountHolderName: 'john doe',
-            accountNumber: '0726219090',
-            mobileMoneyCode: '901',
-            country: 'GB',
-            bankCode: '044',
-            sortCode: '9090',
-            registrationNumber: 'A909'
+            firstName: "John",
+            lastName: "Doe",
+            email: "test@fincra.com",
+            type: "individual",
+            accountHolderName: "john doe",
+            accountNumber: "0726219090",
+            mobileMoneyCode: "901",
+            country: "GB",
+            bankCode: "044",
+            sortCode: "9090",
+            registrationNumber: "A909",
           },
-          paymentDestination: 'bank_account'
-        })
+          paymentDestination: "bank_account",
+        }),
       };
 
-      fetch("https://sandboxapi.fincra.com/quotes/generate", options)
+      fetch("https://sandboxapi.fincra.com/disbursements/payouts", options)
         .then((res) => res.json())
         .then((res) => console.log("Fincra response:", res))
         .catch((err) => console.error("Fincra error:", err));
