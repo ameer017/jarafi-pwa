@@ -402,10 +402,10 @@ const Swap = () => {
         confirmations: 2,
       });
 
-      console.log(receipt);
+      // console.log(receipt);
       if (receipt.status === "success") {
-        console.log("Approval successful:", receipt);
-        console.log("Token approval successful ✅");
+        // console.log("Approval successful:", receipt);
+        // console.log("Token approval successful ✅");
         return receipt;
       } else {
         throw new Error("Transaction reverted");
