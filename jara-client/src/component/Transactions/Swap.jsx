@@ -24,6 +24,7 @@ import { createPublicClient } from "viem";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import { USDC_MAINNET, USDT_MAINNET } from "../../constant/constant";
+import { checkAxelarStatus } from "../../utils/utils";
 
 const formatToken = (token) => ({
   chainId: celo.id,
@@ -73,6 +74,7 @@ const Swap = () => {
   const { width, height } = useWindowSize();
   const hexToBigInt = (hexValue) => BigInt(hexValue);
   const [filteredTokens, setFilteredTokens] = useState([]);
+  const [isWaitingForAxelar, setIsWaitingForAxelar] = useState(false);
 
   // ========== State management end ==========
 
@@ -376,14 +378,15 @@ const Swap = () => {
         args: [viemParaAccount.address, spender],
       });
 
+      // console.log(allowance.toString());
       // console.log("Current Allowance:", allowance.toString());
 
       if (allowance >= BigInt(amount)) {
-        console.log("Sufficient allowance already granted.");
+        console.info("Sufficient allowance already granted.");
         return;
       }
 
-      // toast.info("Initiating approval transaction...");
+      toast.info("Initiating approval transaction...");
 
       const txHash = await paraViemSigner.writeContract({
         address: tokenAddress,
@@ -392,16 +395,17 @@ const Swap = () => {
         args: [spender, amount],
       });
 
-      // console.log("Approval transaction hash:", txHash);
+      toast.success("Approved successfully:");
 
       const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash,
         confirmations: 2,
       });
 
+      console.log(receipt);
       if (receipt.status === "success") {
-        // console.log("Approval successful:", receipt);
-        // toast.success("Token approval successful ✅");
+        console.log("Approval successful:", receipt);
+        console.log("Token approval successful ✅");
         return receipt;
       } else {
         throw new Error("Transaction reverted");
@@ -410,11 +414,11 @@ const Swap = () => {
       console.error("Approval failed:", error);
 
       if (error.reason) {
-        toast.error("Approval failed: " + error.reason);
+        console.error("Approval failed: " + error.reason);
       } else if (error.data && error.data.message) {
-        toast.error("Approval failed: " + error.data.message);
+        console.error("Approval failed: " + error.data.message);
       } else {
-        toast.error("Approval failed: " + error.message);
+        console.error("Approval failed: " + error.message);
       }
     }
   };
@@ -526,6 +530,8 @@ const Swap = () => {
         toAddress: address,
       });
 
+      // console.log("Transaction request:", route.transactionRequest);
+
       // Handle approval
       await approveSpending(
         route.transactionRequest.target,
@@ -537,20 +543,26 @@ const Swap = () => {
       const txHash = await paraViemSigner.sendTransaction({
         to: route.transactionRequest.target,
         data: route.transactionRequest.data,
-        value: BigInt(route.transactionRequest.value || 0),
+        value: 0n,
         gasPrice: await publicClient.getGasPrice(),
         gasLimit: route.transactionRequest.gasLimit,
       });
 
+      setIsWaitingForAxelar(true);
+      await checkAxelarStatus(txHash);
+      // console.log("✅ Axelar GMP transaction is indexed.");
+      setIsWaitingForAxelar(false);
+
       await updateTransactionStatus(txHash, requestId);
-      toast.success("Swap successful! 🎉");
+      toast.success("Swap successful!");
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 5000);
       showNotification("Swap Complete", "Your token swap has been completed.");
 
       navigate("/dashboard");
     } catch (error) {
-      toast.error(`Swap failed: ${error.shortMessage || error.message}`);
+      console.error(`Swap failed: ${error.shortMessage || error.message}`);
+      setIsWaitingForAxelar(false);
     } finally {
       setIsSwapping(false);
     }
@@ -611,7 +623,7 @@ const Swap = () => {
       >
         <FaArrowLeftLong size={25} />
       </button>
-      
+
       <div className="flex flex-col items-center w-full max-w-2xl gap-6">
         <p className="text-2xl text-[#F6F5F6] font-bold my-6 text-center">
           Swap Assets
@@ -758,10 +770,33 @@ const Swap = () => {
             </div>
           ))}
 
+        {isWaitingForAxelar && (
+          <div className="flex items-center space-x-2 text-blue-500 mt-4">
+            <svg
+              className="animate-spin h-5 w-5 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8z"
+              />
+            </svg>
+            <span>Waiting for Axelar cross-chain confirmation...</span>
+          </div>
+        )}
+
         <button
-          className={`$ {
-            isSwapping ? "bg-[#4F4E50] text-[#F2E205]" : "bg-[#F2E205] text-[#4F4E50]"
-          } p-3 rounded-xl w-full text-lg bg-[#F2E205] p-[10px] rounded-[10px] text-[16px] font-[Montserrat] font-[600] text-[#4F4E50] w-full text-center`}
           onClick={handleSwap}
           disabled={
             isSwapping ||
@@ -770,8 +805,40 @@ const Swap = () => {
             !fromToken ||
             !toToken
           }
+          className={`p-[10px] rounded-[10px] w-full text-[16px] font-[600] font-[Montserrat] text-center flex items-center justify-center gap-2 transition-all duration-200
+    ${
+      isSwapping
+        ? "bg-[#4F4E50] text-[#F2E205] cursor-not-allowed"
+        : "bg-[#F2E205] text-[#4F4E50] hover:bg-[#e6d904]"
+    }`}
         >
-          {isSwapping ? "Processing..." : "Continue"}
+          {isSwapping ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-[#F2E205]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
+                ></path>
+              </svg>
+              Processing...
+            </>
+          ) : (
+            "Continue"
+          )}
         </button>
       </div>
     </section>

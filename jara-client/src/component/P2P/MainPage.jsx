@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaArrowLeft, FaExchangeAlt } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import { LuSettings2, LuWalletMinimal } from "react-icons/lu";
-import { TbExchange } from "react-icons/tb";
+import { TbExchange, TbInfoHexagon } from "react-icons/tb";
 import { FaNairaSign } from "react-icons/fa6";
 import { IoIosArrowForward } from "react-icons/io";
 import { useAccount, useConfig, useWalletClient } from "wagmi";
@@ -441,32 +441,35 @@ const MainPage = () => {
       console.log("Transaction successful:", txHash);
 
       const options = {
-        method: 'POST',
-        headers: {accept: 'application/json', 'content-type': 'application/json'},
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+        },
         body: JSON.stringify({
-          sourceCurrency: 'NGN',
-          destinationCurrency: 'NGN',
-          amount: '200',
-          description: 'Payment',
-          customerReference: 'TXT-001',
+          sourceCurrency: "NGN",
+          destinationCurrency: "NGN",
+          amount: "200",
+          description: "Payment",
+          customerReference: "TXT-001",
           beneficiary: {
-            firstName: 'John',
-            lastName: 'Doe',
-            email: 'test@fincra.com',
-            type: 'individual',
-            accountHolderName: 'john doe',
-            accountNumber: '0726219090',
-            mobileMoneyCode: '901',
-            country: 'GB',
-            bankCode: '044',
-            sortCode: '9090',
-            registrationNumber: 'A909'
+            firstName: "John",
+            lastName: "Doe",
+            email: "test@fincra.com",
+            type: "individual",
+            accountHolderName: "john doe",
+            accountNumber: "0726219090",
+            mobileMoneyCode: "901",
+            country: "GB",
+            bankCode: "044",
+            sortCode: "9090",
+            registrationNumber: "A909",
           },
-          paymentDestination: 'bank_account'
-        })
+          paymentDestination: "bank_account",
+        }),
       };
 
-      fetch("https://sandboxapi.fincra.com/quotes/generate", options)
+      fetch("https://sandboxapi.fincra.com/disbursements/payouts", options)
         .then((res) => res.json())
         .then((res) => console.log("Fincra response:", res))
         .catch((err) => console.error("Fincra error:", err));
@@ -668,9 +671,14 @@ const MainPage = () => {
               )}
             </div>
 
-            <div className="md:w-[400px] w-full md:h-[108px] border-[1px] border-[#3718FF] bg-[#E5E9FF] rounded-md flex flex-col gap-2 justify-center p-4">
+            <div className="md:w-[400px] w-full md:h-[108px]  rounded-md flex flex-col gap-2 justify-center p-4">
               <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
+              <div className="flex items-center gap-6">
                 <p>Exchange Rate:</p>
+
+                <TbInfoHexagon size={15} color="#141414" />
+
+              </div>
                 {exchangeRate && (
                   <p className="text-sm text-gray-600">
                     1 {selectedToken?.symbol} ≈ ₦
@@ -679,7 +687,12 @@ const MainPage = () => {
                 )}
               </div>
               <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
+              <div className="flex items-center gap-6">
                 <p>Fees:</p>
+
+                <TbInfoHexagon size={15} color="#141414" />
+
+              </div>
                 <p>{/* dynamic fee */}</p>
               </div>
             </div>

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { RiTokenSwapLine } from "react-icons/ri";
 import {
-  LuCreditCard,
+
   LuSettings2,
   LuWalletMinimal,
   LuArrowUpToLine,
 } from "react-icons/lu";
 import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { FaExchangeAlt, FaPlus } from "react-icons/fa";
+import { FaExchangeAlt } from "react-icons/fa";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import Activities from "./Activities";
 import { FaArrowLeftLong } from "react-icons/fa6";
@@ -143,7 +143,7 @@ const TokenDetails = ({ tokens }) => {
           </Link>
         </div>
 
-        <header className="h-auto bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
+        <header className=" bg-[#1D143E] my-4 py-4 md:my-10 flex items-center justify-center">
           <section className="flex flex-col justify-between w-full max-w-[1024px] px-4 md:p-6">
             <section className="flex items-center gap-2 flex-col">
               <div className="flex items-center gap-2">
@@ -258,31 +258,31 @@ const TokenDetails = ({ tokens }) => {
         </main>
 
         <footer className="fixed bottom-0 bg-white py-4 w-full  flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
-                <Link to="/dashboard">
-                  <LuWalletMinimal
-                    size={25}
-                    color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
-                  />
-                </Link>
-                <Link to="/p2p">
-                  <FaExchangeAlt
-                    size={25}
-                    color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
-                  />
-                </Link>
-                {/* <Link to="/card-display">
+          <Link to="/dashboard">
+            <LuWalletMinimal
+              size={25}
+              color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
+            />
+          </Link>
+          <Link to="/p2p">
+            <FaExchangeAlt
+              size={25}
+              color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
+            />
+          </Link>
+          {/* <Link to="/card-display">
                   <LuCreditCard
                     size={25}
                     color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
                   />
                 </Link> */}
-                <Link to="/settings">
-                  <LuSettings2
-                    size={25}
-                    color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
-                  />
-                </Link>
-              </footer>
+          <Link to="/settings">
+            <LuSettings2
+              size={25}
+              color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
+            />
+          </Link>
+        </footer>
       </section>
     </div>
   );
