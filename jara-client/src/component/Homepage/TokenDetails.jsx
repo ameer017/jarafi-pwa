@@ -131,7 +131,7 @@ const TokenDetails = ({ tokens }) => {
 
   return (
     <div className="overflow-y-auto h-full">
-      <section className="bg-[#fff] h-screen w-full overflow-x-hidden">
+      <section className="bg-[#1D143E] h-screen w-full overflow-x-hidden">
         <div className="flex items-center justify-between px-4 py-2">
           <Link to="/dashboard">
             <button
@@ -197,7 +197,7 @@ const TokenDetails = ({ tokens }) => {
           </section>
         </header>
 
-        <main className="overflow-hidden">
+        <main className="overflow-hidden bg-white min-h-[67.5vh]">
           <div className="h-full  flex flex-col">
             <div className="flex border-b">
               <button
