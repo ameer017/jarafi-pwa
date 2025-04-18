@@ -62,6 +62,7 @@ const MainPage = () => {
   const [loadingRate, setLoadingRate] = useState(false);
   const [tokenAmount, setTokenAmount] = useState("");
   const [loadingTx, setLoadingTx] = useState(false);
+  const [emailAddress, setEmailAddress] = useState("");
 
   const publicClient = createPublicClient({
     chain: celo,
@@ -308,6 +309,11 @@ const MainPage = () => {
     return true;
   };
 
+  useEffect(() => {
+    const fetchedEmail = localStorage.getItem("@CAPSULE/e-mail");
+    setEmailAddress(fetchedEmail);
+  }, []);
+
   const handleExchange = async () => {
     if (!validateTransaction()) return;
     if (!walletClient) {
@@ -455,7 +461,7 @@ const MainPage = () => {
           beneficiary: {
             firstName: "John",
             lastName: "Doe",
-            email: "test@fincra.com",
+            email: emailAddress,
             type: "individual",
             accountHolderName: "john doe",
             accountNumber: "0726219090",
@@ -673,12 +679,11 @@ const MainPage = () => {
 
             <div className="md:w-[400px] w-full md:h-[108px]  rounded-md flex flex-col gap-2 justify-center p-4">
               <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
-              <div className="flex items-center gap-6">
-                <p>Exchange Rate:</p>
+                <div className="flex items-center gap-6">
+                  <p>Exchange Rate:</p>
 
-                <TbInfoHexagon size={15} color="#141414" />
-
-              </div>
+                  <TbInfoHexagon size={15} color="#141414" />
+                </div>
                 {exchangeRate && (
                   <p className="text-sm text-gray-600">
                     1 {selectedToken?.symbol} ≈ ₦
@@ -687,12 +692,11 @@ const MainPage = () => {
                 )}
               </div>
               <div className="flex justify-between text-[#262526] text-[12px] font-[400]">
-              <div className="flex items-center gap-6">
-                <p>Fees:</p>
+                <div className="flex items-center gap-6">
+                  <p>Fees:</p>
 
-                <TbInfoHexagon size={15} color="#141414" />
-
-              </div>
+                  <TbInfoHexagon size={15} color="#141414" />
+                </div>
                 <p>{/* dynamic fee */}</p>
               </div>
             </div>
