@@ -66,7 +66,7 @@ const HomePage = () => {
   const [showTnxHistory, setShowTnxHistory] = useState(false);
   const [tokenTransactions, setTokenTransactions] = useState([]);
   const [selectedChain, setSelectedChain] = useState(CHAINS[0]);
-  const [hideZeroBalances, setHideZeroBalances] = useState(false);
+  const [hideZeroBalances, setHideZeroBalances] = useState(true);
 
   // function starknetAddressFromEVM(address) {
   //   const evmAddressBN = BigInt(address);
