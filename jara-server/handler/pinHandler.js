@@ -43,4 +43,26 @@ const setPIN = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { setPIN };
+const retrievePin = asyncHandler(async (req, res) => {
+  try {
+    const { wallet, pin } = req.body;
+
+    const existingPin = await Pin.findOne({ wallet });
+
+    if (existingPin) {
+      const isMatch = await bcrypt.compare(pin.toString(), existingPin.pin);
+
+      if (isMatch) {
+        res.json(existingPin);
+      } else {
+        res.status(401).json({ message: "Incorrect PIN" });
+      }
+    } else {
+      res.status(404).json({ message: "Pin not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+module.exports = { setPIN, retrievePin };

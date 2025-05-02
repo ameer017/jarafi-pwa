@@ -14,4 +14,17 @@ app.use(
 );
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send("Welcome to homepage 🏠");
+});
+
+app.use("/api/pin", require("./routes/pin"));
+
 const PORT = process.env.PORT || 6000;
+
+connectDB();
+
+mongoose.connection.once("open", () => {
+  console.log("Connected to MongoDB");
+  app.listen(PORT, () => console.log(`Server 🆙 and 🏃‍♂️ on port ${PORT}`));
+});
