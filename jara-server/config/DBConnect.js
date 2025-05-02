@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.ATLAS_UR);
+    await mongoose.connect(process.env.ATLAS_URI);
   } catch (err) {
     console.error(err);
   }
