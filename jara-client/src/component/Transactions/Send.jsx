@@ -42,6 +42,8 @@ import {
   USDT_MAINNET,
 } from "../../constant/constant";
 import { FaArrowLeftLong } from "react-icons/fa6";
+import { useDispatch, useSelector } from "react-redux";
+import { getPin } from "../../redux/pinSlice";
 
 const Send = () => {
   const navigate = useNavigate();
@@ -52,6 +54,9 @@ const Send = () => {
   const tokens = TOKENS;
   const CELO_CHAIN = { id: 42220, name: "Celo" };
   const ETHEREUM_CHAIN = { id: 1, name: "Ethereum" };
+  const dispatch = useDispatch();
+
+  const { isSuccess, isError, message } = useSelector((state) => state.pin);
 
   const CHAINS = [CELO_CHAIN, ETHEREUM_CHAIN];
 
@@ -420,7 +425,7 @@ const Send = () => {
       return;
     }
 
-    const storedPIN = await getPIN(address);
+    const storedPIN = await dispatch(getPin(address));
     if (!storedPIN) {
       setError("No PIN found. Please set up your PIN first.");
       return;
@@ -439,7 +444,7 @@ const Send = () => {
   };
 
   const handleConfirmTransaction = async (enteredPin) => {
-    const storedPIN = await getPIN(address);
+    const storedPIN = await dispatch(getPin(address));
     // console.log(storedPIN)
 
     if (enteredPin !== storedPIN) {

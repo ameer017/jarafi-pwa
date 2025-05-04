@@ -7,7 +7,12 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["*", "http://localhost:5173"],
+    origin: [
+      "*",
+      "http://localhost:5173",
+      "https://pwa.jarafi.xyz",
+      "https://www.jarafi.xyz",
+    ],
     credentials: true,
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     optionSuccessStatus: 200,
