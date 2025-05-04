@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { setPIN } from "../../constant/usePinStore";
+import { GoEye, GoEyeClosed } from "react-icons/go";
 import { useAccount } from "wagmi";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeftLong } from "react-icons/fa6";
@@ -21,6 +21,8 @@ const PinSetup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPwd, updateConfirmPwd] = useState(false);
   const { isSuccess, isError, message, isLoading } = useSelector(
     (state) => state.pin
   );
@@ -30,8 +32,15 @@ const PinSetup = () => {
     setFormData({ ...formData, [name]: value });
   };
   const handleConfirm = async () => {
-    if (pin.length !== 4 || confirmPin.length !== 4) {
-      toast.error("PIN must be 4 digits");
+
+    console.log(pin.length)
+    if (
+      isNaN(pin) ||
+      isNaN(confirmPin) ||
+      pin.toString().length !== 4 ||
+      confirmPin.toString().length !== 4
+    ) {
+      toast.error("PIN must be a 4-digit number");
       return;
     }
     if (pin !== confirmPin) {
@@ -72,23 +81,53 @@ const PinSetup = () => {
           <p className="text-sm  text-center my-6">Wallet: {address}</p>
         )}
 
-        <input
-          type="password"
-          maxLength="4"
-          className="w-full p-2 border rounded mb-2 text-center bg-transparent  outline-none "
-          placeholder="Enter PIN"
-          value={pin}
-          onChange={handleInputChange}
-        />
+        <div className="flex gap-1 items-center border rounded mb-4 p-2">
+          <input
+            type={showPassword ? "text" : "password"}
+            maxLength="4"
+            className="w-full text-center bg-transparent  outline-none "
+            placeholder="Enter PIN"
+            value={pin}
+            name="pin"
+            onChange={handleInputChange}
+          />
 
-        <input
-          type="password"
-          maxLength="4"
-          className="w-full p-2 border rounded mb-2 text-center bg-transparent my-4 outline-none  "
-          placeholder="Confirm PIN"
-          value={confirmPin}
-          onChange={handleInputChange}
-        />
+          {showPassword ? (
+            <GoEyeClosed
+              onClick={() => setShowPassword(!showPassword)}
+              className="cursor-pointer"
+            />
+          ) : (
+            <GoEye
+              onClick={() => setShowPassword(!showPassword)}
+              className="cursor-pointer"
+            />
+          )}
+        </div>
+
+        <div className="flex gap-1 items-center border rounded mb-2 p-2">
+          <input
+            type={showConfirmPwd ? "text" : "password"}
+            maxLength="4"
+            className="w-full text-center bg-transparent outline-none  "
+            placeholder="Confirm PIN"
+            value={confirmPin}
+            onChange={handleInputChange}
+            name="confirmPin"
+          />
+
+          {showConfirmPwd ? (
+            <GoEyeClosed
+              onClick={() => updateConfirmPwd(!showConfirmPwd)}
+              className="cursor-pointer"
+            />
+          ) : (
+            <GoEye
+              onClick={() => updateConfirmPwd(!showConfirmPwd)}
+              className="cursor-pointer"
+            />
+          )}
+        </div>
 
         {isError && (
           <p className="text-red-500 text-sm text-center">{message}</p>
