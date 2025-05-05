@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/pin", require("./routes/pin"));
 
-const PORT = process.env.PORT || 6000;
+const PORT = 8000;
 
 connectDB();
 

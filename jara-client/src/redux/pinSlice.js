@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_APP_SERVER_URL;
 
-console.log(API_URL)
+// console.log({API_URL})
 
 const initialState = {
   pin: null,
@@ -31,18 +31,25 @@ export const setPin = createAsyncThunk(
   }
 );
 
-export const getPin = createAsyncThunk("pin/get-pin", async (id, thunkAPI) => {
-  try {
-    const response = await axios.get(`${API_URL}/api/pin/get-pin/${id}`);
-    return response.data;
-  } catch (error) {
-    const message =
-      (error.response && error.response.data && error.response.data.message) ||
-      error.message ||
-      error.toString();
-    return thunkAPI.rejectWithValue(message);
+export const getPin = createAsyncThunk(
+  "pin/get-pin",
+  async ({ wallet, pin }, thunkAPI) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/pin/get-pin`, {
+        wallet,
+        pin,
+      });
+
+      // console.log(response.data )
+      return response.data;
+    } catch (error) {
+      const message =
+        (error.response?.data?.message) || error.message || error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
   }
-});
+);
+
 
 export const pinSlice = createSlice({
   name: "pin",

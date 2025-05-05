@@ -26,12 +26,11 @@ import {
 } from "viem";
 import { getStorageAt } from "@wagmi/core";
 import { celo, mainnet } from "viem/chains";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { IoIosArrowBack } from "react-icons/io";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
-import { getPIN } from "../../constant/usePinStore";
 import PinModal from "./PinModal";
 import {
   CELO_MAINNET,
@@ -44,6 +43,7 @@ import {
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { getPin } from "../../redux/pinSlice";
+import axios from "axios";
 
 const Send = () => {
   const navigate = useNavigate();
@@ -55,8 +55,11 @@ const Send = () => {
   const CELO_CHAIN = { id: 42220, name: "Celo" };
   const ETHEREUM_CHAIN = { id: 1, name: "Ethereum" };
   const dispatch = useDispatch();
+  const { id } = useParams();
 
   const { isSuccess, isError, message } = useSelector((state) => state.pin);
+
+  const API_URL = import.meta.env.VITE_APP_SERVER_URL;
 
   const CHAINS = [CELO_CHAIN, ETHEREUM_CHAIN];
 
@@ -255,14 +258,19 @@ const Send = () => {
       const RPC_URLS = {
         [CELO_CHAIN.id]: "https://forno.celo.org",
         [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
-        [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
       };
 
-      const rpcUrl = RPC_URLS[selectedToken.chainId];
+      const rpcUrl =
+        RPC_URLS[selectedToken.chainId] ||
+        (selectedToken.networks && selectedToken.networks[selectedNetwork])
+          ? selectedToken.networks[selectedNetwork].rpcUrls?.http?.[0]
+          : null;
+      console.log(rpcUrl, selectedNetwork, selectedToken.chainId);
       if (!rpcUrl) {
-        throw new Error(
+        console.error(
           `Unsupported network for token: ${selectedToken.symbol}`
         );
+        return;
       }
 
       // Switch chain if necessary
@@ -425,9 +433,14 @@ const Send = () => {
       return;
     }
 
-    const storedPIN = await dispatch(getPin(address));
-    if (!storedPIN) {
-      setError("No PIN found. Please set up your PIN first.");
+    try {
+      const response = await axios.get(`${API_URL}/api/pin/exists/${address}`);
+      if (!response.data?.exists) {
+        setError("No PIN found. Please set up your PIN first.");
+        return;
+      }
+    } catch (err) {
+      setError("Unable to check PIN existence.");
       return;
     }
 
@@ -444,16 +457,21 @@ const Send = () => {
   };
 
   const handleConfirmTransaction = async (enteredPin) => {
-    const storedPIN = await dispatch(getPin(address));
-    // console.log(storedPIN)
+    try {
+      const result = await dispatch(
+        getPin({ wallet: address, pin: enteredPin })
+      );
 
-    if (enteredPin !== storedPIN) {
-      setError("Incorrect PIN. Try again.");
-      return;
+      if (getPin.rejected.match(result)) {
+        setError(result.payload || "Error retrieving PIN");
+        return;
+      }
+
+      setIsPinModalOpen(false);
+      await validateAndSend();
+    } catch (err) {
+      setError("Unexpected error occurred.");
     }
-
-    setIsPinModalOpen(false);
-    await validateAndSend();
   };
 
   const handleQuickAmount = (percentage) => {
