@@ -73,7 +73,6 @@ const Swap = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const { width, height } = useWindowSize();
   const hexToBigInt = (hexValue) => BigInt(hexValue);
-  const [filteredTokens, setFilteredTokens] = useState([]);
   const [isWaitingForAxelar, setIsWaitingForAxelar] = useState(false);
 
   // ========== State management end ==========

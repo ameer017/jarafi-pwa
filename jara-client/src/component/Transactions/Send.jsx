@@ -26,9 +26,8 @@ import {
 } from "viem";
 import { getStorageAt } from "@wagmi/core";
 import { celo, mainnet } from "viem/chains";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { IoIosArrowBack } from "react-icons/io";
 import Confetti from "react-confetti";
 import { useWindowSize } from "react-use";
 import PinModal from "./PinModal";
@@ -55,13 +54,15 @@ const Send = () => {
   const CELO_CHAIN = { id: 42220, name: "Celo" };
   const ETHEREUM_CHAIN = { id: 1, name: "Ethereum" };
   const dispatch = useDispatch();
-  const { id } = useParams();
-
-  const { isSuccess, isError, message } = useSelector((state) => state.pin);
 
   const API_URL = import.meta.env.VITE_APP_SERVER_URL;
 
   const CHAINS = [CELO_CHAIN, ETHEREUM_CHAIN];
+
+  const URLS = {
+    1: new JsonRpcProvider("https://eth.llamarpc.com"),
+    42220: new JsonRpcProvider("https://forno.celo.org"),
+  };
 
   // State management
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -258,19 +259,15 @@ const Send = () => {
       const RPC_URLS = {
         [CELO_CHAIN.id]: "https://forno.celo.org",
         [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
+        [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
       };
 
-      const rpcUrl =
-        RPC_URLS[selectedToken.chainId] ||
-        (selectedToken.networks && selectedToken.networks[selectedNetwork])
-          ? selectedToken.networks[selectedNetwork].rpcUrls?.http?.[0]
-          : null;
-      console.log(rpcUrl, selectedNetwork, selectedToken.chainId);
+      const rpcUrl = RPC_URLS[selectedToken.chainId];
+      console.log({ rpcUrl, selectedNetwork, selectedToken });
       if (!rpcUrl) {
-        console.error(
+        throw new Error(
           `Unsupported network for token: ${selectedToken.symbol}`
         );
-        return;
       }
 
       // Switch chain if necessary
@@ -278,7 +275,7 @@ const Send = () => {
         await switchChain(config, { chainId: selectedToken.chainId });
       }
 
-      // Create ParaAccount and Viem signer
+      // Create ParaAccount and Viem signer with the correct RPC URL
       const viemParaAccount = await createParaAccount(para);
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
@@ -397,13 +394,6 @@ const Send = () => {
         `${Number(formatUnits(adjustedAmount, selectedToken.decimals)).toFixed(
           2
         )} ${selectedToken.symbol} sent successfully!`
-      );
-
-      showNotification(
-        "Tokens Sent",
-        `You succesfully sent ${Number(
-          formatUnits(adjustedAmount, selectedToken.decimals)
-        ).toFixed(2)} ${selectedToken.symbol}`
       );
 
       // Show confetti and navigate to dashboard
