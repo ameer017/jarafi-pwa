@@ -708,9 +708,10 @@ const HomePage = () => {
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
-                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${rotate ? "rotate-180" : ""
-                    }`}
 
+                  className={`bg-[#F2E205] rounded-lg md:h-[60px] h-[40px] w-[40px] md:w-[60px]  flex items-center justify-center cursor-pointer ${
+                    rotate ? "rotate-180" : ""
+                  }`}
                   onClick={() => navigate(routes)}
                 >
                   {icon}
@@ -805,6 +806,7 @@ const HomePage = () => {
                                     {item.network} network
                                   </span>
                                 </div>
+
                                 <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
                                   <div className="flex gap-2 justify-end">
                                     {isVisible
