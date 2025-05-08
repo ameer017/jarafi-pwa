@@ -32,8 +32,7 @@ const PinSetup = () => {
     setFormData({ ...formData, [name]: value });
   };
   const handleConfirm = async () => {
-
-    console.log(pin.length)
+    // console.log(pin.length);
     if (
       isNaN(pin) ||
       isNaN(confirmPin) ||
@@ -50,7 +49,6 @@ const PinSetup = () => {
     try {
       const pinData = { wallet: address, pin };
       await dispatch(setPin(pinData));
-      setFormData("");
     } catch (error) {
       toast.error("Error saving PIN");
     }
@@ -59,6 +57,7 @@ const PinSetup = () => {
   useEffect(() => {
     if (isSuccess) {
       navigate("/dashboard");
+      setFormData(initialState);
     } else if (isError) {
       toast.error(message);
     }
@@ -145,6 +144,7 @@ const PinSetup = () => {
               : "w-full bg-[#F2E205] text-[#0F0140] py-2 mt-3 rounded"
           }
           onClick={handleConfirm}
+          disabled={isLoading}
         >
           {isLoading ? "Loading..." : "Set PIN"}
         </button>

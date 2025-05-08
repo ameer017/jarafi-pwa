@@ -18,6 +18,8 @@ export default defineConfig({
       manifest: "/manifest.json",
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,json}"], // Cache all necessary file types
+        maximumFileSizeToCacheInBytes: 9 * 1024 * 1024, // 6MB
+
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === "image", // Cache images

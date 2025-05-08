@@ -19,7 +19,6 @@ const setPIN = asyncHandler(async (req, res) => {
   const salt = await bcrypt.genSalt(10);
   const hashedPin = await bcrypt.hash(pin.toString(), salt);
 
-  // Check if the PIN already exists for the wallet
   const existingPin = await Pin.findOne({ wallet });
   if (existingPin) {
     return res
@@ -32,6 +31,8 @@ const setPIN = asyncHandler(async (req, res) => {
 
   if (newPin) {
     const { _id, wallet, pin } = newPin;
+
+    // console.log({ newPin });
 
     res.status(201).json({
       _id,
@@ -49,8 +50,11 @@ const retrievePin = asyncHandler(async (req, res) => {
 
     const existingPin = await Pin.findOne({ wallet });
 
+    // console.log({ existingPin });
+
     if (existingPin) {
       const isMatch = await bcrypt.compare(pin.toString(), existingPin.pin);
+      // console.log({ isMatch });
 
       if (isMatch) {
         res.json(existingPin);
@@ -62,6 +66,7 @@ const retrievePin = asyncHandler(async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+    // console.log({ error });
   }
 });
 
