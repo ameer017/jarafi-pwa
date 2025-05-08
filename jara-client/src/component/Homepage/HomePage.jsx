@@ -33,12 +33,13 @@ import {
   hash,
   stark,
 } from "starknet";
+import axios from "axios";
 import HomeLoader from "./Loader/HomeLoader";
 import { FaExchangeAlt } from "react-icons/fa";
-
 const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
+
 
   // const starknetAddress = starknetAddressFromEVM(address);
 
@@ -68,10 +69,31 @@ const HomePage = () => {
   const [selectedChain, setSelectedChain] = useState(CHAINS[0]);
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
 
-  // function starknetAddressFromEVM(address) {
-  //   const evmAddressBN = BigInt(address);
-  //   return `0x${evmAddressBN.toString(16).padStart(64, "0")}`;
-  // }
+
+  useEffect(() => {
+
+    if(!address) return
+    console.log({address})
+
+    const registerPwaUser = async () => {
+      try {
+
+        const response = await axios.post("https://jarafibackend.vercel.app/pwauser/register", { referenceId: address.toString() }, { withCredentials: true })
+
+        if(response.status === 400) return;
+
+
+      } catch (error) {
+
+        console.log(`Error registering user: ${error}`);
+
+      }
+    }
+    registerPwaUser();
+  }, [address])
+
+
+
 
   const handleScan = (data) => {
     if (data?.text) {
@@ -686,6 +708,7 @@ const HomePage = () => {
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
+
                   className={`bg-[#F2E205] rounded-lg md:h-[60px] h-[40px] w-[40px] md:w-[60px]  flex items-center justify-center cursor-pointer ${
                     rotate ? "rotate-180" : ""
                   }`}
