@@ -33,6 +33,7 @@ const Verify = () => {
   const response = (type, data) => {
     switch (type) {
       case "success":
+        navigate("/card-display")
         console.log("Verification successful:", data);
         break;
       case "error":

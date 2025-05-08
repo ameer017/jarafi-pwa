@@ -42,7 +42,7 @@ export default function CardPage() {
       try {
         setIsLoading(true);
 
-        const response = await axios.get(`http://localhost:3500/pwauser/${referenceId}`, {withCredentials: true});
+        const response = await axios.get(`https://jarafibackend.vercel.app/pwauser/${referenceId}`, {withCredentials: true});
         console.log("API Response:", response.data); // Debug API response
         if (response.status === 200) {
           const status = response.data?.kycStatus || "pending"; // Default to pending
@@ -77,7 +77,7 @@ export default function CardPage() {
   // Redirect to /request-card when countdown reaches 0 for null or failed states
   useEffect(() => {
     if (countdown === 0 && (verified === null || verified === "failed")) {
-      console.log("Redirecting to /request-card, verified:", verified); // Debug redirect
+      console.log("Redirecting to /request-card, verified:", verified); 
       navigate("/request-card");
     }
   }, [countdown, verified, navigate]);
@@ -125,7 +125,7 @@ export default function CardPage() {
                     <p className='text-[#6F6B6F] text-[12px]'>Thank you for submitting your information.</p>
                     <p className='font-semibold text-[#6F6B6F] text-[12px]'>We’ll send you a notification within 15-30mins with the status of your verification.</p>
                 </div>
-                <button className='bg-[#F2E205] md:w-1/3 rounded-xl p-4 text-[#4F4E50] w-full font-semibold'>Go to home</button>
+                <button onClick={() => navigate("/card-display")} className='bg-[#F2E205] md:w-1/3 rounded-xl p-4 text-[#4F4E50] w-full font-semibold'>Access dashboard</button>
             </div>
         </div>
         ) : verified === "success" ? (

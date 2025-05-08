@@ -64,7 +64,7 @@ const HomePage = () => {
     const registerPwaUser = async () => {
       try {
 
-        const response = await axios.post("http://localhost:3500/pwauser/register", { referenceId: address.toString() }, { withCredentials: true })
+        const response = await axios.post("https://jarafibackend.vercel.app/pwauser/register", { referenceId: address.toString() }, { withCredentials: true })
 
         if(response.status === 400) return;
 
