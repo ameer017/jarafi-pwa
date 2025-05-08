@@ -1,16 +1,12 @@
 import { useState } from "react";
-import {
-  CELO_CHAIN,
-  ETHEREUM_CHAIN,
-  STARKNET_CHAIN,
-  TOKENS,
-} from "../../constant/otherChains";
+import { CELO_CHAIN, ETHEREUM_CHAIN, TOKENS } from "../../constant/otherChains";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, Share } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAccount } from "wagmi";
 import { useNavigate } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
+
 
 const ReceiveAssets = () => {
   const { address } = useAccount();
@@ -28,49 +24,27 @@ const ReceiveAssets = () => {
   });
 
   const handleCopy = async () => {
-    const addressToCopy =
-      selectedChain.id === 5 ? convertToStarknetFormat(address) : address;
-    await navigator.clipboard.writeText(addressToCopy);
+    await navigator.clipboard.writeText(address);
     toast("Address copied to clipboard!");
   };
 
   const handleShare = async () => {
-    const addressToShare =
-      selectedChain.id === 5 ? convertToStarknetFormat(address) : address;
-
     if (navigator.share) {
       try {
         await navigator.share({
           title: "Wallet Address",
-          text: addressToShare,
+          text: address,
         });
       } catch (error) {
         if (error.name !== "AbortError") {
-          await navigator.clipboard.writeText(addressToShare);
+          await navigator.clipboard.writeText(address);
           toast("Address copied to clipboard!");
         }
       }
     } else {
-      await navigator.clipboard.writeText(addressToShare);
+      await navigator.clipboard.writeText(address);
       toast("Address copied to clipboard!");
     }
-  };
-
-  const convertToStarknetFormat = (address) => {
-    try {
-      const numericAddress = BigInt(address);
-      return `0x${numericAddress.toString(16).padStart(64, "0")}`;
-    } catch (error) {
-      console.error("Error converting to StarkNet format:", error);
-      return address;
-    }
-  };
-
-  const getDisplayAddress = () => {
-    if (selectedChain.id === 5) {
-      return convertToStarknetFormat(address);
-    }
-    return address;
   };
 
   return (
@@ -100,14 +74,13 @@ const ReceiveAssets = () => {
         {/* QR Code Section */}
         <div className="flex items-center justify-center w-[190px] h-[190px] mt-[40px]">
           <QRCodeSVG
-            value={getDisplayAddress()}
+            value={address}
             size={190}
             bgColor="#FFFFFF"
             fgColor="#000000"
             className="rounded-lg"
           />
         </div>
-
 
         <div className="w-full flex flex-col items-center space-y-4">
           <div className="flex gap-6 items-center mt-6">
@@ -116,7 +89,7 @@ const ReceiveAssets = () => {
                 {`This address can receive tokens on the ${selectedChain.name} network`}
               </p>
               <p className="text-[12px] font-[500] mt-2 text-gray-700 break-all">
-                {getDisplayAddress()}
+                {address}
               </p>
             </div>
 
@@ -138,7 +111,8 @@ const ReceiveAssets = () => {
         </div>
 
         <p className="w-[293px] text-[12px] text-[#0F014080]">
-          This address can only be used to receive compatible tokens.
+          This address can only be used to receive tokens on the{" "}
+          {selectedChain.name} network.
         </p>
       </div>
     </div>
