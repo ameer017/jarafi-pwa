@@ -26,7 +26,7 @@ import {
 } from "viem";
 import { getStorageAt } from "@wagmi/core";
 import { celo, mainnet } from "viem/chains";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { IoIosArrowBack } from "react-icons/io";
 import Confetti from "react-confetti";
@@ -41,13 +41,23 @@ import {
   USDT_ADAPTER_MAINNET,
   USDT_MAINNET,
 } from "../../constant/constant";
+import { FaArrowLeftLong } from "react-icons/fa6";
+import { useDispatch, useSelector } from "react-redux";
+import { getPin } from "../../redux/pinSlice";
 
 const Send = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { address } = useAccount();
   const config = useConfig();
   const { data: walletClient } = useWalletClient();
   const tokens = TOKENS;
+  const CELO_CHAIN = { id: 42220, name: "Celo" };
+  const ETHEREUM_CHAIN = { id: 1, name: "Ethereum" };
+  const dispatch = useDispatch();
+
+  const { isSuccess, isError, message } = useSelector((state) => state.pin);
+
   const CHAINS = [CELO_CHAIN, ETHEREUM_CHAIN];
 
   // State management
@@ -260,7 +270,7 @@ const Send = () => {
         await switchChain(config, { chainId: selectedToken.chainId });
       }
 
-      // Create ParaAccount and Viem signer with the correct RPC URL
+      // Create ParaAccount and Viem signer
       const viemParaAccount = await createParaAccount(para);
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
@@ -381,6 +391,13 @@ const Send = () => {
         )} ${selectedToken.symbol} sent successfully!`
       );
 
+      showNotification(
+        "Tokens Sent",
+        `You succesfully sent ${Number(
+          formatUnits(adjustedAmount, selectedToken.decimals)
+        ).toFixed(2)} ${selectedToken.symbol}`
+      );
+
       // Show confetti and navigate to dashboard
       setShowConfetti(true);
       const confettiTimeout = setTimeout(() => {
@@ -408,7 +425,7 @@ const Send = () => {
       return;
     }
 
-    const storedPIN = await getPIN(address);
+    const storedPIN = await dispatch(getPin(address));
     if (!storedPIN) {
       setError("No PIN found. Please set up your PIN first.");
       return;
@@ -417,8 +434,17 @@ const Send = () => {
     setIsPinModalOpen(true);
   };
 
+  const showNotification = (title, message) => {
+    if (Notification.permission === "granted") {
+      new Notification(title, {
+        body: message,
+        icon: "/JaraFiLogin.png",
+      });
+    }
+  };
+
   const handleConfirmTransaction = async (enteredPin) => {
-    const storedPIN = await getPIN(address);
+    const storedPIN = await dispatch(getPin(address));
     // console.log(storedPIN)
 
     if (enteredPin !== storedPIN) {
@@ -477,7 +503,9 @@ const Send = () => {
   const estimatedCost = getEstimatedTotalCost();
 
   const handleNetworkChange = (event) => {
-    setSelectedNetwork(Number(event.target.value));
+    const newNetworkId = Number(event.target.value);
+    setSelectedNetwork(newNetworkId);
+    // console.log("Selected Network:", newNetworkId);
   };
 
   const filterTokensByNetwork = (tokens, selectedNetwork) => {
@@ -501,21 +529,13 @@ const Send = () => {
 
   useEffect(() => {
     const fetchBalanceAndGas = async () => {
-      if (!selectedToken || !address) return;
+      if (!selectedToken || !address || !selectedNetwork) return;
 
-      const chainId =
-        selectedToken.chainId ||
-        (selectedToken.networks && Object.keys(selectedToken.networks)[0]);
-      if (!chainId) {
-        console.error("No chain ID found for the selected token");
-        setError("Invalid token configuration");
-        return;
-      }
+      const chainId = selectedNetwork;
 
       const RPC_ENDPOINTS = {
-        [CELO_CHAIN.id]: "https://forno.celo.org",
-        [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
-        [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
+        42220: "https://forno.celo.org",
+        1: "https://eth.llamarpc.com",
       };
 
       const rpcUrl = RPC_ENDPOINTS[chainId];
@@ -530,6 +550,11 @@ const Send = () => {
       try {
         const tokenAddress =
           selectedToken.networks?.[chainId]?.address || selectedToken.address;
+        if (!tokenAddress) {
+          console.error("No token address found for this network");
+          setError("Token not available on this network");
+          return;
+        }
 
         const contract = new Contract(
           tokenAddress,
@@ -547,8 +572,9 @@ const Send = () => {
           selectedToken.decimals
         );
         setBalance(formattedBalance);
+        // console.log("Fetched balance:", formattedBalance);
 
-        if (chainId === ETHEREUM_CHAIN.id || chainId === CELO_CHAIN.id) {
+        if (chainId === 1 || chainId === 42220) {
           const currentGasPrice = await provider.getFeeData();
           setGasPrice(currentGasPrice.gasPrice);
         } else {
@@ -561,7 +587,7 @@ const Send = () => {
     };
 
     fetchBalanceAndGas();
-  }, [selectedToken, address]);
+  }, [selectedToken, address, selectedNetwork]);
 
   useEffect(() => {
     const estimateGasFee = async () => {
@@ -611,7 +637,7 @@ const Send = () => {
         const minGasPrice = await publicClient
           .request({
             method: "eth_gasPrice",
-            params: gasPriceParams,
+            params: [], // Ensure this is empty
           })
           .then((hexValue) => BigInt(hexValue));
 
@@ -647,13 +673,11 @@ const Send = () => {
         // console.log(estimatedGas);
 
         const estimatedFee = gasEstimate * gasPriceWithBuffer;
-        const amountBigInt = parseUnits(amount, selectedToken.decimals);
-        const amountToReceiveBigInt = amountBigInt - estimatedFee;
+        const estimatedFeeInUSDC = estimatedFee / BigInt(1e12);
 
-        const amountToReceiveFormatted = formatUnits(
-          amountToReceiveBigInt,
-          selectedToken.decimals
-        );
+        const amountBigInt = parseUnits(amount, 6);
+        const amountToReceiveBigInt = amountBigInt - estimatedFeeInUSDC;
+        const amountToReceiveFormatted = formatUnits(amountToReceiveBigInt, 6);
         setAmountToReceive(amountToReceiveFormatted);
       } catch (error) {
         console.error("Gas estimation error:", error);
@@ -679,12 +703,18 @@ const Send = () => {
     fetchData();
   }, [selectedToken]);
 
+  useEffect(() => {
+    if (location.state?.address) {
+      setRecipientAddress(location.state.address);
+    }
+  }, [location.state]);
+
   // ================ END ================
-  
+
   return (
     <div className="min-h-screen bg-[#0F0140] flex items-center justify-center p-4 relative">
       <button onClick={() => navigate(-1)} className="absolute top-4 left-4">
-        <IoIosArrowBack size={25} color="#F6F5F6" />
+        <FaArrowLeftLong size={25} color="#F6F5F6" />
       </button>
       <div className="max-w-xl w-full">
         {showConfetti && <Confetti width={width} height={height} />}
@@ -698,7 +728,7 @@ const Send = () => {
               onChange={handleNetworkChange}
             >
               {CHAINS.map((chain) => (
-                <option key={chain.id} value={chain.id} className="">
+                <option key={chain.id} value={chain.id}>
                   {chain.name}
                 </option>
               ))}
@@ -787,7 +817,7 @@ const Send = () => {
                 </div>
 
                 {[USDC_MAINNET, USDT_MAINNET].includes(
-                  selectedToken?.address.toLowerCase()
+                  selectedToken?.address
                 ) && (
                   <div className="flex justify-between text-white font-medium">
                     <span>Total Sent:</span>

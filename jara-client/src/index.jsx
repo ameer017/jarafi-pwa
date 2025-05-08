@@ -20,13 +20,13 @@ export { default as CardPage } from "./component/Cards/CardsPage";
 
 export { default as Settings } from "./component/Settings/Settings";
 export { default as SelectAsset } from "./component/Cards/SelectAssest";
-export {default as FinalFundingExt} from "./component/Cards/FinalFundingExt"
+export { default as FinalFundingExt } from "./component/Cards/FinalFundingExt";
 
-export {default as RequestCard} from "./component/kyc/RequestCard";
-export {default as Verify} from "./component/kyc/Verify";
-export {default as GetVerified} from "./component/kyc/LetGetYouVerified";
-export {default as SelectResidence} from "./component/kyc/SelectResidence";
-export {default as SelectId} from "./component/kyc/SelectId";
+export { default as RequestCard } from "./component/kyc/RequestCard";
+export { default as Verify } from "./component/kyc/Verify";
+export { default as GetVerified } from "./component/kyc/LetGetYouVerified";
+export { default as SelectResidence } from "./component/kyc/SelectResidence";
+export { default as SelectId } from "./component/kyc/SelectId";
 
-
-export { default as PinSetup} from "./pages/PinManagement/PinSetup";
+export { default as PinSetup } from "./pages/PinManagement/PinSetup";
+export { default as BankDetails } from "./component/P2P/BankDetails";

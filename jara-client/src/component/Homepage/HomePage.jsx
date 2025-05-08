@@ -14,8 +14,11 @@ import { useAccount } from "wagmi";
 import {
   CELO_CHAIN,
   ETHEREUM_CHAIN,
-  STARKNET_CHAIN,
+  // STARKNET_CHAIN,
   TOKENS,
+  ARBITRUM_CHAIN,
+  OPTIMISM_CHAIN,
+  BASE_CHAIN,
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import { IoIosLogOut } from "react-icons/io";
@@ -31,18 +34,27 @@ import {
   stark,
 } from "starknet";
 import axios from "axios";
-
+import HomeLoader from "./Loader/HomeLoader";
+import { FaExchangeAlt } from "react-icons/fa";
 const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
 
+  // const starknetAddress = starknetAddressFromEVM(address);
+
+  // console.log(address)
 
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
 
   const tokens = TOKENS;
-  const CHAINS = [CELO_CHAIN, STARKNET_CHAIN, ETHEREUM_CHAIN];
+  const CHAINS = [
+    CELO_CHAIN,
+    // STARKNET_CHAIN,
+    ETHEREUM_CHAIN,
+  ];
 
+  // console.log(tokens)
   // State Managament.
   const [totalBalance, setTotalBalance] = useState(0);
   const [totalUSDTBalance, setTotalUSDTBalance] = useState(0);
@@ -54,6 +66,7 @@ const HomePage = () => {
   const [showTnxHistory, setShowTnxHistory] = useState(false);
   const [tokenTransactions, setTokenTransactions] = useState([]);
   const [selectedChain, setSelectedChain] = useState(CHAINS[0]);
+  const [hideZeroBalances, setHideZeroBalances] = useState(true);
 
 
   useEffect(() => {
@@ -82,10 +95,13 @@ const HomePage = () => {
 
 
   const handleScan = (data) => {
-    if (data) {
-      setScannedAddress(data);
+    if (data?.text) {
+      setScannedAddress(data.text);
       setShowScanner(false);
-      console.log("Scanned Wallet Address:", data);
+      navigate("/send", { state: { address: data.text } });
+      // console.log("Scanned Wallet Address:", data.text);
+    } else {
+      // console.warn("Invalid scan result:", data);
     }
   };
 
@@ -123,6 +139,18 @@ const HomePage = () => {
         url: "https://api.etherscan.io/api",
         apiKey: import.meta.env.VITE_APP_ETHERSCAN_API,
       },
+      [ARBITRUM_CHAIN.id]: {
+        url: "https://arbiscan.io/api",
+        apiKey: import.meta.env.VITE_APP_ARBISCAN_API,
+      },
+      [OPTIMISM_CHAIN.id]: {
+        url: "https://optimistic.etherscan.io/api",
+        apiKey: import.meta.env.VITE_APP_OP_API,
+      },
+      [BASE_CHAIN.id]: {
+        url: "https://basescan.org/api",
+        apiKey: import.meta.env.VITE_APP_BASE_API,
+      },
       // [STARKNET_CHAIN.id]: {
       //   url: "https://api.starkscan.io/api", // Replace with actual StarkNet explorer API
       //   apiKey: import.meta.env.VITE_APP_STARKSCAN_API,
@@ -133,15 +161,17 @@ const HomePage = () => {
       // Fetch transactions for all networks concurrently
       const allTransactions = await Promise.all(
         Object.entries(tokensByChain).map(async ([chainId, tokens]) => {
-          const { url, apiKey } = EXPLORER_APIS[chainId];
-          if (!url || !apiKey) {
-            console.error(`No API configured for chain ID ${chainId}`);
+          const apiConfig = EXPLORER_APIS[chainId];
+          if (!apiConfig) {
+            console.warn(`No API configured for chain ID ${chainId}`);
             return [];
           }
+          const { url, apiKey } = apiConfig;
+          const tokenAddresses = tokens
+            .map((token) => token.networks?.[chainId]?.address || token.address)
+            .filter(Boolean);
 
-          const tokenAddresses = tokens.map((token) =>
-            token.networks ? token.networks[chainId]?.address : token.address
-          );
+          if (!tokenAddresses.length) return [];
 
           const tokenAddressesLower = tokenAddresses.map((addr) =>
             addr?.toLowerCase()
@@ -179,9 +209,9 @@ const HomePage = () => {
         })
       );
 
-      const flattenedTransactions = allTransactions.flat();
-
-      flattenedTransactions.sort((a, b) => b.timestamp - a.timestamp);
+      const flattenedTransactions = allTransactions
+        .flat()
+        .sort((a, b) => b.timestamp - a.timestamp);
 
       setTokenTransactions(flattenedTransactions);
     } catch (error) {
@@ -217,6 +247,7 @@ const HomePage = () => {
       return 0;
     }
   };
+
   const fetchTokenBalances = async (address, tokens) => {
     if (!address) {
       console.error("Address is not provided!");
@@ -228,58 +259,59 @@ const HomePage = () => {
     let totalUSDTBalance = 0;
 
     // Helper function for StarkNet balances
-    const fetchStarkNetBalance = async (
-      contractAddress,
-      providerUrl,
-      userAddress,
-      decimals
-    ) => {
-      try {
-        const starkProvider = new RpcProvider({ nodeUrl: providerUrl });
+    // const fetchStarkNetBalance = async (
+    //     contractAddress,
+    //     providerUrl,
+    //     userAddress,
+    //     decimals
+    //   ) => {
+    //     try {
+    //       const starkProvider = new RpcProvider({ nodeUrl: providerUrl });
 
-        // Cairo 1.0-compatible ABI
-        const contractAbi = [
-          {
-            name: "balance_of",
-            type: "function",
-            inputs: [{ name: "account", type: "core::felt252" }],
-            outputs: [{ type: "core::integer::u256" }],
-            state_mutability: "view",
-          },
-        ];
+    //       // Cairo 1.0-compatible ABI
+    //       const contractAbi = [
+    //         {
+    //           name: "balance_of",
+    //           type: "function",
+    //           inputs: [{ name: "account", type: "core::felt252" }],
+    //           outputs: [{ type: "core::integer::u256" }],
+    //           state_mutability: "view",
+    //         },
+    //       ];
 
-        // ✅ Correct StarkNet contract initialization
-        const starkContract = new StarkContract(
-          contractAbi,
-          contractAddress,
-          starkProvider
-        );
+    //       // Correct StarkNet contract initialization
+    //       const starkContract = new StarkContract(
+    //         contractAbi,
+    //         contractAddress,
+    //         starkProvider
+    //       );
 
-        const numericAddress = BigInt(userAddress);
-        const starkAddress = `0x${numericAddress
-          .toString(16)
-          .padStart(64, "0")}`;
+    //       const numericAddress = BigInt(userAddress);
+    //       const starkAddress = `0x${numericAddress
+    //         .toString(16)
+    //         .padStart(64, "0")}`;
 
-        // ✅ Call StarkNet contract
-        const balance = await starkContract.balance_of(starkAddress);
+    //       // Call StarkNet contract
+    //       const balance = await starkContract.balance_of(starkAddress);
 
-        // Handle Uint256 conversion safely
-        if (!balance?.low || !balance?.high) {
-          return 0;
-        }
+    //       // Handle Uint256 conversion safely
+    //       if (!balance?.low || !balance?.high) {
+    //         return 0;
+    //       }
 
-        const low = BigInt(balance.low);
-        const high = BigInt(balance.high);
-        const total = (high << 128n) + low;
+    //       const low = BigInt(balance.low);
+    //       const high = BigInt(balance.high);
+    //       const total = (high << 128n) + low;
 
-        return Number(total / 10n ** BigInt(decimals));
-      } catch (error) {
-        console.error("StarkNet balance error:", error);
-        return 0;
-      }
-    };
+    //       return Number(total / 10n ** BigInt(decimals));
+    //     } catch (error) {
+    //       console.error("StarkNet balance error:", error);
+    //       return 0;
+    //     }
+    //   };
 
     // Helper function for EVM-compatible chains
+
     const fetchERC20Balance = async (
       providerUrl,
       contractAddress,
@@ -316,8 +348,9 @@ const HomePage = () => {
           if (token.networks) {
             for (const [networkKey, config] of Object.entries(token.networks)) {
               const chainId = parseInt(networkKey);
-              const chain = CHAINS.find((c) => c.id === chainId);
 
+              const chain = CHAINS.find((c) => c.id === chainId);
+              // console.log(chainId, chain)
               if (!chain) {
                 console.error(
                   `Chain ${chainId} not found for token ${token.name}`
@@ -325,22 +358,31 @@ const HomePage = () => {
                 continue;
               }
 
-              const isStarknet = chain.id === STARKNET_CHAIN.id;
+              // const isStarknet = chain.id === STARKNET_CHAIN.id;
               const providerUrl = chain.rpcUrls.default.http[0];
 
-              const balance = await (isStarknet
-                ? fetchStarkNetBalance(
-                  config.address,
-                  providerUrl,
-                  address,
-                  token.decimals
-                )
-                : fetchERC20Balance(
-                  providerUrl,
-                  config.address,
-                  address,
-                  token.decimals
-                ));
+              const balance = await fetchERC20Balance(
+                providerUrl,
+                config.address,
+                address,
+                token.decimals
+              );
+
+              // console.log(token, balance)
+
+              // const balance = await (isStarknet
+              //   ? fetchStarkNetBalance(
+              //       config.address,
+              //       providerUrl,
+              //       address,
+              //       token.decimals
+              //     )
+              //   : fetchERC20Balance(
+              //       providerUrl,
+              //       config.address,
+              //       address,
+              //       token.decimals
+              //     ));
 
               const priceInUSDT = await fetchTokenPriceInUSDT(token.symbol);
               const balanceInUSDT = balance * priceInUSDT;
@@ -361,6 +403,7 @@ const HomePage = () => {
           } else {
             // Handle single-network tokens (like cUSD, cEUR, CELO)
             const chain = CHAINS.find((c) => c.id === token.chainId);
+            // console.log(chain)
             if (!chain) {
               console.error(
                 `Chain ${token.chainId} not found for token ${token.name}`
@@ -368,22 +411,29 @@ const HomePage = () => {
               continue;
             }
 
-            const isStarknet = chain.id === STARKNET_CHAIN.id;
+            // const isStarknet = chain.id === STARKNET_CHAIN.id;
             const providerUrl = chain.rpcUrls.default.http[0];
 
-            const balance = await (isStarknet
-              ? fetchStarkNetBalance(
-                token.address,
-                providerUrl,
-                address,
-                token.decimals
-              )
-              : fetchERC20Balance(
-                providerUrl,
-                token.address,
-                address,
-                token.decimals
-              ));
+
+            const balance = await fetchERC20Balance(
+              providerUrl,
+              token.address,
+              address,
+              token.decimals
+            );
+            // const balance = await (isStarknet
+            //   ? fetchStarkNetBalance(
+            //       token.address,
+            //       providerUrl,
+            //       address,
+            //       token.decimals
+            //     )
+            //   : fetchERC20Balance(
+            //       providerUrl,
+            //       token.address,
+            //       address,
+            //       token.decimals
+            //     ));
 
             const priceInUSDT = await fetchTokenPriceInUSDT(token.symbol);
             const balanceInUSDT = balance * priceInUSDT;
@@ -444,8 +494,15 @@ const HomePage = () => {
   // Side Action == useEffect
 
   useEffect(() => {
+    const hasReloaded = localStorage.getItem("hasReloaded");
+
     if (!address || address === "N/A") {
-      window.location.reload();
+      if (!hasReloaded) {
+        localStorage.setItem("hasReloaded", "true");
+        window.location.reload();
+      }
+    } else {
+      localStorage.removeItem("hasReloaded");
     }
   }, [address]);
 
@@ -499,24 +556,38 @@ const HomePage = () => {
     filterTokens();
   }, [selectedChain]);
 
+  useEffect(() => {
+    // Prevent scrolling when component mounts
+    document.body.classList.add("overflow-hidden");
+
+    // Cleanup function to remove the class when component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
+
   // ========= END ============
   // console.log(mockData)
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#0F0140]">
-        <p className="text-white text-[20px]">Loading ...</p>
+        <HomeLoader />
       </div>
     );
   }
 
+  const filteredData = [...mockData]
+    .filter((item) => !hideZeroBalances || parseFloat(item.balance_in_usdt) > 0)
+    .sort((a, b) => b.balance_in_usdt - a.balance_in_usdt);
+
   return (
     <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
-      <p className="text-[12px] text-[#8A868A] text-center px-6 py-2">
+      <p className="text-[12px] text-[#8A868A] text-center px-6 py-2 mt-4">
         Finish setting up your account for maximum security!
       </p>
 
       <div className="flex items-center justify-end  gap-2">
-        <p className="text-[20px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
+        <p className="text-[15px] md:text-[12px] text-[#fff] text-left md:text-right px-2">
           {address ? `${address.slice(0, 10)}...${address.slice(-10)}` : "N/A"}
         </p>
 
@@ -562,11 +633,11 @@ const HomePage = () => {
                   </div>
                 )}
 
-                {scannedAddress && (
+                {/* {scannedAddress && (
                   <p className="text-green-500 text-center mt-2">
                     Scanned Address: {scannedAddress}
                   </p>
-                )}
+                )} */}
               </div>
 
               <div>
@@ -582,7 +653,7 @@ const HomePage = () => {
 
           <section className="mt-4 flex gap-4 items-center justify-start  ">
             <motion.p
-              className="text-[#F2EDE4] text-[32px] w-[110px] "
+              className="text-[#F2EDE4] text-[25px] md:text-[32px] md:w-[110px] w-[70px] "
               initial={{ opacity: 0.5, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
@@ -637,8 +708,10 @@ const HomePage = () => {
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
-                  className={`bg-[#F2E205] rounded-lg h-[60px] w-[60px] flex items-center justify-center cursor-pointer ${rotate ? "rotate-180" : ""
-                    }`}
+
+                  className={`bg-[#F2E205] rounded-lg md:h-[60px] h-[40px] w-[40px] md:w-[60px]  flex items-center justify-center cursor-pointer ${
+                    rotate ? "rotate-180" : ""
+                  }`}
                   onClick={() => navigate(routes)}
                 >
                   {icon}
@@ -650,10 +723,10 @@ const HomePage = () => {
         </section>
       </header>
 
-      <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
-        <div className="h-full border">
-          <table className="w-full text-center border-collapse ">
-            <thead>
+      <main className="h-[650px] md:h-[562px] bg-white overflow-hidden">
+        <div className="h-full border flex flex-col">
+          <table className="w-full text-center border-collapse">
+            <thead className="bg-white sticky top-0 z-10">
               <tr>
                 {showTnxHistory ? (
                   <th
@@ -676,7 +749,7 @@ const HomePage = () => {
             </thead>
           </table>
 
-          <div className="overflow-y-auto h-full">
+          <div className="overflow-y-auto flex-1 pb-20">
             {showTnxHistory ? (
               <TnxHistory
                 isVisible={showTnxHistory}
@@ -685,68 +758,87 @@ const HomePage = () => {
                 tokens={tokens}
               />
             ) : (
-              <div className="w-full overflow-y-auto max-h-80">
-                {" "}
-                <table className="w-full text-center border-collapse table-fixed">
-                  <tbody>
-                    {mockData.map((item) => (
-                      <tr key={item.id} className="hover:bg-gray-100">
-                        <td colSpan={2} className="p-0">
-                          <Link
-                            to={`/token-details/${item.id}`}
-                            state={{
-                              tokenData: {
-                                ...item,
-                                network: item.network,
-                                balance_in_usdt: item.balance_in_usdt,
-                              },
-                            }}
-                            className="w-full flex justify-between"
-                          >
-                            <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex flex-col gap-1 w-full">
-                              <div className="flex gap-2 items-center">
-                                <img
-                                  src={item.icon}
-                                  className="w-[20px] h-[20px] rounded-full"
-                                  alt="icon"
-                                />
-                                <span>{item.token_name}</span>
-                              </div>
-                              <span className="text-xs text-gray-500">
-                                {item.network} network
-                              </span>
-                            </div>
+              <>
+                <div className="w-full flex flex-col">
+                  <div className="p-2 flex items-center gap-2 bg-white border-b sticky top-0 z-10">
+                    <input
+                      type="checkbox"
+                      id="hide-zero"
+                      checked={hideZeroBalances}
+                      onChange={() => setHideZeroBalances(!hideZeroBalances)}
+                      className="cursor-pointer"
+                    />
+                    <label
+                      htmlFor="hide-zero"
+                      className="text-sm cursor-pointer"
+                    >
+                      Hide tokens with 0 balance
+                    </label>
+                  </div>
 
-                            <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
-                              <div className="flex gap-2 justify-end">
-                                {isVisible
-                                  ? `${parseFloat(item.balance).toFixed(2)}`
-                                  : "**"}
-                                <span>{item.symbol}</span>
-                              </div>
+                  <div className="flex-1 overflow-y-auto">
+                    <table className="w-full text-center border-collapse table-fixed">
+                      <tbody>
+                        {filteredData.map((item) => (
+                          <tr key={item.id} className="hover:bg-gray-100">
+                            <td colSpan={2} className="p-2">
+                              <Link
+                                to={`/token-details/${item.id}`}
+                                state={{
+                                  tokenData: {
+                                    ...item,
+                                    network: item.network,
+                                    balance_in_usdt: item.balance_in_usdt,
+                                  },
+                                }}
+                                className="w-full flex justify-between"
+                              >
+                                <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-left flex flex-col gap-1 w-full">
+                                  <div className="flex gap-2 items-center">
+                                    <img
+                                      src={item.icon}
+                                      className="w-[20px] h-[20px] rounded-full"
+                                      alt="icon"
+                                    />
+                                    <span>{item.token_name}</span>
+                                  </div>
+                                  <span className="text-xs text-gray-500">
+                                    {item.network} network
+                                  </span>
+                                </div>
 
-                              <div>
-                                {isVisible
-                                  ? `$${parseFloat(
-                                    item.balance_in_usdt
-                                  ).toFixed(2)}`
-                                  : "**"}{" "}
-                                USDT
-                              </div>
-                            </div>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                                <div className="p-4 text-[#3D3C3D] text-[14px] font-[400] text-right flex gap-1 flex-col w-full">
+                                  <div className="flex gap-2 justify-end">
+                                    {isVisible
+                                      ? `${parseFloat(item.balance).toFixed(2)}`
+                                      : "**"}
+                                    <span>{item.symbol}</span>
+                                  </div>
+
+                                  <div className="text-[13px]">
+                                    {isVisible
+                                      ? `$${parseFloat(
+                                          item.balance_in_usdt
+                                        ).toFixed(2)}`
+                                      : "**"}{" "}
+                                    USDT
+                                  </div>
+                                </div>
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </div>
       </main>
 
-      <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
+      <footer className="fixed bottom-0 bg-white py-4 w-full  flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
         <Link to="/dashboard">
           <LuWalletMinimal
             size={25}
@@ -754,17 +846,17 @@ const HomePage = () => {
           />
         </Link>
         <Link to="/p2p">
-          <RiTokenSwapLine
+          <FaExchangeAlt
             size={25}
             color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
           />
         </Link>
-        <Link to="/card-display">
+        {/* <Link to="/card-display">
           <LuCreditCard
             size={25}
             color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link>
+        </Link> */}
         <Link to="/settings">
           <LuSettings2
             size={25}
