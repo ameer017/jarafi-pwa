@@ -104,7 +104,6 @@ export const USDC = {
     // [ARBITRUM_CHAIN.id]: {
     //   address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
     // },
-    
   },
 };
 
@@ -197,13 +196,4 @@ export const RPC_URLS = {
   [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
 };
 
-// export const PROVIDERS = {
-//   [CELO_CHAIN.id]: new JsonRpcProvider("https://forno.celo.org"),
-//   [ETHEREUM_CHAIN.id]: new JsonRpcProvider("https://eth.llamarpc.com"),
-//   [ARBITRUM_CHAIN.id]: new JsonRpcProvider("https://arb1.arbitrum.io/rpc"),
-//   [OPTIMISM_CHAIN.id]: new JsonRpcProvider("https://mainnet.optimism.io"),
-//   [BASE_CHAIN.id]: new JsonRpcProvider("https://mainnet.base.org"),
-// };
-
-
-export const DEFAULT_ADDRESS = "0x6f8f27b80E28D7D85C4970f97763A3dda4a1a497"
+export const DEFAULT_ADDRESS = "0x6f8f27b80E28D7D85C4970f97763A3dda4a1a497";

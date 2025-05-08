@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Dojah from "react-dojah";
 import { useAccount } from "wagmi";
 
 const Verify = () => {
   const navigate = useNavigate();
-  const {address} = useAccount()
+  const { address } = useAccount();
 
   const [loading, setLoading] = useState(false);
 
@@ -21,43 +20,81 @@ const Verify = () => {
     appID: import.meta.env.VITE_APP_DOJAH_APP_ID,
     publicKey: import.meta.env.VITE_APP_DOJAH_PUBLIC_KEY,
     widget_id: import.meta.env.VITE_APP_DOJAH_WIDGET_ID,
-    reference_id: address ? address.toString() : null
+    reference_id: address ? address.toString() : null,
   };
 
   // Dojah configuration
   const { appID, publicKey, widget_id, reference_id } = dojahCredentials;
-  const type = "custom"; // Widget type
-  const config = { widget_id, reference_id };
+  // const type = "custom"; // Widget type
+  // const config = { widget_id, reference_id };
 
-  // Handle Dojah widget response
-  const response = (type, data) => {
-    switch (type) {
-      case "success":
-        navigate("/card-display")
-        console.log("Verification successful:", data);
-        break;
-      case "error":
-        console.error("Verification error:", data);
-        setLoading(false); // Reset loading state on error
-        break;
-      case "close":
-        console.log("Widget closed by user");
-        setLoading(false); // Reset loading state when widget is closed
-        break;
-      case "begin":
-        console.log("Verification process started");
-        break;
-      case "loading":
-        console.log("Widget is loading...");
-        break;
-      default:
-        console.warn("Unknown response type:", type, data);
-    }
-  };
+  // // Handle Dojah widget response
+  // const response = (type, data) => {
+  //   switch (type) {
+  //     case "success":
+  //       navigate("/card-display")
+  //       console.log("Verification successful:", data);
+  //       break;
+  //     case "error":
+  //       console.error("Verification error:", data);
+  //       setLoading(false); // Reset loading state on error
+  //       break;
+  //     case "close":
+  //       console.log("Widget closed by user");
+  //       setLoading(false); // Reset loading state when widget is closed
+  //       break;
+  //     case "begin":
+  //       console.log("Verification process started");
+  //       break;
+  //     case "loading":
+  //       console.log("Widget is loading...");
+  //       break;
+  //     default:
+  //       console.warn("Unknown response type:", type, data);
+  //   }
+  // };
 
   // Handle button click to start verification
   const handleClick = () => {
-    setLoading(true); // Show the Dojah widget
+    if (!window.Connect) {
+      console.error("Dojah script not loaded yet.");
+      return;
+    }
+
+    setLoading(true);
+
+    const options = {
+      app_id: appID,
+      p_key: publicKey,
+      type: "custom",
+      // user_data: {
+      //   residence_country: "NG",
+      //   // You can optionally pass first_name, last_name, dob, email here
+      // },
+      metadata: {
+        user_id: address || "unknown",
+      },
+      config: {
+        widget_id,
+        reference_id
+      },
+      onSuccess: (res) => {
+        console.log("Success", res);
+        navigate("/card-display");
+      },
+      onError: (err) => {
+        console.error("Error", err);
+        setLoading(false);
+      },
+      onClose: () => {
+        console.log("Widget closed");
+        setLoading(false);
+      },
+    };
+
+    const connect = new window.Connect(options);
+    connect.setup();
+    connect.open();
   };
 
   // Reset loading state if the component unmounts
@@ -84,8 +121,8 @@ const Verify = () => {
         </div>
 
         <p className="w-[228px] sm:w-[300px] mt-12 text-center text-[17px] text-[#6F6B6F] font-normal font-['Montserrat']">
-          This will establish your identity, and prevent someone else from claiming
-          your account.
+          This will establish your identity, and prevent someone else from
+          claiming your account.
         </p>
 
         <button
@@ -97,7 +134,7 @@ const Verify = () => {
         </button>
 
         {/* Render the Dojah widget */}
-        {loading && (
+        {/* {loading && (
           <Dojah
             response={response}
             appID={appID}
@@ -106,7 +143,7 @@ const Verify = () => {
             config={config}
             
           />
-        )}
+        )} */}
       </main>
     </section>
   );

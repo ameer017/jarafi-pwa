@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@getpara/react-sdk/styles.css";
 import { Provider } from "react-redux";
 import store from "./redux/store.js";
+// import { wagmiConfig } from "./constant/wagmiClient.js";
 
 const queryClient = new QueryClient();
 

@@ -9,7 +9,7 @@ import {
   CELO_CHAIN,
   STARKNET_CHAIN,
   ETHEREUM_CHAIN,
-  RPC_URLS,
+  RPC_URLS as CHAIN_RPC_URLS,
 } from "../../constant/otherChains";
 import para from "../../constant/paraClient";
 import {
@@ -40,11 +40,13 @@ import {
   USDT_MAINNET,
 } from "../../constant/constant";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { getPin } from "../../redux/pinSlice";
 import axios from "axios";
 
 const Send = () => {
+  // const { switchNetwork } = useSwitchNetwork();
+
   const navigate = useNavigate();
   const location = useLocation();
   const { address } = useAccount();
@@ -251,18 +253,17 @@ const Send = () => {
       return;
     }
 
+    const tokenAddress = getTokenAddress(selectedToken, selectedNetwork);
+    if (!tokenAddress) {
+      setError("Token not supported on this network");
+      return;
+    }
     setIsLoading(true);
     setError("");
     setIsTransactionPending(true);
 
     try {
-      const RPC_URLS = {
-        [CELO_CHAIN.id]: "https://forno.celo.org",
-        [ETHEREUM_CHAIN.id]: "https://eth.llamarpc.com",
-        [STARKNET_CHAIN.id]: "https://free-rpc.nethermind.io/mainnet-juno/",
-      };
-
-      const rpcUrl = RPC_URLS[selectedToken.chainId];
+      const rpcUrl = CHAIN_RPC_URLS[selectedNetwork];
       console.log({ rpcUrl, selectedNetwork, selectedToken });
       if (!rpcUrl) {
         throw new Error(
@@ -271,8 +272,9 @@ const Send = () => {
       }
 
       // Switch chain if necessary
-      if (currentChainId !== selectedToken.chainId) {
-        await switchChain(config, { chainId: selectedToken.chainId });
+      if (currentChainId !== selectedNetwork) {
+        // this now works because Wagmi knows about Celo
+        await switchChain({ chainId: selectedNetwork });
       }
 
       // Create ParaAccount and Viem signer with the correct RPC URL
@@ -283,18 +285,17 @@ const Send = () => {
         transport: http(rpcUrl),
       });
 
-      const isCelo =
-        selectedToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
+      const isCelo = tokenAddress.toLowerCase() === CELO_MAINNET.toLowerCase();
 
       const amountInWei = parseUnits(amount, selectedToken.decimals);
 
       // Get adapter address for stablecoins
-      const getAdapterAddress = (token) => {
-        if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
+      const getAdapterAddress = (addr) => {
+        if (addr.toLowerCase() === USDC_MAINNET.toLowerCase())
           return USDC_ADAPTER_MAINNET;
-        if (token.address.toLowerCase() === USDT_MAINNET.toLowerCase())
+        if (addr.toLowerCase() === USDT_MAINNET.toLowerCase())
           return USDT_ADAPTER_MAINNET;
-        return token.address;
+        return addr;
       };
 
       // Determine fee currency
@@ -335,13 +336,13 @@ const Send = () => {
       // Prepare unsigned transaction
       const unsignedTx = {
         account: viemParaAccount,
-        to: selectedToken.address,
+        to: tokenAddress,
         data: encodeFunctionData({
           abi: [transferAbi],
           args: [recipientAddress, amountInWei],
         }),
         gasPrice,
-        ...(feeCurrency && { feeCurrency }),
+        ...(feeCurrency ? { feeCurrency } : {}),
       };
 
       // Estimate gas
@@ -365,7 +366,7 @@ const Send = () => {
       // Prepare transaction parameters
       const txParams = {
         ...unsignedTx,
-        chain: selectedToken.chainId === CELO_CHAIN.id ? celo : mainnet,
+        chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
         data: encodeFunctionData({
           abi: [transferAbi],
           args: [recipientAddress, adjustedAmount],
@@ -398,6 +399,7 @@ const Send = () => {
 
       // Show confetti and navigate to dashboard
       setShowConfetti(true);
+      showNotification("Token Sent Successfully");
       const confettiTimeout = setTimeout(() => {
         setShowConfetti(false);
         navigate("/dashboard");
@@ -638,7 +640,7 @@ const Send = () => {
 
         const publicClient = createPublicClient({
           chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
-          transport: http(RPC_URLS[selectedNetwork]),
+          transport: http(CHAIN_RPC_URLS[selectedNetwork]),
         });
 
         const gasPriceParams = feeCurrency ? [feeCurrency] : [];
