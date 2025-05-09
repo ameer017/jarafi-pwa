@@ -837,18 +837,18 @@ const HomePage = () => {
             color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
           />
         </Link>
-        <Link to="/p2p">
+        {/* <Link to="/p2p">
           <FaExchangeAlt
             size={25}
             color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link>
-        <Link to="/card-display">
+        </Link> */}
+        {/* <Link to="/card-display">
           <LuCreditCard
             size={25}
             color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link>
+        </Link> */}
         <Link to="/settings">
           <LuSettings2
             size={25}
