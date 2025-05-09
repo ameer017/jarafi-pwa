@@ -1,20 +1,19 @@
 import { http, useAccount } from "wagmi";
 import {
-  cEUR,
-  cUsd,
-  cREAL,
-  celoToken,
-  commons,
-  usdt,
-  USDC,
+  CELO_CHAIN,
+  ETHEREUM_CHAIN,
+  // PROVIDERS,
+  RPC_URLS,
+  // STARKNET_CHAIN,
+  TOKENS,
 } from "../../constant/otherChains";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { celo } from "viem/chains";
+import { useEffect, useState, useCallback } from "react";
+import { debounce } from "lodash";
+import { celo, mainnet } from "viem/chains";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeftLong } from "react-icons/fa6";
-import { TbInfoHexagon } from "react-icons/tb";
 import { toast } from "react-toastify";
 import {
   createParaAccount,
@@ -22,8 +21,11 @@ import {
 } from "@getpara/viem-v2-integration";
 import para from "../../constant/paraClient";
 import { createPublicClient } from "viem";
+import Confetti from "react-confetti";
+import { useWindowSize } from "react-use";
+import { USDC_MAINNET, USDT_MAINNET } from "../../constant/constant";
+import { checkAxelarStatus } from "../../utils/utils";
 
-// Utility: format token data for use in the widget
 const formatToken = (token) => ({
   chainId: celo.id,
   address: token.address,
@@ -33,73 +35,218 @@ const formatToken = (token) => ({
   logoURI: token.icon,
 });
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC].map(
-  formatToken
-);
+const tokens = TOKENS.map(formatToken);
+const CHAINS = [
+  CELO_CHAIN,
+  ETHEREUM_CHAIN,
+  // STARKNET_CHAIN
+];
+// console.log(tokens)
+
+const PROVIDERS = {
+  1: new JsonRpcProvider("https://eth.llamarpc.com"),
+  42220: new JsonRpcProvider("https://forno.celo.org"),
+};
 
 const Swap = () => {
   const { address } = useAccount();
-  const provider = new JsonRpcProvider("https://forno.celo.org");
   const navigate = useNavigate();
+
+  // ========== State management ==========
   const [isLoading, setIsLoading] = useState(true);
   const [isSwapping, setIsSwapping] = useState(false);
+  const [isExchanging, setIsExchanging] = useState(false);
+  const [error, setError] = useState("");
   const [tokenBalance, setTokenBalance] = useState({});
-  const [error, setError] = useState(null);
-  const [fromToken, setFromToken] = useState(tokens[1]);
-  const [toToken, setToToken] = useState(tokens[3]);
   const [fromAmount, setFromAmount] = useState("");
   const [toAmount, setToAmount] = useState("");
   const [exchangeRate, setExchangeRate] = useState(null);
   const [fees, setFees] = useState(null);
   const [slippageTolerance, setSlippageTolerance] = useState("0");
   const [transactionRequest, setTransactionRequest] = useState(null);
-
+  const [selectedNetwork, setSelectedNetwork] = useState(null);
+  const [toChainId, setToChainId] = useState(null);
+  const [filteredFromTokens, setFilteredFromTokens] = useState([]);
+  const [filteredToTokens, setFilteredToTokens] = useState([]);
+  const [fromToken, setFromToken] = useState(null);
+  const [toToken, setToToken] = useState(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const { width, height } = useWindowSize();
   const hexToBigInt = (hexValue) => BigInt(hexValue);
+  const [isWaitingForAxelar, setIsWaitingForAxelar] = useState(false);
 
-  const USDC_ADAPTER_MAINNET = "0x2F25deB3848C207fc8E0c34035B3Ba7fC157602B";
-  const USDC_MAINNET = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
-
-  const USDT_ADAPTER_MAINNET = "0x0e2a3e05bc9a16f5292a6170456a710cb89c6f72";
-  const USDT_MAINNET = "0x48065fbbe25f71c9282ddf5e1cd6d6a887483d5e";
-  const CELO_MAINNET = "0x471EcE3750Da237f93B8E339c536989b8978a438";
+  // ========== State management end ==========
 
   const isStablecoin = (token) =>
     [USDC_MAINNET, USDT_MAINNET].includes(token?.address?.toLowerCase());
 
-  const publicClient = createPublicClient({
-    chain: celo,
-    transport: http("https://forno.celo.org"),
-  });
-  // Fetch token balances from the blockchain
-  const fetchTokenBalance = async () => {
-    if (!address) {
-      setError("Wallet address not available");
-      setIsLoading(false);
-      return;
-    }
-    try {
-      const balances = {};
-      for (const token of tokens) {
-        const contract = new Contract(
-          token.address,
-          ["function balanceOf(address) view returns (uint256)"],
-          provider
-        );
-        const balance = await contract.balanceOf(address);
-        balances[token.symbol] = ethers.formatUnits(balance, token.decimals);
-      }
-      setTokenBalance(balances);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching token balance:", error);
-      setError("Failed to fetch token balance");
-      setIsLoading(false);
+  const handleNetworkChange = (newChainId) => {
+    // toast.success(`Network changed to: ${newChainId}`); // Debug log
+    setSelectedNetwork(newChainId); // Update selected network
+
+    // Filter tokens for the selected network
+    const availableTokens = filterTokensByNetwork(TOKENS, newChainId);
+    setFilteredFromTokens(availableTokens);
+
+    // Set the first available token as the fromToken
+    setFromToken(availableTokens[0] || null);
+  };
+
+  const handleFromTokenChange = (e) => {
+    const tokenId = Number(e.target.value);
+    const token = filteredFromTokens.find((t) => t.id === tokenId);
+    // console.log(token);
+    if (token) {
+      setFromToken(token);
+      setTokenBalance((prev) => ({ ...prev, [token.symbol]: "0.00" })); // Reset balance for the new token
+    } else {
+      setFromToken(null);
     }
   };
 
+  const handleToTokenChange = (e) => {
+    const tokenId = Number(e.target.value);
+    const token = filteredToTokens.find((t) => t.id === tokenId);
+    if (token) {
+      setToToken(token);
+    } else {
+      setToToken(null);
+    }
+  };
+
+  const debouncedFetchExchange = useCallback(
+    debounce((amount) => {
+      if (amount && parseFloat(amount) > 0) {
+        fetchExchangeDetails(amount);
+      }
+    }, 500), // 500ms delay
+    [fromToken, toToken, selectedNetwork, toChainId]
+  );
+
   useEffect(() => {
-    fetchTokenBalance();
-  }, [address]);
+    return () => {
+      debouncedFetchExchange.cancel();
+    };
+  }, [debouncedFetchExchange]);
+
+  const handleFromAmountChange = (e) => {
+    const value = e.target.value;
+    setFromAmount(value);
+    debouncedFetchExchange(value);
+  };
+
+  const publicClient = createPublicClient({
+    chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
+    transport: http(RPC_URLS[selectedNetwork]),
+  });
+
+  // Token address resolution
+  const getTokenAddress = (token, chainId) => {
+    // console.log(`Checking token: ${token.symbol}, chainId: ${chainId}`);
+
+    // Check if the token has a `networks` property
+    if (token.networks && token.networks[chainId]?.address !== undefined) {
+      // console.log(
+      //   `Resolved address from networks: ${token.networks[chainId].address}`
+      // );
+      return token.networks[chainId].address;
+    }
+
+    // Check if the token has a `chainId` property and it matches
+    if (!token.networks && token.chainId === chainId) {
+      // console.log(`Resolved address from chainId: ${token.address}`);
+      return token.address;
+    }
+
+    // console.log(
+    //   `No address found for token: ${token.symbol}, chainId: ${chainId}`
+    // );
+    return undefined;
+  };
+
+  const filterTokensByNetwork = (tokens, chainId) => {
+    return tokens.filter((token) => {
+      const address = getTokenAddress(token, chainId);
+      return address !== undefined;
+    });
+  };
+
+  // Fetch token balances from the blockchain ==== functions.
+  const fetchTokenBalance = async () => {
+    if (!address || !fromToken) {
+      setError("Wallet address or token not available");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Get the chainId for the token
+      const tokenChainId =
+        fromToken.networks && fromToken.networks[selectedNetwork]
+          ? selectedNetwork
+          : fromToken.chainId;
+
+      const tokenAddress = getTokenAddress(fromToken, selectedNetwork);
+
+      // console.log(
+      //   `Fetching balance for token: ${fromToken.symbol}, Address: ${tokenAddress}`
+      // );
+
+      if (fromToken.symbol === "USDC" && tokenChainId === "42220") {
+        console.log("Fetching USDC on Celo...");
+      }
+
+      // console.log(tokenChainId)
+      if (!tokenAddress) {
+        setTokenBalance((prev) => ({ ...prev, [fromToken.symbol]: "0.00" }));
+        setIsLoading(false);
+        return;
+      }
+
+      // Select provider based on chainId
+      const provider = PROVIDERS[tokenChainId];
+      // console.log(`Using provider for chainId ${tokenChainId}:`, provider);
+
+      if (!provider) {
+        console.error(`Provider not found for chainId: ${tokenChainId}`);
+        setTokenBalance((prev) => ({ ...prev, [fromToken.symbol]: "0.00" }));
+        setIsLoading(false);
+        return;
+      }
+
+      let balance;
+      if (!tokenAddress) {
+        // Native token balance (ETH, CELO, etc.)
+        balance = await provider.getBalance(address);
+      } else {
+        const contract = new Contract(
+          tokenAddress,
+          [
+            "function balanceOf(address) view returns (uint256)",
+            "function decimals() view returns (uint8)",
+            "function symbol() view returns (string)",
+          ],
+          provider
+        ).connect(provider);
+
+        // console.log(
+        //   `Calling balanceOf for address: ${address} at ${tokenAddress}`
+        // );
+        balance = await contract.balanceOf(address);
+      }
+
+      // Update token balance in state
+      setTokenBalance((prev) => ({
+        ...prev,
+        [fromToken.symbol]: ethers.formatUnits(balance, fromToken.decimals),
+      }));
+    } catch (error) {
+      console.error("Error fetching token balance:", error);
+      setError("Failed to fetch token balance");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // ---------------- SquidRouter Integration Helpers ----------------
 
@@ -116,8 +263,10 @@ const Swap = () => {
           },
         }
       );
-      const requestId = response.headers["x-request-id"];
-      return { route: response.data.route, requestId };
+      return {
+        route: response.data.route,
+        requestId: response.headers["x-request-id"],
+      };
     } catch (error) {
       console.error("Route error:", error.response?.data || error);
       throw error;
@@ -153,46 +302,36 @@ const Swap = () => {
     const getStatusParams = {
       transactionId: txHash,
       requestId: requestId,
-      fromChainId: `${celo.id}`,
-      toChainId: `${celo.id}`,
+      fromChainId: `${selectedNetwork}`,
+      toChainId: `${toChainId}`,
     };
 
-    let status;
     const completedStatuses = [
       "success",
       "partial_success",
       "needs_gas",
       "not_found",
     ];
-    const maxRetries = 10;
     let retryCount = 0;
 
     do {
       try {
-        status = await getStatus(getStatusParams);
-        console.log(`Route status: ${status.squidTransactionStatus}`);
+        const status = await getStatus(getStatusParams);
+        // console.log(`Route status: ${status.squidTransactionStatus}`);
+        if (completedStatuses.includes(status.squidTransactionStatus)) break;
       } catch (error) {
-        if (error.response && error.response.status === 404) {
+        if (error.response?.status === 404 && retryCount < 10) {
           retryCount++;
-          if (retryCount >= maxRetries) {
-            console.error("Max retries reached. Transaction not found.");
-            break;
-          }
-          console.log("Transaction not found. Retrying...");
           await new Promise((resolve) => setTimeout(resolve, 5000));
           continue;
-        } else {
-          throw error;
         }
+        throw error;
       }
-
-      if (!completedStatuses.includes(status.squidTransactionStatus)) {
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-      }
-    } while (!completedStatuses.includes(status.squidTransactionStatus));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    } while (true);
   };
 
-  // Approve the SquidRouter contract to spend your token.
+  // Approve the SquidRouter contract to spend token.
 
   const erc20Abi = [
     {
@@ -226,8 +365,8 @@ const Swap = () => {
 
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
-        chain: celo,
-        transport: http("https://forno.celo.org"),
+        chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
+        transport: http(RPC_URLS[selectedNetwork]),
       });
 
       // Use existing publicClient instead of creating new provider
@@ -238,14 +377,15 @@ const Swap = () => {
         args: [viemParaAccount.address, spender],
       });
 
-      console.log("Current Allowance:", allowance.toString());
+      // console.log(allowance.toString());
+      // console.log("Current Allowance:", allowance.toString());
 
       if (allowance >= BigInt(amount)) {
-        console.log("Sufficient allowance already granted.");
+        console.info("Sufficient allowance already granted.");
         return;
       }
 
-      console.log("Initiating approval transaction...");
+      toast.info("Initiating approval transaction...");
 
       const txHash = await paraViemSigner.writeContract({
         address: tokenAddress,
@@ -254,16 +394,17 @@ const Swap = () => {
         args: [spender, amount],
       });
 
-      console.log("Approval transaction hash:", txHash);
+      toast.success("Approved successfully:");
 
       const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash,
         confirmations: 2,
       });
 
+      // console.log(receipt);
       if (receipt.status === "success") {
-        console.log("Approval successful:", receipt);
-        toast.success("Token approval successful ✅");
+        // console.log("Approval successful:", receipt);
+        // console.log("Token approval successful ✅");
         return receipt;
       } else {
         throw new Error("Transaction reverted");
@@ -272,11 +413,11 @@ const Swap = () => {
       console.error("Approval failed:", error);
 
       if (error.reason) {
-        toast.error("Approval failed: " + error.reason);
+        console.error("Approval failed: " + error.reason);
       } else if (error.data && error.data.message) {
-        toast.error("Approval failed: " + error.data.message);
+        console.error("Approval failed: " + error.data.message);
       } else {
-        toast.error("Approval failed: " + error.message);
+        console.error("Approval failed: " + error.message);
       }
     }
   };
@@ -285,32 +426,32 @@ const Swap = () => {
 
   // Fetch exchange details and update exchangeRate, fees, and the calculated tokenTo amount.
   const fetchExchangeDetails = async (amount) => {
+    // Validate input
     if (!amount || parseFloat(amount) <= 0) {
+      setToAmount("");
       setExchangeRate(null);
       setFees(null);
-      setToAmount("");
       return;
     }
 
-    // Check if the selected tokens are the same.
-    if (fromToken.address.toLowerCase() === toToken.address.toLowerCase()) {
-      console.warn(
-        "Same token selected for both sides. Using 1:1 exchange rate."
-      );
-      setExchangeRate("1.0000");
-      setFees("0.00");
-      setToAmount(amount);
+    // Validate token addresses
+    const fromAddress = getTokenAddress(fromToken, selectedNetwork);
+    const toAddress = getTokenAddress(toToken, toChainId);
+
+    if (!fromAddress || !toAddress) {
+      toast.error("Invalid token selection for these networks");
       return;
     }
 
     try {
+      setIsExchanging(true);
       const params = {
         fromAddress: address,
-        fromChain: `${celo.id}`,
-        fromToken: fromToken.address,
+        fromChain: `${selectedNetwork}`,
+        fromToken: getTokenAddress(fromToken, selectedNetwork),
         fromAmount: ethers.parseUnits(amount, fromToken.decimals).toString(),
-        toChain: `${celo.id}`,
-        toToken: toToken.address,
+        toChain: `${toChainId}`,
+        toToken: getTokenAddress(toToken, toChainId),
         toAddress: address,
       };
 
@@ -324,300 +465,114 @@ const Swap = () => {
           },
         }
       );
+
+      // console.log({data})
+
       const route = data.route;
-
-      // Log the response for debugging
-      // console.log("Squid API response:", route);
-
-      // Check if the estimate object exists
       if (!route.estimate || !route.estimate.toAmount) {
-        // If the API returned an error message, you might see it here
         const errorMsg =
           route.message || "Missing estimate data from SquidRouter API";
         throw new Error(errorMsg);
       }
 
+      // console.log(route)
       setSlippageTolerance(route.estimate.aggregateSlippage);
-      // Format the to-token amount and calculate the exchange rate.
       const toAmountFormatted = ethers.formatUnits(
         route.estimate.toAmount,
         toToken.decimals
       );
-      const rate = parseFloat(toAmountFormatted) / parseFloat(amount);
-      const estimatedFees =
-        parseFloat(route.estimate.feeCosts?.[0]?.amount) || 0;
-      setExchangeRate(rate.toFixed(4));
-      setFees(estimatedFees.toFixed(4));
+
+      setExchangeRate(
+        (parseFloat(toAmountFormatted) / parseFloat(amount)).toFixed(4)
+      );
+      setFees(parseFloat(route.estimate.gasCosts[0]?.amountUsd) || "0.00");
       setToAmount(toAmountFormatted);
-
-      let transactionValue = BigInt(0);
-
-      if (
-        route.transactionRequest?.value &&
-        route.transactionRequest.value !== "0"
-      ) {
-        transactionValue = BigInt(route.transactionRequest.value);
-        console.log(
-          "Using pre-set transactionRequest value:",
-          transactionValue
-        );
-      } else if (fromToken.symbol.toUpperCase() === "CELO") {
-        console.log(
-          "Swapping CELO - Amount:",
-          amount,
-          "Decimals:",
-          fromToken.decimals
-        );
-        let parsedValue = ethers
-          .parseUnits(amount, fromToken.decimals)
-          .toString();
-        console.log("Parsed CELO Value:", parsedValue);
-        transactionValue = BigInt(parsedValue);
-      } else {
-        // console.log("Transaction value remains 0.");
-      }
-
-      // console.log("Final Transaction Value:", transactionValue.toString());
-
-      // ✅ Ensure the transaction request value is updated
-      setTransactionRequest({
-        ...route.transactionRequest,
-        value: transactionValue,
-      });
+      setTransactionRequest(route.transactionRequest);
+      setIsExchanging(false);
     } catch (error) {
+      setIsExchanging(false);
       console.error("Error fetching exchange details:", error);
-      // Optionally, show the error message to the user via toast:
-      toast.error(`Exchange details error: ${error.message}`);
-      setExchangeRate(null);
-      setFees(null);
-      setToAmount("");
-    }
-  };
-
-  // When the fromAmount input changes, update state and fetch the new exchange details.
-  const handleFromAmountChange = (e) => {
-    const value = e.target.value;
-    setFromAmount(value);
-    if (value && parseFloat(value) > 0) {
-      fetchExchangeDetails(value);
-    } else {
-      setExchangeRate(null);
-      setFees(null);
-      setToAmount("");
+      toast.error(
+        `Exchange error: ${error.response?.data?.message || error.message}`
+      );
     }
   };
 
   // The main swap handler integrating the SquidRouter flow.
   const handleSwap = async () => {
     setIsSwapping(true);
+    const fromAddress = getTokenAddress(fromToken, selectedNetwork);
+    const toAddress = getTokenAddress(toToken, toChainId);
 
+    if (!fromAddress || !toAddress) {
+      toast.error("Selected tokens not available on these networks");
+      return;
+    }
     try {
-      // Ensure necessary variables are initialized
-      if (!address || !fromToken || !toToken || !fromAmount) {
-        toast.error("Missing required parameters for swap.");
-        setIsSwapping(false);
-        return;
-      }
-
-      // Create the Para account and signer
       const viemParaAccount = await createParaAccount(para);
       const paraViemSigner = createParaViemClient(para, {
         account: viemParaAccount,
-        chain: celo,
-        transport: http("https://forno.celo.org"),
+        chain: selectedNetwork === CELO_CHAIN.id ? celo : mainnet,
+        transport: http(RPC_URLS[selectedNetwork]),
       });
 
-      if (!paraViemSigner) {
-        toast.error("Wallet not connected");
-        setIsSwapping(false);
-        return;
-      }
-
-      if (fromToken.decimals === undefined || fromToken.decimals === null) {
-        toast.error("Invalid token decimals");
-        setIsSwapping(false);
-        return;
-      }
-
-      // console.log("From Token Symbol:", fromToken.symbol);
-      // console.log("From Amount:", fromAmount);
-      // console.log("Decimals:", fromToken.decimals);
-
-      const fromAmountInUnits = ethers
-        .parseUnits(fromAmount, fromToken.decimals)
-        .toString();
-      console.log("Parsed Amount in Units:", fromAmountInUnits);
-
-      const params = {
+      // Get route
+      const { route, requestId } = await getRoute({
         fromAddress: address,
-        fromChain: `${celo.id}`,
-        fromToken: fromToken.address,
-        fromAmount: fromAmountInUnits,
-        toChain: `${celo.id}`,
-        toToken: toToken.address,
+        fromChain: `${selectedNetwork}`,
+        fromToken: getTokenAddress(fromToken, selectedNetwork),
+        fromAmount: ethers
+          .parseUnits(fromAmount, fromToken.decimals)
+          .toString(),
+        toChain: `${toChainId}`,
+        toToken: getTokenAddress(toToken, toChainId),
         toAddress: address,
-      };
-
-      // console.log("Swap parameters:", params);
-
-      // 1. Get the optimal swap route from SquidRouter.
-      const { route, requestId } = await getRoute(params);
-      console.log("Route response:", route, "Request ID:", requestId);
-
-      if (!route || !route.transactionRequest) {
-        throw new Error("Invalid route received from SquidRouter");
-      }
-
-      let transactionRequest = route.transactionRequest;
-
-      if (!transactionRequest?.target || !transactionRequest?.data) {
-        throw new Error("Invalid transaction request");
-      }
-
-      transactionRequest.value =
-        fromToken.symbol.toUpperCase() === "CELO" ? fromAmountInUnits : "0";
-
-      // console.log("Transaction Request:", transactionRequest);
-
-      // 2. Check token allowance before approving spending
-      const allowance = await publicClient.readContract({
-        address: fromToken.address,
-        abi: erc20Abi,
-        functionName: "allowance",
-        args: [address, transactionRequest.target],
       });
 
-      // console.log("Token Allowance:", allowance.toString());
+      // console.log("Transaction request:", route.transactionRequest);
 
-      // Add more detailed approval verification
-      if (BigInt(allowance) < BigInt(fromAmountInUnits)) {
-        console.log(
-          "Approval needed. Current allowance:",
-          allowance.toString()
-        );
-        const approveTx = await approveSpending(
-          transactionRequest.target,
-          fromToken.address,
-          fromAmountInUnits
-        );
-        toast.success("Approval transaction:", approveTx);
-        await publicClient.waitForTransactionReceipt({ hash: approveTx });
-        console.log("Approval confirmed");
-      }
+      // Handle approval
+      await approveSpending(
+        route.transactionRequest.target,
+        getTokenAddress(fromToken, selectedNetwork),
+        ethers.parseUnits(fromAmount, fromToken.decimals).toString()
+      );
 
-      const isCelo =
-        fromToken.address.toLowerCase() === CELO_MAINNET.toLowerCase();
-
-      const getAdapterAddress = (token) => {
-        if (token.address.toLowerCase() === USDC_MAINNET.toLowerCase())
-          return USDC_ADAPTER_MAINNET;
-        if (token.address.toLowerCase() === USDT_MAINNET.toLowerCase())
-          return USDT_ADAPTER_MAINNET;
-        return token.address;
-      };
-
-      let feeCurrency;
-      if (isCelo) {
-        feeCurrency = undefined;
-      } else if (isStablecoin(fromToken)) {
-        feeCurrency = getAdapterAddress(fromToken);
-      } else {
-        feeCurrency = fromToken.address;
-      }
-
-      const gasPriceParams = feeCurrency ? [feeCurrency] : [];
-      const minGasPrice = await publicClient
-        .request({
-          method: "eth_gasPrice",
-          params: gasPriceParams,
-        })
-        .then(hexToBigInt);
-
-      const gasPrice = (minGasPrice * BigInt(125)) / BigInt(100);
-
-      // 4. Estimate Gas
-      const estimatedGas = await publicClient.estimateGas({
-        to: transactionRequest.target,
-        data: transactionRequest.data,
-        value: BigInt(transactionRequest.value || 0),
-        chain: celo,
-        ...(feeCurrency && { feeCurrency }),
-        account: viemParaAccount, // Add this line
+      // Execute swap
+      const txHash = await paraViemSigner.sendTransaction({
+        to: route.transactionRequest.target,
+        data: route.transactionRequest.data,
+        value: 0n,
+        gasPrice: await publicClient.getGasPrice(),
+        gasLimit: route.transactionRequest.gasLimit,
       });
 
-      // console.log("Estimated Gas:", estimatedGas.toString());
+      setIsWaitingForAxelar(true);
+      await checkAxelarStatus(txHash);
+      // console.log("✅ Axelar GMP transaction is indexed.");
+      setIsWaitingForAxelar(false);
 
-      const transactionFee = gasPrice * estimatedGas;
-
-      const isUSDC =
-        fromToken.address.toLowerCase() === USDC_MAINNET.toLowerCase();
-
-      const adjustedAmount = isUSDC
-        ? BigInt(fromAmountInUnits) -
-          transactionFee / 10n ** (18n - BigInt(fromToken.decimals))
-        : BigInt(fromAmountInUnits) - transactionFee;
-
-      if (adjustedAmount <= BigInt(0)) {
-        throw new Error("Insufficient balance after fee deduction");
-      }
-
-      const nonce = await publicClient.getTransactionCount({
-        address: viemParaAccount.address,
-        blockTag: "pending",
-      });
-
-      const transactionValue = BigInt(transactionRequest.value || 0);
-
-      // console.log("Final Transaction Value:", transactionValue.toString());
-
-      const tx = {
-        to: transactionRequest.target,
-        data: transactionRequest.data,
-        value: transactionValue,
-        gasPrice,
-        gas: estimatedGas,
-        nonce,
-        chain: celo,
-        ...(feeCurrency && { feeCurrency }),
-        type: "cip42",
-        gatewayFee: BigInt(0),
-        gatewayFeeRecipient: "0x0000000000000000000000000000000000000000",
-      };
-
-      console.log("Final Transaction:", tx);
-
-      await publicClient.call({
-        ...tx,
-        account: viemParaAccount,
-      });
-
-      // 6. Sign the transaction
-      const signedTx = await paraViemSigner.signTransaction(tx);
-      // console.log("Signed Transaction:", signedTx);
-
-      // 7. Send the signed transaction
-      const txHash = await paraViemSigner.sendRawTransaction({
-        serializedTransaction: signedTx,
-      });
-      // console.log("Transaction Hash:", txHash);
-
-      const explorerLink = `https://explorer.celo.org/tx/${txHash}`;
-      console.log("Explorer Link:", explorerLink);
-      toast.info(`Transaction sent! Check: ${explorerLink}`);
-
-      // 8. Poll for transaction status until completion
       await updateTransactionStatus(txHash, requestId);
-      toast.success("Swap successful! 🎉");
+      toast.success("Swap successful!");
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 5000);
+      showNotification("Swap Complete", "Your token swap has been completed.");
+
       navigate("/dashboard");
     } catch (error) {
-      console.error("Swap failed:", {
-        message: error.message,
-        data: error.cause?.data || error.cause?.cause?.data,
-        stack: error.stack,
-      });
-      toast.error(`Swap failed: ${error.shortMessage || error.message}`);
+      console.error(`Swap failed: ${error.shortMessage || error.message}`);
+      setIsWaitingForAxelar(false);
     } finally {
       setIsSwapping(false);
+    }
+  };
+
+  const showNotification = (title, message) => {
+    if (Notification.permission === "granted") {
+      new Notification(title, {
+        body: message,
+        icon: "/JaraFiLogin.png",
+      });
     }
   };
 
@@ -627,145 +582,262 @@ const Swap = () => {
     fetchExchangeDetails(maxBalance);
   };
 
+  // Side actions --> useEffects
+  useEffect(() => {
+    if (address && fromToken && selectedNetwork) {
+      fetchTokenBalance();
+    }
+  }, [address, fromToken, selectedNetwork]);
+
+  useEffect(() => {
+    if (toChainId) {
+      const availableTokens = filterTokensByNetwork(TOKENS, toChainId);
+      setFilteredToTokens(availableTokens);
+      setToToken(null);
+    }
+  }, [toChainId]);
+
+  useEffect(() => {
+    if (fromAmount && parseFloat(fromAmount) > 0) {
+      fetchExchangeDetails(fromAmount);
+    }
+  }, [fromToken, toToken, selectedNetwork, toChainId]);
+
+  useEffect(() => {
+    // Prevent scrolling when component mounts
+    document.body.classList.add("overflow-hidden");
+
+    // Cleanup function to remove the class when component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
+
   return (
-    <section className="bg-[#0F0140] h-screen w-full flex justify-center">
-      <div className="flex gap-2 flex-col items-center justify-center relative">
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute left-4 top-4 text-white"
-        >
-          <FaArrowLeftLong size={25} />
-        </button>
-        <p className="text-[22px] text-[#F6F5F6] font-[700] my-6">
+    <section className="bg-[#0F0140] min-h-screen w-full flex justify-center md:items-center p-4 sm:p-8 relative">
+      {showConfetti && <Confetti width={width} height={height} />}
+      <button
+        onClick={() => navigate(-1)}
+        className="absolute left-4 top-4 text-white"
+      >
+        <FaArrowLeftLong size={25} />
+      </button>
+
+      <div className="flex flex-col items-center w-full max-w-2xl gap-6">
+        <p className="text-2xl text-[#F6F5F6] font-bold my-6 text-center">
           Swap Assets
         </p>
 
-        {/* From Token Input */}
-        <div className="flex w-[450px] h-[85px] bg-[#1D143E] rounded-lg border border-[#FFFFFF80] flex-col p-4">
-          <div className="flex items-center justify-between">
-            <input
-              type="text"
-              placeholder="0.00"
-              value={fromAmount}
-              onChange={handleFromAmountChange}
-              className="w-full bg-transparent text-white outline-none border-none"
-            />
-            <div>
-              <select
-                className="bg-transparent text-[#fff] outline-none border-none"
-                value={fromToken.address}
-                onChange={(e) => {
-                  const token = tokens.find(
-                    (t) => t.address === e.target.value
-                  );
-                  setFromToken(token);
-                  if (fromAmount) fetchExchangeDetails(fromAmount);
-                }}
-              >
-                {tokens.map((token) => (
-                  <option key={token.address} value={token.address}>
-                    {token.symbol}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-end mt-4 gap-4">
-            <p className="text-[12px] text-[#F6F5F6]">
-              Avail Bal:{" "}
-              {parseFloat(tokenBalance[fromToken.symbol]).toFixed(2) || "0.00"}
-            </p>
-            <p
-              className="text-[10px] text-[#F2E205] cursor-pointer"
-              onClick={handleMaxClick}
-            >
-              MAX
-            </p>
-          </div>
-        </div>
-
-        {/* To Token Input (Read Only) */}
-        <div className="w-[450px] h-[85px] bg-[#1D143E] rounded-lg border border-[#FFFFFF80] flex items-center justify-between p-4">
-          <input
-            type="text"
-            placeholder="0.00"
-            value={toAmount}
-            readOnly
-            className="w-full bg-transparent text-white outline-none border-none"
-          />
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+          <div className="text-center">
+            <label className="text-white text-sm mb-2 block">
+              From Network
+            </label>
             <select
-              className="bg-transparent text-[#fff] outline-none border-none"
-              value={toToken.address}
-              onChange={(e) => {
-                const token = tokens.find((t) => t.address === e.target.value);
-                if (
-                  token.address.toLowerCase() ===
-                  fromToken.address.toLowerCase()
-                ) {
-                  toast.warn("Please select a different token for swapping.");
-                  return;
-                }
-                setToToken(token);
-                if (fromAmount) fetchExchangeDetails(fromAmount);
-              }}
+              className="w-full text-white bg-[#1A1831] border border-[#2D2B54] rounded-xl p-4"
+              value={selectedNetwork || ""}
+              onChange={(e) => handleNetworkChange(Number(e.target.value))}
             >
-              {tokens.map((token) => (
-                <option
-                  key={token.address}
-                  value={token.address}
-                  disabled={
-                    token.address.toLowerCase() ===
-                    fromToken.address.toLowerCase()
-                  }
-                >
-                  {token.symbol}
+              <option value="" disabled>
+                Select a network
+              </option>
+              {CHAINS.map((chain) => (
+                <option key={chain.id} value={chain.id}>
+                  {chain.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="text-center">
+            <label className="text-white text-sm mb-2 block">To Network</label>
+            <select
+              className="w-full text-white bg-[#1A1831] border border-[#2D2B54] rounded-xl p-4"
+              value={toChainId || ""}
+              onChange={(e) => setToChainId(Number(e.target.value))}
+            >
+              <option value="" disabled>
+                Select a network
+              </option>
+              {CHAINS.map((chain) => (
+                <option key={chain.id} value={chain.id}>
+                  {chain.name}
                 </option>
               ))}
             </select>
           </div>
         </div>
 
-        {/* Exchange Details */}
-        <div className="w-[450px] bg-[#1D143E] rounded-lg border border-[#FFFFFF80] flex flex-col p-4 my-6">
-          <div className="flex justify-between text-[#FFFFFF80] text-[14px]">
-            <div className="flex gap-4 items-center">
-              <p>Exchange Rate:</p>
-              <TbInfoHexagon size={15} />
+        <div className="w-full space-y-4">
+          {/* From Token Input */}
+          <div className="bg-[#1D143E] rounded-lg border border-[#FFFFFF80] p-4 flex flex-col">
+            <div className="flex justify-between">
+              <input
+                type="text"
+                placeholder="0.00"
+                value={fromAmount}
+                onChange={handleFromAmountChange}
+                className="bg-transparent text-white outline-none w-2/3"
+              />
+              <select
+                className="bg-transparent text-white outline-none border-none"
+                value={fromToken?.id || ""}
+                onChange={handleFromTokenChange}
+                disabled={!selectedNetwork}
+              >
+                <option value="" disabled>
+                  Select a token
+                </option>
+                {filteredFromTokens.map((token) => (
+                  <option key={token.id} value={token.id}>
+                    {token.symbol}
+                  </option>
+                ))}
+              </select>
             </div>
-            <p>
-              1 {fromToken.symbol} ≈ {exchangeRate || "0.00"} {toToken.symbol}
-            </p>
+            <div className="flex items-center justify-end mt-4 gap-4">
+              <p className="text-xs text-[#F6F5F6]">
+                Avail Bal:{" "}
+                {fromToken
+                  ? parseFloat(tokenBalance[fromToken.symbol] || 0).toFixed(2)
+                  : "0.00"}
+              </p>
+              <p
+                className="text-xs text-[#F2E205] cursor-pointer"
+                onClick={handleMaxClick}
+              >
+                MAX
+              </p>
+            </div>
           </div>
-          <div className="flex justify-between text-[#FFFFFF80] text-[14px] mt-2">
-            <div className="flex gap-4 items-center">
-              <p>Fees:</p>
-              <TbInfoHexagon size={15} />
+
+          {/* To Token Input */}
+          <div className="bg-[#1D143E] rounded-lg border border-[#FFFFFF80] p-4">
+            <div className="flex justify-between">
+              <input
+                type="text"
+                placeholder="0.00"
+                value={toAmount}
+                readOnly
+                className="w-full bg-transparent text-white outline-none border-none"
+              />
+              <select
+                className="bg-transparent text-white outline-none border-none"
+                value={toToken?.id || ""}
+                onChange={handleToTokenChange}
+                disabled={!toChainId}
+              >
+                <option value="" disabled>
+                  Select a token
+                </option>
+                {filteredToTokens.map((token) => (
+                  <option key={token.id} value={token.id}>
+                    {token.symbol}
+                  </option>
+                ))}
+              </select>
             </div>
-            <p>
-              {fees || "0.00"} {fromToken.symbol}
-            </p>
-          </div>
-          <div className="flex justify-between text-[#FFFFFF80] text-[14px] mt-2">
-            <div className="flex gap-4 items-center">
-              <p>Slippage Tolerance:</p>
-              <TbInfoHexagon size={15} />
-            </div>
-            <p>{parseFloat(slippageTolerance).toFixed(2)}%</p>
           </div>
         </div>
 
+        {/* Exchange Details */}
+        {selectedNetwork &&
+          toChainId &&
+          fromToken &&
+          toToken &&
+          (isExchanging ? (
+            <p className="text-white">Fetching exchange details...</p>
+          ) : (
+            <div className="w-full bg-[#1D143E] rounded-lg border border-[#FFFFFF80] p-4 space-y-2 md:my-6 my-2">
+              <div className="flex justify-between text-[#FFFFFF80] text-sm">
+                <p>Exchange Rate:</p>
+                <p>
+                  1 {fromToken.symbol} ≈ {exchangeRate || "0.00"}{" "}
+                  {toToken.symbol}
+                </p>
+              </div>
+              <div className="flex justify-between text-[#FFFFFF80] text-sm">
+                <p>Fees:</p>
+                <p>
+                  {fees || "0.00"} {fromToken.symbol}
+                </p>
+              </div>
+              <div className="flex justify-between text-[#FFFFFF80] text-sm">
+                <p>Slippage Tolerance:</p>
+                <p>{parseFloat(slippageTolerance).toFixed(2)}%</p>
+              </div>
+            </div>
+          ))}
+
+        {isWaitingForAxelar && (
+          <div className="flex items-center space-x-2 text-blue-500 mt-4">
+            <svg
+              className="animate-spin h-5 w-5 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8z"
+              />
+            </svg>
+            <span>Waiting for Axelar cross-chain confirmation...</span>
+          </div>
+        )}
+
         <button
-          className={
-            isSwapping
-              ? "bg-[#4F4E50] text-[#F2E205] p-[10px] rounded-[10px] w-full absolute bottom-6 text-[16px] cursor-not-allowed "
-              : "bg-[#F2E205] p-[10px] rounded-[10px] w-full absolute bottom-6 text-[16px] text-[#4F4E50]"
-          }
           onClick={handleSwap}
-          disabled={isSwapping}
+          disabled={
+            isSwapping ||
+            !selectedNetwork ||
+            !toChainId ||
+            !fromToken ||
+            !toToken
+          }
+          className={`p-[10px] rounded-[10px] w-full text-[16px] font-[600] font-[Montserrat] text-center flex items-center justify-center gap-2 transition-all duration-200
+    ${
+      isSwapping
+        ? "bg-[#4F4E50] text-[#F2E205] cursor-not-allowed"
+        : "bg-[#F2E205] text-[#4F4E50] hover:bg-[#e6d904]"
+    }`}
         >
-          {isSwapping ? "Processing..." : "Continue"}
+          {isSwapping ? (
+            <>
+              <svg
+                className="animate-spin h-5 w-5 text-[#F2E205]"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
+                ></path>
+              </svg>
+              Processing...
+            </>
+          ) : (
+            "Continue"
+          )}
         </button>
       </div>
     </section>

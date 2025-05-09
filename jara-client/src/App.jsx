@@ -25,73 +25,132 @@ import {
   GetVerified,
   SelectResidence,
   SelectId,
+  PinSetup,
+  BankDetails,
 } from "./index";
-import {
-  cEUR,
-  cUsd,
-  cREAL,
-  celoToken,
-  commons,
-  usdt,
-  USDC,
-} from "./constant/otherChains";
-import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
 
-const tokens = [cEUR, cUsd, cREAL, celoToken, commons, usdt, USDC];
+import { AuthRoute, IdleTimeout } from "./component/Registration/AuthRoute";
+import { TOKENS } from "./constant/otherChains";
+import AuthWrapper from "./component/Registration/AuthWrapper";
+
+const tokens = TOKENS;
 
 function App() {
   return (
     <>
       <IdleTimeout />
-
       <Routes>
-        {/* <Route path="*" element={<IdleTimeout />} /> */}
-
-        <Route path="/" element={<Home />} />
-        <Route path="/p2p" element={<MainPage />} />
-        <Route path="/Cards" element={<MainPage />} />
-        <Route path="/main-screen" element={<MainScreen />} />
-        <Route path="/trade-with-ease" element={<TWE />} />
-        <Route path="/sign-up-endpoint" element={<SignUpEndpoint />} />
+        <Route
+          path="/"
+          element={
+            <AuthWrapper>
+              <Home />
+            </AuthWrapper>
+          }
+        />
         <Route path="/dashboard" element={<HomePage />} />
         <Route
           path="/token-details/:id"
           element={<TokenDetails tokens={tokens} />}
         />
-        <Route path="/sign-up-user" element={<Register />} />
+        <Route path="/p2p" element={<MainPage />} />
+        <Route path="/final-funding" element={<FinalFundingExt />} />
+        <Route path="/verify" element={<Verify />} />
+        <Route path="/get-verified" element={<GetVerified />} />
+        <Route path="/select-residence" element={<SelectResidence />} />
+        <Route path="/select-id" element={<SelectId />} />
 
-        <Route path="/confirm-email" element={<ConfirmEmail />} />
-        <Route path="/create-wallet" element={<CreateWallet />} />
-        <Route path="/wallet-showcase" element={<WalletShowcase />} />
-        <Route path="/send" element={<AuthRoute element={<Send />} />} />
+        <Route
+          path="/main-screen"
+          element={
+            <AuthWrapper>
+              <MainScreen />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/trade-with-ease"
+          element={
+            <AuthWrapper>
+              <TWE />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/sign-up-endpoint"
+          element={
+            <AuthWrapper>
+              <SignUpEndpoint />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/create-wallet"
+          element={
+            <AuthWrapper>
+              <CreateWallet />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/wallet-showcase"
+          element={
+            <AuthWrapper>
+              <WalletShowcase />
+            </AuthWrapper>
+          }
+        />
+        <Route path="/congrats" element={<Congratulation />} />
+
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/create-pin" element={<PinSetup />} />
+
+        {/* Protected routes */}
         <Route
           path="/card-display"
           element={<AuthRoute element={<CardPage />} />}
         />
-
-        <Route path="/final-funding" element={<FinalFundingExt />} />
-        <Route path="/congrats" element={<Congratulation />} />
-
-        <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
-        <Route path="/recieve" element={<ReceiveAssets />} />
-
+        <Route
+          path="/request-card"
+          element={<AuthRoute element={<RequestCard />} />}
+        />
+        <Route path="/send" element={<AuthRoute element={<Send />} />} />
         <Route path="/swap" element={<AuthRoute element={<Swap />} />} />
         <Route
           path="/recieve"
           element={<AuthRoute element={<ReceiveAssets />} />}
         />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/settings" element={<Settings />} />
-
         <Route
-          path="/request-card"
-          element={<AuthRoute element={<RequestCard />} />}
+          path="/add-bank"
+          element={<AuthRoute element={<BankDetails />} />}
         />
-        <Route path="/verify" element={<Verify />} />
-        <Route path="/get-verified" element={<GetVerified />} />
-        <Route path="/select-residence" element={<SelectResidence />} />
-        <Route path="/selectId" element={<SelectId />} />
+
+        {/* Auth-only pages wrapped with AuthWrapper */}
+        <Route
+          path="/login"
+          element={
+            <AuthWrapper>
+              <Login />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/sign-up-user"
+          element={
+            <AuthWrapper>
+              <Register />
+            </AuthWrapper>
+          }
+        />
+        <Route
+          path="/confirm-email"
+          element={
+            <AuthWrapper>
+              <ConfirmEmail />
+            </AuthWrapper>
+          }
+        />
       </Routes>
     </>
   );

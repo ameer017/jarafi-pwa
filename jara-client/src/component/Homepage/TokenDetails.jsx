@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { RiTokenSwapLine } from "react-icons/ri";
 import {
-  LuCreditCard,
+
   LuSettings2,
   LuWalletMinimal,
   LuArrowUpToLine,
 } from "react-icons/lu";
 import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAccount } from "wagmi";
-import { FaPlus } from "react-icons/fa";
+import { FaExchangeAlt } from "react-icons/fa";
 import { Contract, ethers, JsonRpcProvider } from "ethers";
-import Activities from "./Activities"; // Make sure you have this component
+import Activities from "./Activities";
+import { FaArrowLeftLong } from "react-icons/fa6";
 
 const TokenDetails = ({ tokens }) => {
   const navigate = useNavigate();
@@ -43,6 +44,7 @@ const TokenDetails = ({ tokens }) => {
         balance: t.balance ? t.balance : "0",
       }));
 
+      // console.log(formattedMockData)
       setMockData(formattedMockData);
     }
   }, [tokens, id]);
@@ -61,8 +63,13 @@ const TokenDetails = ({ tokens }) => {
       return;
     }
 
+    // console.log(tokenData)
+
     try {
-      const provider = new JsonRpcProvider("https://forno.celo.org");
+      const provider =
+        tokenData.chainId === 1
+          ? new JsonRpcProvider("https://eth.llamarpc.com")
+          : new JsonRpcProvider("https://forno.celo.org");
       const contract = new Contract(
         tokenData.address,
         ["function balanceOf(address) view returns (uint256)"],
@@ -85,9 +92,20 @@ const TokenDetails = ({ tokens }) => {
 
   useEffect(() => {
     if (tokenData) {
+      // console.log(tokenData)
       fetchTokenBalance();
     }
   }, [address, tokenData]);
+
+  useEffect(() => {
+    // Prevent scrolling when component mounts
+    document.body.classList.add("overflow-hidden");
+
+    // Cleanup function to remove the class when component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, []);
 
   if (isLoading) {
     return (
@@ -113,19 +131,19 @@ const TokenDetails = ({ tokens }) => {
 
   return (
     <div className="overflow-y-auto h-full">
-      <section className="bg-[#0F0140] h-screen w-full overflow-x-hidden">
+      <section className="bg-[#1D143E] h-screen w-full overflow-x-hidden">
         <div className="flex items-center justify-between px-4 py-2">
           <Link to="/dashboard">
             <button
               onClick={() => navigate(-1)}
               className="text-white flex items-center gap-2"
             >
-              ← Back
+              <FaArrowLeftLong size={25} />
             </button>
           </Link>
         </div>
 
-        <header className="h-auto bg-[#1D143E] my-4 md:my-10 flex items-center justify-center">
+        <header className=" bg-[#1D143E] my-4 py-4 md:my-10 flex items-center justify-center">
           <section className="flex flex-col justify-between w-full max-w-[1024px] px-4 md:p-6">
             <section className="flex items-center gap-2 flex-col">
               <div className="flex items-center gap-2">
@@ -138,19 +156,16 @@ const TokenDetails = ({ tokens }) => {
               </div>
               <section className="mt-4">
                 <p className="text-[#F2EDE4] text-[30px]">
-                  $ {parseFloat(tokenBalance).toFixed(2) ||
-                    tokenData?.quote?.USD?.price?.toFixed(2)}
+                  {" "}
+                  {parseFloat(tokenBalance).toFixed(2) ||
+                    tokenData?.quote?.USD?.price?.toFixed(2)}{" "}
+                  {tokenData.symbol}
                 </p>
               </section>
             </section>
 
             <section className="flex justify-between items-center px-8 mt-12">
               {[
-                {
-                  label: "Buy",
-                  icon: <FaPlus size={25} color="#0F0140" />,
-                  routes: "/buy",
-                },
                 {
                   label: "Send",
                   icon: <LuArrowUpToLine size={25} color="#0F0140" />,
@@ -162,13 +177,15 @@ const TokenDetails = ({ tokens }) => {
                   rotate: true,
                   routes: "/withdraw",
                 },
-              ].map(({ label, icon, routes }, index) => (
+              ].map(({ label, icon, routes, rotate }, index) => (
                 <div
                   key={index}
                   className="flex flex-col items-center gap-2 text-white text-[14px]"
                 >
                   <button
-                    className="bg-[#F2E205] rounded-lg h-[50px] w-[50px] flex items-center justify-center cursor-pointer"
+                    className={`bg-[#F2E205] rounded-lg md:h-[60px] h-[40px] w-[40px] md:w-[60px]  flex items-center justify-center cursor-pointer ${
+                      rotate ? "rotate-180" : ""
+                    }`}
                     onClick={() => navigate(routes)}
                   >
                     {icon}
@@ -180,8 +197,8 @@ const TokenDetails = ({ tokens }) => {
           </section>
         </header>
 
-        <main className="h-[575px] md:h-[562px] bg-white overflow-hidden">
-          <div className="h-full border flex flex-col">
+        <main className="overflow-hidden bg-white min-h-[67.5vh]">
+          <div className="h-full  flex flex-col">
             <div className="flex border-b">
               <button
                 onClick={() => handleTabChange("balance")}
@@ -195,11 +212,12 @@ const TokenDetails = ({ tokens }) => {
               </button>
               <button
                 onClick={() => handleTabChange("activity")}
+                disabled={true}
                 className={`p-4 text-[14px] w-1/2 ${
                   activeTab === "activity"
                     ? "text-[#0F0140] border-b-2 border-[#0F0140] font-medium"
                     : "text-[#464446] font-normal"
-                }`}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 Activity
               </button>
@@ -213,11 +231,13 @@ const TokenDetails = ({ tokens }) => {
                     alt={tokenData.name}
                   />
                   <div className="flex flex-col justify-center">
-                    <p className="text-[16px] text-[#464446]">{tokenData.name}</p>
+                    <p className="text-[16px] text-[#464446]">
+                      {tokenData.name}
+                    </p>
                     <p className="text-[14px] text-[#464446]">
                       {tokenData.name === "Celo"
                         ? tokenData.name
-                        : tokenData.network.name}{" "}
+                        : tokenData.network}{" "}
                       Network
                     </p>
                   </div>
@@ -237,7 +257,7 @@ const TokenDetails = ({ tokens }) => {
           </div>
         </main>
 
-        <footer className="fixed bottom-0 bg-white p-6 w-full h-[90px] flex items-center justify-evenly border-t-[1px] border-[#B0AFB1]">
+        <footer className="fixed bottom-0 bg-white py-4 w-full  flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
           <Link to="/dashboard">
             <LuWalletMinimal
               size={25}
@@ -245,17 +265,17 @@ const TokenDetails = ({ tokens }) => {
             />
           </Link>
           <Link to="/p2p">
-            <RiTokenSwapLine
+            <FaExchangeAlt
               size={25}
               color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
             />
           </Link>
-          <Link to="/card-display">
-            <LuCreditCard
-              size={25}
-              color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
-            />
-          </Link>
+          {/* <Link to="/card-display">
+                  <LuCreditCard
+                    size={25}
+                    color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
+                  />
+                </Link> */}
           <Link to="/settings">
             <LuSettings2
               size={25}
