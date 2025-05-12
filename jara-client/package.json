@@ -16,30 +16,19 @@
     "@getpara/viem-v2-integration": "1.0.1",
     "@getpara/wagmi-v2-integration": "1.0.1",
     "@lifi/sdk": "^3.5.2",
-<<<<<<< HEAD
-<<<<<<< HEAD
-    "@tanstack/react-query": "^5.64.2",
-    "@uniswap/sdk-core": "^7.5.0",
-    "@uniswap/v3-sdk": "^3.24.0",
-    "@uniswap/v4-sdk": "^1.18.0",
-    "axios": "^1.7.9",
-=======
-=======
-
->>>>>>> 77351f9d1af8e9de218d8357a95283aa140e3dff
     "@reduxjs/toolkit": "^2.7.0",
     "@rollup/plugin-inject": "^5.0.5",
     "@starknet-react/chains": "^3.1.2",
     "@starknet-react/core": "^3.7.2",
+    "@stripe/stripe-js": "^1.54.2",
     "@tanstack/react-query": "^5.64.2",
+    "@uniswap/sdk-core": "^7.5.0",
+    "@uniswap/v3-sdk": "^3.24.0",
+    "@uniswap/v4-sdk": "^1.18.0",
     "at-least-node": "^1.0.0",
-    "axios": "^1.8.4",
+    "axios": "^1.7.9",
     "base-x": "^5.0.0",
     "bs58": "^6.0.0",
-<<<<<<< HEAD
->>>>>>> c1e41524276ac755ee8756f5c570960333c34252
-=======
->>>>>>> 77351f9d1af8e9de218d8357a95283aa140e3dff
     "chart.js": "^4.4.7",
     "ethers": "^6.13.5",
     "eventemitter3": "^5.0.1",
@@ -47,16 +36,8 @@
     "install": "^0.13.0",
     "jotai": "^2.11.1",
     "jsbi": "^4.3.0",
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
     "jsonfile": "^6.1.0",
     "lodash": "^4.17.21",
->>>>>>> c1e41524276ac755ee8756f5c570960333c34252
-=======
-    "jsonfile": "^6.1.0",
-    "lodash": "^4.17.21",
->>>>>>> 77351f9d1af8e9de218d8357a95283aa140e3dff
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.473.0",
     "mathjs": "^14.2.0",
