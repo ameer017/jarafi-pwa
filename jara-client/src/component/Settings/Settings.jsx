@@ -36,28 +36,30 @@ const Settings = () => {
         </h1>
 
         <div className="flex flex-col mt-8 space-y-5 w-full">
-          {settings.map((setting) => {
-            const isValidLink = setting.link !== "#";
-            return (
-              <Link
-                key={setting.id}
-                to={isValidLink ? setting.link : "#"}
-                className={`flex justify-between items-center py-3 px-4 border-b-[1px] border-[#B0AFB1] transition ${
-                  isValidLink ? "hover:bg-[#2B1070]" : "cursor-not-allowed"
-                }`}
-                style={{
-                  pointerEvents: isValidLink ? "auto" : "none",
-                  color: isValidLink ? "#FFF" : "#B0AFB1",
-                }}
-              >
-                <p className="text-[16px] sm:text-[18px]">{setting.name}</p>
-                <IoIosArrowForward
-                  size={20}
-                  color={isValidLink ? "#FFF" : "#B0AFB1"}
-                />
-              </Link>
-            );
-          })}
+          {settings
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((setting) => {
+              const isValidLink = setting.link !== "#";
+              return (
+                <Link
+                  key={setting.id}
+                  to={isValidLink ? setting.link : "#"}
+                  className={`flex justify-between items-center py-3 px-4 border-b-[1px] border-[#B0AFB1] transition ${
+                    isValidLink ? "hover:bg-[#2B1070]" : "cursor-not-allowed"
+                  }`}
+                  style={{
+                    pointerEvents: isValidLink ? "auto" : "none",
+                    color: isValidLink ? "#FFF" : "#B0AFB1",
+                  }}
+                >
+                  <p className="text-[16px] sm:text-[18px]">{setting.name}</p>
+                  <IoIosArrowForward
+                    size={20}
+                    color={isValidLink ? "#FFF" : "#B0AFB1"}
+                  />
+                </Link>
+              );
+            })}
         </div>
       </div>
 
@@ -68,12 +70,12 @@ const Settings = () => {
             color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
           />
         </Link>
-        <Link to="/p2p">
-               <FaExchangeAlt
-                 size={25}
-                 color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
-               />
-             </Link>
+        {/* <Link to="/p2p">
+          <FaExchangeAlt
+            size={25}
+            color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
+          />
+        </Link> */}
         {/* <Link to="/card-display">
                <LuCreditCard
                  size={25}

@@ -40,7 +40,6 @@ const HomePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
 
-
   // const starknetAddress = starknetAddressFromEVM(address);
 
   // console.log(address)
@@ -69,31 +68,26 @@ const HomePage = () => {
   const [selectedChain, setSelectedChain] = useState(CHAINS[0]);
   const [hideZeroBalances, setHideZeroBalances] = useState(true);
 
-
   useEffect(() => {
-
-    if(!address) return
-    console.log({address})
+    if (!address) return;
+    // console.log({ address });
 
     const registerPwaUser = async () => {
       try {
+      
 
-        const response = await axios.post("http://localhost:3500/pwauser/register", { referenceId: address.toString() }, { withCredentials: true })
+        const response = await axios.post("https://jarafibackend.vercel.app/register", { referenceId: address.toString() }, { withCredentials: true })
 
         if(response.status === 400) return;
 
 
+
       } catch (error) {
-
         console.log(`Error registering user: ${error}`);
-
       }
-    }
+    };
     registerPwaUser();
-  }, [address])
-
-
-
+  }, [address]);
 
   const handleScan = (data) => {
     if (data?.text) {
@@ -708,7 +702,6 @@ const HomePage = () => {
                 className="flex flex-col items-center gap-2 text-white text-[14px]"
               >
                 <button
-
                   className={`bg-[#F2E205] rounded-lg md:h-[60px] h-[40px] w-[40px] md:w-[60px]  flex items-center justify-center cursor-pointer ${
                     rotate ? "rotate-180" : ""
                   }`}
@@ -845,24 +838,24 @@ const HomePage = () => {
             color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
           />
         </Link>
-        <Link to="/p2p">
+        {/* <Link to="/p2p">
           <FaExchangeAlt
             size={25}
             color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link>
-        <Link to="/card-display">
+        </Link> */}
+         <Link to="/card-display">
           <LuCreditCard
             size={25}
             color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
           />
         </Link>
-        <Link to="/settings">
+        {/* <Link to="/settings">
           <LuSettings2
             size={25}
             color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link>
+        </Link> */}
       </footer>
     </section>
   );

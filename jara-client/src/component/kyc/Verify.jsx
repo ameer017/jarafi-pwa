@@ -7,6 +7,7 @@ import Dojah from "react-dojah";
 const Verify = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
+
   const [loading, setLoading] = useState(false);
   const [scriptError, setScriptError] = useState(null);
 
@@ -44,7 +45,7 @@ const Verify = () => {
       try {
         const payload = { referenceId: reference_id, status: "pending" };
         console.log("Sending PUT request with payload:", payload);
-        const response = await axios.put(`http://localhost:3500/pwauser/update_status`, payload);
+        const response = await axios.put(`https://jarafibackend.vercel.app/update_status`, payload);
         if (response.status !== 200) {
           throw new Error("Failed updating status");
         }
@@ -65,7 +66,7 @@ const Verify = () => {
       console.log("Widget closed");
       // Check status before navigating
       try {
-        const response = await axios.get(`http://localhost:3500/pwauser/${reference_id}`);
+        const response = await axios.get(`https://jarafibackend.vercel.app/pwauser/${reference_id}`);
         if (response.data.kycStatus === "pending" || response.data.kycStatus === "verified") {
           navigate("/card-display");
         } else {
@@ -89,7 +90,8 @@ const Verify = () => {
   const config = {
     widget_id,
     reference_id
-  };
+  }
+
 
   const metadata = {
     user_id: address,
@@ -133,6 +135,7 @@ const Verify = () => {
 
         {/* Hidden Dojah widget, triggered by button */}
         <div style={{ display: "none" }}>
+        {loading && (
           <Dojah
             response={handleResponse}
             appID={appID}
@@ -142,7 +145,10 @@ const Verify = () => {
             metadata={metadata}
             id="dojah-widget"
           />
+        )}
+
         </div>
+
       </main>
     </section>
   );

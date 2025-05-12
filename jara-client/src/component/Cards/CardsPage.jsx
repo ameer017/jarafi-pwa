@@ -36,7 +36,7 @@ export default function CardPage() {
 
   useEffect(() => {
     if (!referenceId) {
-      setVerified(null); // No address, treat as unverified (default null)
+      setVerified(null); 
       setIsLoading(false);
       return;
     }
@@ -44,7 +44,7 @@ export default function CardPage() {
     const getVerifiedUser = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`http://localhost:3500/pwauser/${referenceId}`, {
+        const response = await axios.get(`https://jarafibackend.vercel.app/pwauser/${referenceId}`, {
           withCredentials: true,
         });
         console.log("API Response:", response.data);
@@ -62,6 +62,7 @@ export default function CardPage() {
         } else {
           setVerified("failed"); // Other errors, treat as failed KYC
         }
+
       } finally {
         setIsLoading(false);
       }
@@ -100,6 +101,17 @@ export default function CardPage() {
       navigate("/request-card");
     }
   }, [countdown, verified, navigate]);
+
+  useEffect(() => {
+    console.log(
+      "Current state - verified:",
+      verified,
+      "countdown:",
+      countdown,
+      "isLoading:",
+      isLoading
+    );
+  }, [verified, countdown, isLoading]);
 
   if (isLoading) {
     return (
@@ -144,6 +156,7 @@ export default function CardPage() {
                 className="bg-[#F2E205] md:w-1/3 rounded-xl p-4 text-[#4F4E50] w-full font-semibold"
               >
               <Link to="/dashboard"> Access dashboard</Link> 
+
               </button>
             </div>
           </div>
@@ -194,11 +207,14 @@ export default function CardPage() {
               <button
                 className="flex flex-col items-center justify-center bg-transparent border-[1.2px] rounded-lg p-4 w-[120px] h-[100px] transition-all hover:bg-gray-100"
                 onClick={() =>
-                  navigate("/card-details", { state: { details滴滴: mockCardDetails } })
+                  navigate("/card-details", { state: { details: mockCardDetails } })
+
                 }
               >
                 <Eye size={30} className="text-[#0F0140]" />
-                <span className="text-sm font-medium text-gray-800">Details</span>
+                <span className="text-sm font-medium text-gray-800">
+                  Details
+                </span>
               </button>
             </div>
             <div className="justify-start items-start w-full">
@@ -231,8 +247,8 @@ export default function CardPage() {
               KYC Verification Failed
             </h2>
             <p className="text-gray-600 mt-2">
-              Your KYC verification was not successful. Redirecting to retry KYC in{" "}
-              <span className="text-[#0F0140] font-bold">{countdown}</span>{" "}
+              Your KYC verification was not successful. Redirecting to retry KYC
+              in <span className="text-[#0F0140] font-bold">{countdown}</span>{" "}
               seconds...
             </p>
           </div>
