@@ -74,13 +74,14 @@ const HomePage = () => {
 
     const registerPwaUser = async () => {
       try {
-        const response = await axios.post(
-          "https://jarafibackend.vercel.app/pwauser/register",
-          { referenceId: address.toString() },
-          { withCredentials: true }
-        );
+      
 
-        if (response.status === 400) return;
+        const response = await axios.post("https://jarafibackend.vercel.app/register", { referenceId: address.toString() }, { withCredentials: true })
+
+        if(response.status === 400) return;
+
+
+
       } catch (error) {
         console.log(`Error registering user: ${error}`);
       }
@@ -843,18 +844,18 @@ const HomePage = () => {
             color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
           />
         </Link> */}
-        {/* <Link to="/card-display">
+         <Link to="/card-display">
           <LuCreditCard
             size={25}
             color={isActive("/card-display") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link> */}
-        <Link to="/settings">
+        </Link>
+        {/* <Link to="/settings">
           <LuSettings2
             size={25}
             color={isActive("/settings") ? "#0F0140" : "#B0AFB1"}
           />
-        </Link>
+        </Link> */}
       </footer>
     </section>
   );
