@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from "react";
+import axios from "axios";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAccount } from "wagmi";
+import Dojah from "react-dojah";
 
 const Verify = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
 
   const [loading, setLoading] = useState(false);
-
-  // Log environment variables for debugging
-  console.log("Environment Variables:", {
-    appID: import.meta.env.VITE_APP_DOJAH_APP_ID,
-    publicKey: import.meta.env.VITE_APP_DOJAH_PUBLIC_KEY,
-    widget_id: import.meta.env.VITE_APP_DOJAH_WIDGET_ID,
-  });
+  const [scriptError, setScriptError] = useState(null);
 
   // Dojah credentials from environment variables
   const dojahCredentials = {
@@ -23,84 +19,85 @@ const Verify = () => {
     reference_id: address ? address.toString() : null,
   };
 
-  // Dojah configuration
   const { appID, publicKey, widget_id, reference_id } = dojahCredentials;
-  // const type = "custom"; // Widget type
-  // const config = { widget_id, reference_id };
 
-  // // Handle Dojah widget response
-  // const response = (type, data) => {
-  //   switch (type) {
-  //     case "success":
-  //       navigate("/card-display")
-  //       console.log("Verification successful:", data);
-  //       break;
-  //     case "error":
-  //       console.error("Verification error:", data);
-  //       setLoading(false); // Reset loading state on error
-  //       break;
-  //     case "close":
-  //       console.log("Widget closed by user");
-  //       setLoading(false); // Reset loading state when widget is closed
-  //       break;
-  //     case "begin":
-  //       console.log("Verification process started");
-  //       break;
-  //     case "loading":
-  //       console.log("Widget is loading...");
-  //       break;
-  //     default:
-  //       console.warn("Unknown response type:", type, data);
-  //   }
-  // };
+ 
+  if (!appID || !publicKey || !widget_id || !reference_id) {
+    console.error("Missing Dojah credentials:", dojahCredentials);
+    return (
+      <section className="bg-[#D0D6FF80] min-h-screen flex flex-col justify-center items-center">
+        <header className="bg-[#0F0140] w-full p-4 flex items-center justify-center">
+          <h2 className="text-white text-2xl font-bold">My Card</h2>
+        </header>
+        <main className="flex flex-col items-center flex-grow w-auto md:w-[400px]">
+          <p className="text-center text-red-500 mt-12">Invalid Dojah configuration</p>
+        </main>
+      </section>
+    );
+  }
 
-  // Handle button click to start verification
-  const handleClick = () => {
-    if (!window.Connect) {
-      console.error("Dojah script not loaded yet.");
-      return;
+  // Handle Dojah response
+  const handleResponse = async (responseType, data) => {
+    console.log(`Dojah response: ${responseType}`, data);
+
+    if (responseType === "success") {
+      // Update KYC status to pending
+      try {
+        const payload = { referenceId: reference_id, status: "pending" };
+        console.log("Sending PUT request with payload:", payload);
+        const response = await axios.put(`https://jarafibackend.vercel.app/update_status`, payload);
+        if (response.status !== 200) {
+          throw new Error("Failed updating status");
+        }
+        console.log("KYC status updated to pending");
+        navigate("/card-display"); // Navigate on success
+      } catch (error) {
+        console.error(`Error updating status: ${error}`);
+        setScriptError("Failed to update verification status. Please try again.");
+        navigate("/request-card"); // Redirect to retry
+      }
+      setLoading(false);
+    } else if (responseType === "error") {
+      console.error("Dojah error:", data);
+      setScriptError("Verification failed. Please try again.");
+      navigate("/request-card"); // Redirect to retry
+      setLoading(false);
+    } else if (responseType === "close") {
+      console.log("Widget closed");
+      // Check status before navigating
+      try {
+        const response = await axios.get(`https://jarafibackend.vercel.app/pwauser/${reference_id}`);
+        if (response.data.kycStatus === "pending" || response.data.kycStatus === "verified") {
+          navigate("/card-display");
+        } else {
+          navigate("/request-card"); // Retry if no valid status
+        }
+      } catch (error) {
+        console.error("Error checking status on close:", error);
+        navigate("/request-card"); 
+      }
+      setLoading(false);
+    } else if (responseType === "begin") {
+      console.log("Verification process started");
+      setLoading(true);
+    } else if (responseType === "loading") {
+      console.log("Widget loading");
+      setLoading(true);
     }
-
-    setLoading(true);
-
-    const options = {
-      app_id: appID,
-      p_key: publicKey,
-      type: "custom",
-      // user_data: {
-      //   residence_country: "NG",
-      //   // You can optionally pass first_name, last_name, dob, email here
-      // },
-      metadata: {
-        user_id: address || "unknown",
-      },
-      config: {
-        widget_id,
-        reference_id
-      },
-      onSuccess: (res) => {
-        console.log("Success", res);
-        navigate("/card-display");
-      },
-      onError: (err) => {
-        console.error("Error", err);
-        setLoading(false);
-      },
-      onClose: () => {
-        console.log("Widget closed");
-        setLoading(false);
-      },
-    };
-
-    const connect = new window.Connect(options);
-    connect.setup();
-    connect.open();
   };
 
-  // Reset loading state if the component unmounts
-  useEffect(() => {
-    return () => setLoading(false);
-  }, []);
+  // Dojah configuration
+  const config = {
+    widget_id,
+    reference_id
+  }
+
+
+  const metadata = {
+    user_id: address,
+  };
+
+
 
   return (
     <section className="bg-[#D0D6FF80] min-h-screen flex flex-col justify-center items-center">
@@ -109,6 +106,9 @@ const Verify = () => {
       </header>
 
       <main className="flex flex-col items-center flex-grow w-auto md:w-[400px]">
+        {scriptError && (
+          <p className="text-center text-red-500 mt-12">{scriptError}</p>
+        )}
         <div className="flex flex-col items-center justify-center mt-[120px] gap-10">
           <img
             src="/verify.png"
@@ -126,24 +126,29 @@ const Verify = () => {
         </p>
 
         <button
-          onClick={handleClick}
+          onClick={() => document.getElementById("dojah-widget").click()}
           className="w-full md:w-[350px] flex justify-center items-center px-4 py-3 bg-[#F2E205] rounded-lg font-['Montserrat'] font-semibold text-base text-[#4F4E50] mt-6 hover:bg-[#E0D204] transition-colors duration-200"
           disabled={loading}
         >
           {loading ? "Loading... Please wait!" : "Continue"}
         </button>
 
-        {/* Render the Dojah widget */}
-        {/* {loading && (
+        {/* Hidden Dojah widget, triggered by button */}
+        <div style={{ display: "none" }}>
+        {loading && (
           <Dojah
-            response={response}
+            response={handleResponse}
             appID={appID}
             publicKey={publicKey}
-            type={type}
+            type="custom"
             config={config}
-            
+            metadata={metadata}
+            id="dojah-widget"
           />
-        )} */}
+        )}
+
+        </div>
+
       </main>
     </section>
   );

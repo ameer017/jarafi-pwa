@@ -1,7 +1,6 @@
 import { Plus, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { LuCreditCard, LuSettings2, LuWalletMinimal } from "react-icons/lu";
-import { RiTokenSwapLine } from "react-icons/ri";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import FundCard from "./FundCard";
 import { CiBarcode } from "react-icons/ci";
@@ -16,7 +15,7 @@ export default function CardPage() {
   const isActive = (path) => location.pathname === path;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [countdown, setCountdown] = useState(5);
-  const [verified, setVerified] = useState(null); // Initial state is null
+  const [verified, setVerified] = useState(null); // Matches backend default kycStatus: null
   const [isLoading, setIsLoading] = useState(true); // Track API loading
   const { address } = useAccount();
 
@@ -24,17 +23,20 @@ export default function CardPage() {
 
   // Mock card details for success state
   const mockCardDetails = [
-    // {
-    //   id: 1,
-    //   name: "SOLIU MUHAMMED",
-    //   address: referenceId || "0x403852dB7a42F87B4e8bB5230c7d68Edf5a3c21b",
-    //   doe: "08/27/2029",
-    // },
+    {
+      id: 1,
+      name: "SOLIU MUHAMMED",
+      address: referenceId || "0x403852dB7a42F87B4e8bB5230c7d68Edf5a3c21b",
+      doe: "08/27/2029",
+    },
   ];
 
-  // Fetch KYC status
+
+  const handleClick = () => navigate("/card-display")
+
   useEffect(() => {
     if (!referenceId) {
+      setVerified(null); 
       setIsLoading(false);
       return;
     }
@@ -42,44 +44,55 @@ export default function CardPage() {
     const getVerifiedUser = async () => {
       try {
         setIsLoading(true);
-
-        const response = await axios.get(
-          `https://jarafibackend.vercel.app/pwauser/${referenceId}`,
-          { withCredentials: true }
-        );
-        console.log("API Response:", response.data); // Debug API response
+        const response = await axios.get(`https://jarafibackend.vercel.app/pwauser/${referenceId}`, {
+          withCredentials: true,
+        });
+        console.log("API Response:", response.data);
         if (response.status === 200) {
-          const status = response.data?.kycStatus || "pending"; // Default to pending
-          setVerified(null);
-          console.log("Set verified to:", status); // Debug state update
+          const status = response.data?.kycStatus;
+          // Validate status against expected values
+          const validStatuses = ["pending", "success", "failed"];
+          setVerified(validStatuses.includes(status) ? status : null);
+          console.log("Set verified to:", status);
         }
       } catch (error) {
-        console.error(
-          `User ${address} not verified:`,
-          error.response || error.message
-        );
-        setVerified("pending"); // Default to pending on error
+        console.error(`User ${address} not verified:`, error.response || error.message);
+        if (error.response?.status === 404) {
+          setVerified(null); // User not found, treat as unverified (default null)
+        } else {
+          setVerified("failed"); // Other errors, treat as failed KYC
+        }
+
       } finally {
         setIsLoading(false);
       }
     };
 
     getVerifiedUser();
-  }, [address]);
+  }, []);
 
   // Countdown for redirect when verified is null or failed
   useEffect(() => {
-    if (verified !== null && verified !== "failed") {
-      setCountdown(5); // Reset countdown for non-redirect states
+    // Reset countdown for non-redirect states (pending, success)
+    if (verified === "pending" || verified === "success") {
+      setCountdown(5);
       return;
     }
 
-    const interval = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    if (countdown === 5 && (verified === null || verified === "failed")) {
+      setTimeout(() => {
+        setCountdown(4);
+      }, 1000);
+      return;
+    }
 
-    return () => clearInterval(interval);
-  }, [verified]);
+    if (verified === null || verified === "failed") {
+      const interval = setInterval(() => {
+        setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [verified, countdown]);
 
   // Redirect to /request-card when countdown reaches 0 for null or failed states
   useEffect(() => {
@@ -89,7 +102,6 @@ export default function CardPage() {
     }
   }, [countdown, verified, navigate]);
 
-  // Log state changes for debugging
   useEffect(() => {
     console.log(
       "Current state - verified:",
@@ -129,29 +141,22 @@ export default function CardPage() {
           </div>
         ) : verified === "pending" ? (
           <div className="w-screen bg-[#D0D6FF] fixed top-0 left-0 z-50 h-screen backdrop:blur-sm">
-            <h1 className="p-6 w-full bg-[#0F0140] text-center font-bold text-2xl text-white">
-              KYC Verification
-            </h1>
-
+            <h1 className="p-6 w-full bg-[#0F0140] text-center font-bold text-2xl text-white">KYC Verification</h1>
             <div className="flex flex-col gap-[55px] justify-center items-center p-10 pt-6 text-center">
               <img src="/kyc.svg" alt="" />
-              <h1 className="text-[#262526] font-bold text-2xl">
-                Please wait while we verify your identity
-              </h1>
+              <h1 className="text-[#262526] font-bold text-2xl">Please wait while we verify your identity</h1>
               <div className="flex flex-col gap-4">
-                <p className="text-[#6F6B6F] text-[12px]">
-                  Thank you for submitting your information.
-                </p>
+                <p className="text-[#6F6B6F] text-[12px]">Thank you for submitting your information.</p>
                 <p className="font-semibold text-[#6F6B6F] text-[12px]">
-                  We’ll send you a notification within 15-30mins with the status
-                  of your verification.
+                  We’ll send you a notification within 15-30mins with the status of your verification.
                 </p>
               </div>
               <button
-                onClick={() => navigate("/card-display")}
+                
                 className="bg-[#F2E205] md:w-1/3 rounded-xl p-4 text-[#4F4E50] w-full font-semibold"
               >
-                Access dashboard
+              <Link to="/dashboard"> Access dashboard</Link> 
+
               </button>
             </div>
           </div>
@@ -202,9 +207,8 @@ export default function CardPage() {
               <button
                 className="flex flex-col items-center justify-center bg-transparent border-[1.2px] rounded-lg p-4 w-[120px] h-[100px] transition-all hover:bg-gray-100"
                 onClick={() =>
-                  navigate("/card-details", {
-                    state: { details: mockCardDetails },
-                  })
+                  navigate("/card-details", { state: { details: mockCardDetails } })
+
                 }
               >
                 <Eye size={30} className="text-[#0F0140]" />
@@ -257,19 +261,19 @@ export default function CardPage() {
           />
         )}
 
-        <footer className="fixed bottom-0 bg-white py-4 w-full  flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
+        <footer className="fixed bottom-0 bg-white py-4 w-full flex items-center justify-between px-[40px] md:px-[120px] border-t-[1px] border-[#B0AFB1]">
           <Link to="/dashboard">
             <LuWalletMinimal
               size={25}
               color={isActive("/dashboard") ? "#0F0140" : "#B0AFB1"}
             />
           </Link>
-          <Link to="/p2p">
+          {/* <Link to="/p2p">
             <FaExchangeAlt
               size={25}
               color={isActive("/p2p") ? "#0F0140" : "#B0AFB1"}
             />
-          </Link>
+          </Link> */}
           <Link to="/card-display">
             <LuCreditCard
               size={25}
